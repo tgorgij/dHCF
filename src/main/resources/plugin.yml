@@ -1,0 +1,16 @@
+name: dHCF
+version: 1.0
+author: Thomas Gorgij
+description: A HCF plugin for the modern day
+main: me.Thomas.HCF.Main.Main
+api-version: 26.2
+commands:
+  faction:
+    aliases:
+      - f
+      - team
+      - t
+  balance:
+    aliases:
+      - bal
+      - money

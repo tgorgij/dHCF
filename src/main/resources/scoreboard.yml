@@ -1,0 +1,6 @@
+title: "%primary%&l%server-name% &7| %secondary%&lMap %map-number%"
+boards:
+  primary:
+    - "&7&m---------------------"
+    - "&5&lEnderpearl&7: &c%player-enderpearl-timer% <display=%has-player-enderpearl-timer%>"
+    - "&7&m---------------------"

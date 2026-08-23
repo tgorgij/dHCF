@@ -1,0 +1,47 @@
+
+settings:
+  server-name: "HCF"
+  colors:
+    primary: AQUA
+    secondary: BLUE
+    online: GREEN
+    offline: GRAY
+    deathban: RED
+  map:
+    number: 1
+    start-date: "2026-08-16"
+  location-format: "X: %x%, Z: %z%"
+
+economy:
+  default-balance: 500
+  currency-symbol: "$"
+
+timers: # seconds
+  pvp: 1800
+  combat: 30
+  home: 10
+  archertag: 5
+  apple: 5
+  gapple: 3600
+  enderpearl: 15
+
+factions:
+  player-format: "&9%player%&7[&c%kills%&7]"
+  dtr:
+    colors:
+      raidable: RED
+      close-to-raidable: YELLOW
+      not-raidable: GREEN
+  name:
+    min: 3
+    max: 16
+    blocked:
+      - VeltPVP
+      - MineHQ
+      - Arcane
+  colors:
+    team: GREEN
+    ally: BLUE
+    enemy: RED
+    focus: PINK
+

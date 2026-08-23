@@ -1,0 +1,8 @@
+
+Configuration Placeholders:
+
+%primary% - Primary Color
+%secondary% - Secondary Color
+%map-number% - Map Number
+%server-name% - Server Name
+%map-start-date% - Map Start Date

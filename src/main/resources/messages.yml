@@ -1,0 +1,22 @@
+factions:
+  show:
+    player:
+      - "&7&m---------------------------"
+      - "&9%faction% &7[%online-members%&7/%total-members%&7] &3- &eHQ: &f%hq%"
+      - "&eLeader: &9%leader%"
+      - "&eColeaders: &9%coleaders%"
+      - "&eCaptains: &9%captains%"
+      - "&eMembers: &9%members%"
+      - "&eBalance: &9%balance%"
+      - "&ePoints: &9%points%"
+      - "&eKOTH Captures: &9%koth-captures%"
+      - "&eDeaths until Raidable: &a%dtr%"
+      - "&eStatus: &9%open%"
+      - "&eLives: &c%lives%" # Member + Staff Only
+      - "&eAnnouncement: &d%announcement%" # Member + Staff Only
+      - "&7&m---------------------------"
+    system:
+      - "&7&m---------------------------"
+      - "%faction%"
+      - "&9Location&7: &e%hq%"
+      - "&7&m---------------------------"

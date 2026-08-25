@@ -36,6 +36,7 @@ public class Main extends JavaPlugin {
     // Factions
     private final HashMap<UUID, Faction> factions = new HashMap<>();
     private final HashMap<String, Faction> factionNames = new HashMap<>();
+    private boolean factionDebug = false;
 
     public Main() {
         instance = this;
@@ -271,5 +272,17 @@ public class Main extends JavaPlugin {
 
     public Map<UUID, User> getAllUsers() {
         return users;
+    }
+
+    public Map<UUID, Faction> getAllFactions() {
+        return factions;
+    }
+
+    public boolean isFactionDebug() {
+        return factionDebug;
+    }
+
+    public void setFactionDebug(boolean factionDebug) {
+        this.factionDebug = factionDebug;
     }
 }

@@ -41,6 +41,9 @@ public class ShowCommand implements FactionSubcommand{
                 return true;
             }
             showPlayerFaction(p, Faction.get(user.getFaction()));
+            if (Main.getInstance().isFactionDebug()) {
+                p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", Faction.get(user.getFaction()).getType().name().toLowerCase(Locale.ROOT))));
+            }
             return true;
         }
         if (args.length != 1) {
@@ -52,13 +55,22 @@ public class ShowCommand implements FactionSubcommand{
         if (faction != null) {
             if (!faction.getType().equals(Faction.Type.PLAYER)) {
                 showSystemFaction(sender, faction);
+                if (Main.getInstance().isFactionDebug()) {
+                    sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", faction.getType().name().toLowerCase(Locale.ROOT))));
+                }
                 return true;
             }
             if (!(sender instanceof Player p)) {
                 showPlayerFactionAsConsole(sender, faction);
+                if (Main.getInstance().isFactionDebug()) {
+                    sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", faction.getType().name().toLowerCase(Locale.ROOT))));
+                }
                 return true;
             }
             showPlayerFaction(p, faction);
+            if (Main.getInstance().isFactionDebug()) {
+                p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", faction.getType().name().toLowerCase(Locale.ROOT))));
+            }
             return true;
         }
         User user = User.get(name);
@@ -72,10 +84,31 @@ public class ShowCommand implements FactionSubcommand{
         }
         if (!(sender instanceof Player p)) {
             showPlayerFactionAsConsole(sender, Faction.get(user.getFaction()));
+            if (Main.getInstance().isFactionDebug()) {
+                sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", Faction.get(user.getFaction()).getType().name().toLowerCase(Locale.ROOT))));
+            }
             return true;
         }
         showPlayerFaction(p, Faction.get(user.getFaction()));
+        if (Main.getInstance().isFactionDebug()) {
+            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", Faction.get(user.getFaction()).getType().name().toLowerCase(Locale.ROOT))));
+        }
         return true;
+    }
+
+    @Override
+    public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String @NonNull [] args) {
+        if (args.length == 1) {
+            String input = args[0].toUpperCase(Locale.ROOT);
+
+            return Main.getInstance().getAllFactions().values().stream()
+                    .map(Faction::getName)
+                    .filter(Objects::nonNull)
+                    .filter(name -> name.toUpperCase(Locale.ROOT).startsWith(input))
+                    .sorted(String.CASE_INSENSITIVE_ORDER)
+                    .toList();
+        }
+        return List.of();
     }
 
     private void showSystemFaction(CommandSender sender, Faction faction) {
@@ -86,7 +119,7 @@ public class ShowCommand implements FactionSubcommand{
             if (s.contains("%hq%")) {
                 Location home = faction.getHome();
                 if (home != null) {
-                    s = s.replace("%hq%", Objects.requireNonNull(Main.getInstance().getConfig().getString("primary.location-format")).replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
+                    s = s.replace("%hq%", Objects.requireNonNull(Main.getInstance().getConfig().getString("settings.location-format")).replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
                 } else {
                     s = s.replace("%hq%", Objects.requireNonNull(localeConfig.getString("primary.none")));
                 }

@@ -1,9 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction;
 
-import me.Thomas.HCF.Commands.User.Faction.Subcommands.CreateCommand;
-import me.Thomas.HCF.Commands.User.Faction.Subcommands.CreateSystemCommand;
-import me.Thomas.HCF.Commands.User.Faction.Subcommands.FactionSubcommand;
-import me.Thomas.HCF.Commands.User.Faction.Subcommands.ShowCommand;
+import me.Thomas.HCF.Commands.User.Faction.Subcommands.*;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.command.Command;
@@ -30,6 +27,10 @@ public class FactionCommand implements TabExecutor {
         register(new CreateCommand());
         register(new CreateSystemCommand());
         register(new ShowCommand());
+        register(new SetColorCommand());
+        register(new SetTypeCommand());
+        register(new SetLocationCommand());
+        register(new DebugCommand());
     }
 
     private void register(FactionSubcommand subcommand) {
@@ -100,6 +101,15 @@ public class FactionCommand implements TabExecutor {
             return suggestions;
         }
 
-        return List.of();
+        String name = args[0].toLowerCase(Locale.ROOT);
+        FactionSubcommand subcommand = subcommands.get(name);
+
+        if (subcommand == null) {
+            return List.of();
+        }
+
+        String[] subcommandArgs = Arrays.copyOfRange(args, 1, args.length);
+
+        return subcommand.tabComplete(sender, subcommandArgs);
     }
 }

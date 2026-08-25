@@ -12,5 +12,16 @@ public interface FactionSubcommand {
 
     List<String> getAliases();
 
-    boolean execute(@NotNull CommandSender sender, @NotNull String @NonNull [] args, @NotNull String alias);
+    boolean execute(
+            @NotNull CommandSender sender,
+            @NotNull String @NonNull [] args,
+            @NotNull String alias
+    );
+
+    default List<String> tabComplete(
+            @NotNull CommandSender sender,
+            @NotNull String @NonNull [] args
+    ) {
+        return List.of();
+    }
 }

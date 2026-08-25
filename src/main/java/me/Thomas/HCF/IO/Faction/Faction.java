@@ -4,6 +4,7 @@ import me.Thomas.HCF.Main.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -619,5 +620,10 @@ public class Faction {
     public void setAnnouncement(String announcement) {
         this.announcement = announcement;
         modified = true;
+    }
+
+
+    public static Faction get(String name) {
+        return Main.getInstance().getFaction(name);
     }
 }

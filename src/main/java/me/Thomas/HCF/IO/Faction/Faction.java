@@ -1,5 +1,6 @@
 package me.Thomas.HCF.IO.Faction;
 
+import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -99,8 +100,6 @@ public class Faction {
         this.points = 0;
         this.kothCaptures = 0;
         this.announcement = null;
-
-        save();
     }
 
     /**
@@ -124,8 +123,6 @@ public class Faction {
         this.points = 0;
         this.kothCaptures = 0;
         this.announcement = null;
-
-        save();
     }
 
     public static Faction get(UUID uuid) {
@@ -147,7 +144,7 @@ public class Faction {
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) {
                     initializeDefaults();
-                    save();
+                    saveAsync();
                     return;
                 }
 
@@ -622,8 +619,50 @@ public class Faction {
         modified = true;
     }
 
-
     public static Faction get(String name) {
         return Main.getInstance().getFaction(name);
+    }
+
+    public MemberType getMemberType(UUID uuid) {
+        return MemberType.getMemberType(members.getOrDefault(uuid, MemberType.MEMBER.getValue()));
+    }
+
+    public boolean isRaidable() {
+        return dtr <= 0;
+    }
+
+    public void disband() {
+        for (UUID member : members.keySet()) {
+            User user = Main.getInstance().getUser(member);
+            user.setFaction(null);
+            user.saveAsync();
+        }
+        Main.getInstance().removeFaction(uuid);
+
+        String sql = "DELETE FROM factions WHERE uuid = ?";
+
+        try (
+                Connection connection =
+                        Main.getInstance()
+                                .getDatabaseManager()
+                                .getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)
+        ) {
+            statement.setString(1, uuid.toString());
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            Main.getInstance().getLogger().log(
+                    Level.SEVERE,
+                    "Could not delete faction " + uuid,
+                    exception
+            );
+        }
+    }
+
+    public void saveAsync() {
+        Bukkit.getScheduler().runTaskAsynchronously(
+                Main.getInstance(),
+                this::save
+        );
     }
 }

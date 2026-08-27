@@ -44,4 +44,6 @@ factions:
     ally: BLUE
     enemy: RED
     focus: PINK
+  members:
+    max: 10
 

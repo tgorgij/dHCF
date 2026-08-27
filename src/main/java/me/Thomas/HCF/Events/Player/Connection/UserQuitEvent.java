@@ -16,7 +16,7 @@ public class UserQuitEvent implements Listener {
         User user = User.get(p);
         user.setName(p.getName());
         user.pauseTimers();
-        user.save();
+        user.saveAsync();
         Main.getInstance().removeUser(p.getUniqueId());
     }
 }

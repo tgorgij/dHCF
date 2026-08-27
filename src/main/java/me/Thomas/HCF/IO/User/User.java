@@ -2,6 +2,7 @@ package me.Thomas.HCF.IO.User;
 
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Timer.Timer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.sql.Connection;
@@ -49,7 +50,6 @@ public class User {
         }
 
         setName(name);
-        save();
     }
 
     public static User get(Player player) {
@@ -124,6 +124,8 @@ public class User {
         this.timers = new EnumMap<>(Timer.Type.class);
         this.deathbanExpiry = 0;
         this.modified = true;
+
+        saveAsync();
     }
 
     public void save() {
@@ -408,5 +410,12 @@ public class User {
 
     public boolean hasFaction() {
         return faction != null;
+    }
+
+    public void saveAsync() {
+        Bukkit.getScheduler().runTaskAsynchronously(
+                Main.getInstance(),
+                this::save
+        );
     }
 }

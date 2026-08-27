@@ -56,7 +56,7 @@ public class CreateSystemCommand implements FactionSubcommand {
         UUID uuid = UUID.randomUUID();
         Faction faction = new Faction(uuid, name);
         Main.getInstance().addFaction(faction);
-        faction.save();
+        faction.saveAsync();
         sender.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("commands.faction.createsystem.success")).replace("%faction%", name)));
         Bukkit.broadcast(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("commands.faction.createsystem.broadcast")).replace("%player%", sender.getName()).replace("%faction%", name)));
         return true;

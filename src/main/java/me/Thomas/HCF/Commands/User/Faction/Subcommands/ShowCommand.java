@@ -16,6 +16,7 @@ import org.jspecify.annotations.NonNull;
 import java.util.*;
 
 public class ShowCommand implements FactionSubcommand{
+
     @Override
     public String getName() {
         return "show";
@@ -213,7 +214,7 @@ public class ShowCommand implements FactionSubcommand{
 
             if (s.contains("%open%")) {
                 if (!faction.isOpen()) continue;
-                s = s.replace("%open%", Objects.requireNonNull(Main.getInstance().getConfig().getString("faction.open")));
+                s = s.replace("%open%", Objects.requireNonNull(localeConfig.getString("primary.status.open")));
             }
 
             if (s.contains("%lives%")) {
@@ -326,7 +327,7 @@ public class ShowCommand implements FactionSubcommand{
 
             if (s.contains("%open%")) {
                 if (!faction.isOpen()) continue;
-                s = s.replace("%open%", Objects.requireNonNull(Main.getInstance().getConfig().getString("faction.open")));
+                s = s.replace("%open%", Objects.requireNonNull(localeConfig.getString("primary.status.open")));
             }
 
             if (s.contains("%lives%")) {

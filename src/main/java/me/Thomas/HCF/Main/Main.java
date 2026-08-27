@@ -19,6 +19,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Level;
 
 public class Main extends JavaPlugin {
 
@@ -37,6 +38,9 @@ public class Main extends JavaPlugin {
     private final HashMap<UUID, Faction> factions = new HashMap<>();
     private final HashMap<String, Faction> factionNames = new HashMap<>();
     private boolean factionDebug = false;
+
+    private final Map<UUID, Set<UUID>> userInvites = new HashMap<>();
+    private final Map<UUID, Set<UUID>> factionInvites = new HashMap<>();
 
     public Main() {
         instance = this;
@@ -58,10 +62,12 @@ public class Main extends JavaPlugin {
         boardHandler = new BoardHandler();
 
         loadData();
+        loadInvites();
 
         getLogger().info("dHCF has been enabled with SQLite support!");
         events();
         commands();
+
         checkUsers();
         checkFactions();
     }
@@ -74,10 +80,167 @@ public class Main extends JavaPlugin {
         for (Faction faction : factions.values()) {
             faction.save();
         }
-        if (databaseManager != null) {
-            databaseManager.close();
-        }
+
         getLogger().info("dHCF has been disabled.");
+    }
+
+    private void loadInvites() {
+        String sql = """
+            SELECT faction, user
+            FROM factionInvites
+            """;
+
+        try (
+                Connection connection = databaseManager.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()
+        ) {
+            while (resultSet.next()) {
+                UUID factionUuid = UUID.fromString(
+                        resultSet.getString("faction")
+                );
+
+                UUID userUuid = UUID.fromString(
+                        resultSet.getString("user")
+                );
+
+                userInvites
+                        .computeIfAbsent(userUuid, key -> new HashSet<>())
+                        .add(factionUuid);
+
+                factionInvites
+                        .computeIfAbsent(factionUuid, key -> new HashSet<>())
+                        .add(userUuid);
+            }
+        } catch (SQLException | IllegalArgumentException exception) {
+            getLogger().log(
+                    Level.SEVERE,
+                    "Could not load faction invites",
+                    exception
+            );
+        }
+    }
+
+    public Set<UUID> getInvitesForUser(UUID userUuid) {
+        return new HashSet<>(
+                userInvites.getOrDefault(userUuid, Collections.emptySet())
+        );
+    }
+
+    public Set<UUID> getInvitesForFaction(UUID factionUuid) {
+        return new HashSet<>(
+                factionInvites.getOrDefault(factionUuid, Collections.emptySet())
+        );
+    }
+
+    public boolean addInvite(UUID factionUuid, UUID userUuid) {
+        boolean added = userInvites
+                .computeIfAbsent(userUuid, key -> new HashSet<>())
+                .add(factionUuid);
+
+        factionInvites
+                .computeIfAbsent(factionUuid, key -> new HashSet<>())
+                .add(userUuid);
+
+        if (added) {
+            saveInviteAsync(factionUuid, userUuid);
+        }
+
+        return added;
+    }
+
+    private void saveInviteAsync(UUID factionUuid, UUID userUuid) {
+        String sql = """
+            INSERT OR IGNORE INTO factionInvites (faction, user)
+            VALUES (?, ?)
+            """;
+
+        Bukkit.getScheduler().runTaskAsynchronously(
+                this,
+                () -> {
+                    try (
+                            Connection connection =
+                                    databaseManager.getConnection();
+                            PreparedStatement statement =
+                                    connection.prepareStatement(sql)
+                    ) {
+                        statement.setString(1, factionUuid.toString());
+                        statement.setString(2, userUuid.toString());
+                        statement.executeUpdate();
+                    } catch (SQLException exception) {
+                        getLogger().log(
+                                Level.SEVERE,
+                                "Could not save faction invite",
+                                exception
+                        );
+                    }
+                }
+        );
+    }
+
+    public boolean removeInvite(UUID factionUuid, UUID userUuid) {
+        boolean removed = false;
+
+        Set<UUID> userFactionInvites = userInvites.get(userUuid);
+
+        if (userFactionInvites != null) {
+            removed = userFactionInvites.remove(factionUuid);
+
+            if (userFactionInvites.isEmpty()) {
+                userInvites.remove(userUuid);
+            }
+        }
+
+        Set<UUID> factionUserInvites = factionInvites.get(factionUuid);
+
+        if (factionUserInvites != null) {
+            factionUserInvites.remove(userUuid);
+
+            if (factionUserInvites.isEmpty()) {
+                factionInvites.remove(factionUuid);
+            }
+        }
+
+        if (removed) {
+            deleteInviteAsync(factionUuid, userUuid);
+        }
+
+        return removed;
+    }
+
+    private void deleteInviteAsync(UUID factionUuid, UUID userUuid) {
+        String sql = """
+            DELETE FROM factionInvites
+            WHERE faction = ? AND user = ?
+            """;
+
+        Bukkit.getScheduler().runTaskAsynchronously(
+                this,
+                () -> {
+                    try (
+                            Connection connection =
+                                    databaseManager.getConnection();
+                            PreparedStatement statement =
+                                    connection.prepareStatement(sql)
+                    ) {
+                        statement.setString(1, factionUuid.toString());
+                        statement.setString(2, userUuid.toString());
+                        statement.executeUpdate();
+                    } catch (SQLException exception) {
+                        getLogger().log(
+                                Level.SEVERE,
+                                "Could not delete faction invite",
+                                exception
+                        );
+                    }
+                }
+        );
+    }
+
+    public boolean hasInvite(UUID factionUuid, UUID userUuid) {
+        return userInvites
+                .getOrDefault(userUuid, Collections.emptySet())
+                .contains(factionUuid);
     }
 
     public DatabaseManager getDatabaseManager() {
@@ -180,7 +343,7 @@ public class Main extends JavaPlugin {
             public void run() {
                 for (User user : users.values()) {
                     if (user.isModified()) {
-                        user.save();
+                        user.saveAsync();
                         count++;
                     }
                 }
@@ -196,7 +359,7 @@ public class Main extends JavaPlugin {
             public void run() {
                 for (Faction faction : factions.values()) {
                     if (faction.isModified()) {
-                        faction.save();
+                        faction.saveAsync();
                         count++;
                     }
                 }
@@ -221,7 +384,7 @@ public class Main extends JavaPlugin {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null && !player.getName().equals(user.getName())) {
                 user.setName(player.getName());
-                user.save();
+                user.saveAsync();
             }
             users.put(uuid, user);
         }
@@ -236,7 +399,7 @@ public class Main extends JavaPlugin {
         User user = users.remove(uuid);
         if (user != null) {
             userNames.remove(user.getName().toUpperCase(Locale.ROOT));
-            if (user.isModified()) user.save();
+            if (user.isModified()) user.saveAsync();
         }
     }
 
@@ -266,7 +429,7 @@ public class Main extends JavaPlugin {
         Faction faction = factions.remove(uuid);
         if (faction != null) {
             factionNames.remove(faction.getName().toUpperCase(Locale.ROOT));
-            if (faction.isModified()) faction.save();
+            if (faction.isModified()) faction.saveAsync();
         }
     }
 

@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
@@ -13,7 +14,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
-public class JoinCommand implements FactionSubcommand{
+public class JoinCommand implements Subcommand {
 
     private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
 

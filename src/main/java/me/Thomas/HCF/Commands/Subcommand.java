@@ -1,4 +1,4 @@
-package me.Thomas.HCF.Commands.User.Faction.Subcommands;
+package me.Thomas.HCF.Commands;
 
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -6,7 +6,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
-public interface FactionSubcommand {
+public interface Subcommand {
 
     String getName();
 

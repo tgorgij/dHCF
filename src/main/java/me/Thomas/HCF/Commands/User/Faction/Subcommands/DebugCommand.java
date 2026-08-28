@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
@@ -11,7 +12,7 @@ import org.jspecify.annotations.NonNull;
 import java.util.List;
 import java.util.Objects;
 
-public class DebugCommand implements FactionSubcommand{
+public class DebugCommand implements Subcommand {
 
     private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
 

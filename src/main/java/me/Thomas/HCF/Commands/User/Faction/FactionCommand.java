@@ -1,11 +1,13 @@
 package me.Thomas.HCF.Commands.User.Faction;
 
+import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.Commands.User.Faction.Subcommands.*;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
@@ -16,12 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 public class FactionCommand implements TabExecutor {
 
-    private final Map<String, FactionSubcommand> subcommands =
+    private final Map<String, Subcommand> subcommands =
             new HashMap<>();
+
+    private final FileConfiguration messagesConfig = Main.getInstance().getMessagesConfig();
 
     public FactionCommand() {
         register(new CreateCommand());
@@ -37,9 +40,12 @@ public class FactionCommand implements TabExecutor {
         register(new UninviteCommand());
         register(new JoinCommand());
         register(new OpenCommand());
+        register(new InvitesCommand());
+        register(new LeaveCommand());
+        register(new DepositCommand());
     }
 
-    private void register(FactionSubcommand subcommand) {
+    private void register(Subcommand subcommand) {
         subcommands.put(
                 subcommand.getName().toLowerCase(Locale.ROOT),
                 subcommand
@@ -58,27 +64,15 @@ public class FactionCommand implements TabExecutor {
             @NotNull String @NonNull [] args
     ) {
         if (args.length == 0) {
-            sender.sendMessage(C.chat(
-                    Objects.requireNonNull(
-                            Main.getInstance()
-                                    .getLocaleConfig()
-                                    .getString("commands.faction.usage")
-                    ).replace("%alias%", label)
-            ));
+            sendHelp(sender, label);
             return true;
         }
 
         String name = args[0].toLowerCase(Locale.ROOT);
-        FactionSubcommand subcommand = subcommands.get(name);
+        Subcommand subcommand = subcommands.get(name);
 
         if (subcommand == null) {
-            sender.sendMessage(C.chat(
-                    Objects.requireNonNull(
-                            Main.getInstance()
-                                    .getLocaleConfig()
-                                    .getString("commands.faction.usage")
-                    ).replace("%alias%", label)
-            ));
+            sendHelp(sender, label);
             return true;
         }
 
@@ -94,13 +88,22 @@ public class FactionCommand implements TabExecutor {
             @NotNull String label,
             @NotNull String @NonNull [] args
     ) {
+        if (args.length == 0) {
+            return List.of();
+        }
+
         if (args.length == 1) {
             String input = args[0].toLowerCase(Locale.ROOT);
             List<String> suggestions = new ArrayList<>();
 
             for (String name : subcommands.keySet()) {
-                if (name.startsWith(input)) {
-                    suggestions.add(name);
+                String normalizedName = name.toLowerCase(Locale.ROOT);
+
+                if (normalizedName.startsWith(input)) {
+                    // The client may hide a suggestion identical to the input.
+                    suggestions.add(
+                            normalizedName.equals(input) ? name + " " : name
+                    );
                 }
             }
 
@@ -108,14 +111,22 @@ public class FactionCommand implements TabExecutor {
         }
 
         String name = args[0].toLowerCase(Locale.ROOT);
-        FactionSubcommand subcommand = subcommands.get(name);
+        Subcommand subcommand = subcommands.get(name);
 
         if (subcommand == null) {
             return List.of();
         }
 
         String[] subcommandArgs = Arrays.copyOfRange(args, 1, args.length);
-
         return subcommand.tabComplete(sender, subcommandArgs);
+    }
+
+    private void sendHelp(CommandSender sender, String label) {
+        for (String s : messagesConfig.getStringList("factions.help.main")) {
+            if (s.contains("%alias%")) {
+                s = s.replace("%alias%", label);
+            }
+            sender.sendMessage(C.chat(s));
+        }
     }
 }

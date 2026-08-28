@@ -1,6 +1,7 @@
 package me.Thomas.HCF.Main;
 
 import me.Thomas.HCF.Commands.User.Economy.BalanceCommand;
+import me.Thomas.HCF.Commands.User.Faction.EconomyCommand;
 import me.Thomas.HCF.Commands.User.Faction.FactionCommand;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserQuitEvent;
@@ -82,6 +83,25 @@ public class Main extends JavaPlugin {
         }
 
         getLogger().info("dHCF has been disabled.");
+    }
+
+    private void commands() {
+
+        // User
+        Objects.requireNonNull(getCommand("faction")).setExecutor(new FactionCommand()); Objects.requireNonNull(getCommand("faction")).setTabCompleter(new FactionCommand());
+        Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand()); Objects.requireNonNull(getCommand("balance")).setTabCompleter(new BalanceCommand());
+
+        // Admin
+        Objects.requireNonNull(getCommand("economy")).setExecutor(new EconomyCommand()); Objects.requireNonNull(getCommand("economy")).setTabCompleter(new EconomyCommand());
+    }
+
+    private void events() {
+        PluginManager pm = getServer().getPluginManager();
+
+        // User
+        pm.registerEvents(new UserJoinEvent(), this);
+        pm.registerEvents(new UserPearlEvent(), this);
+        pm.registerEvents(new UserQuitEvent(), this);
     }
 
     private void loadInvites() {
@@ -318,22 +338,6 @@ public class Main extends JavaPlugin {
     private void loadMessages() {
         java.io.File messagesFile = new java.io.File(getDataFolder(), "messages.yml");
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
-    }
-
-    private void commands() {
-
-        // User
-        Objects.requireNonNull(getCommand("faction")).setExecutor(new FactionCommand()); Objects.requireNonNull(getCommand("faction")).setTabCompleter(new FactionCommand());
-        Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand()); Objects.requireNonNull(getCommand("balance")).setTabCompleter(new BalanceCommand());
-    }
-
-    private void events() {
-        PluginManager pm = getServer().getPluginManager();
-
-        // User
-        pm.registerEvents(new UserJoinEvent(), this);
-        pm.registerEvents(new UserPearlEvent(), this);
-        pm.registerEvents(new UserQuitEvent(), this);
     }
 
     private void checkUsers() {

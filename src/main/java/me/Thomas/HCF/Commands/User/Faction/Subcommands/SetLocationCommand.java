@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class SetLocationCommand implements FactionSubcommand {
+public class SetLocationCommand implements Subcommand {
 
     private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
 

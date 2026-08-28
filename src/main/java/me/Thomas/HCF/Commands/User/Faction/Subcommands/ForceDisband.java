@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -16,7 +17,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
-public class ForceDisband implements FactionSubcommand {
+public class ForceDisband implements Subcommand {
 
     private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
 

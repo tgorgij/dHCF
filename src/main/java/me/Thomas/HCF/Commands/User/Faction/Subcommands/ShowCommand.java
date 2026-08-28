@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
@@ -15,7 +16,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
-public class ShowCommand implements FactionSubcommand{
+public class ShowCommand implements Subcommand {
 
     @Override
     public String getName() {
@@ -218,12 +219,12 @@ public class ShowCommand implements FactionSubcommand{
             }
 
             if (s.contains("%lives%")) {
-                if (user.getFaction() != faction.getUUID() && !Permission.has(p, "staff")) continue;
+                if (!user.getFaction().equals(faction.getUUID()) && !Permission.has(p, "staff")) continue;
                 s = s.replace("%lives%", faction.getLives() + "");
             }
 
             if (s.contains("%announcement%")) {
-                if (user.getFaction() != faction.getUUID() && !Permission.has(p, "staff")) continue;
+                if (!user.getFaction().equals(faction.getUUID()) && !Permission.has(p, "staff")) continue;
                 s = s.replace("%announcement%", faction.getAnnouncement() == null ? Objects.requireNonNull(localeConfig.getString("primary.none")) : faction.getAnnouncement());
             }
             p.sendMessage(C.chat(s));

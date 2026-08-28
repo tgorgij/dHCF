@@ -15,6 +15,7 @@ settings:
 economy:
   default-balance: 500
   currency-symbol: "$"
+  minimum-transfer: 1
 
 timers: # seconds
   pvp: 1800

@@ -1,13 +1,12 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
-import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
@@ -15,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class CreateSystemCommand implements FactionSubcommand {
+public class CreateSystemCommand implements Subcommand {
 
     @Override
     public String getName() {

@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class CreateCommand implements FactionSubcommand{
+public class CreateCommand implements Subcommand {
 
     @Override
     public String getName() {

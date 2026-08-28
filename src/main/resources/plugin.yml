@@ -14,3 +14,6 @@ commands:
     aliases:
       - bal
       - money
+  economy:
+    aliases:
+      - eco

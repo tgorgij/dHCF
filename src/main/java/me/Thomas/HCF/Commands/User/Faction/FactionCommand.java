@@ -43,6 +43,8 @@ public class FactionCommand implements TabExecutor {
         register(new InvitesCommand());
         register(new LeaveCommand());
         register(new DepositCommand());
+        register(new RenameCommand());
+        register(new ClaimforCommand());
     }
 
     private void register(Subcommand subcommand) {
@@ -100,9 +102,7 @@ public class FactionCommand implements TabExecutor {
                 String normalizedName = name.toLowerCase(Locale.ROOT);
 
                 if (normalizedName.startsWith(input)) {
-                    // The client may hide a suggestion identical to the input.
-                    suggestions.add(
-                            normalizedName.equals(input) ? name + " " : name
+                    suggestions.add(name.toLowerCase(Locale.ROOT)
                     );
                 }
             }

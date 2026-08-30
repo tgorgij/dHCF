@@ -5,12 +5,16 @@ import me.Thomas.HCF.Commands.User.Faction.EconomyCommand;
 import me.Thomas.HCF.Commands.User.Faction.FactionCommand;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserQuitEvent;
+import me.Thomas.HCF.Events.Player.Item.UserClaimEvent;
 import me.Thomas.HCF.Events.Player.Item.UserPearlEvent;
+import me.Thomas.HCF.IO.Claims.ChunkKey;
+import me.Thomas.HCF.IO.Claims.Claim;
 import me.Thomas.HCF.IO.Database.DatabaseManager;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Utils.Scoreboard.BoardHandler;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -43,6 +47,10 @@ public class Main extends JavaPlugin {
     private final Map<UUID, Set<UUID>> userInvites = new HashMap<>();
     private final Map<UUID, Set<UUID>> factionInvites = new HashMap<>();
 
+    // Claims
+    private final List<Claim> claims = new ArrayList<>();
+    private final Map<ChunkKey, List<Claim>> claimsByChunk = new HashMap<>();
+
     public Main() {
         instance = this;
     }
@@ -64,6 +72,7 @@ public class Main extends JavaPlugin {
 
         loadData();
         loadInvites();
+        loadClaims();
 
         getLogger().info("dHCF has been enabled with SQLite support!");
         events();
@@ -102,6 +111,7 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserJoinEvent(), this);
         pm.registerEvents(new UserPearlEvent(), this);
         pm.registerEvents(new UserQuitEvent(), this);
+        pm.registerEvents(new UserClaimEvent(), this);
     }
 
     private void loadInvites() {
@@ -283,11 +293,9 @@ public class Main extends JavaPlugin {
         String usersSql = "SELECT * FROM players";
         String factionsSql = "SELECT * FROM factions";
 
-        String dbUrl = "jdbc:sqlite:plugins/dHCF/storage.db";
-
         // 1. Process Users independently
         try (
-                Connection conn1 = DriverManager.getConnection(dbUrl);
+                Connection conn1 = databaseManager.getConnection();
                 PreparedStatement usersStatement = conn1.prepareStatement(usersSql);
                 ResultSet usersResultSet = usersStatement.executeQuery()
         ) {
@@ -302,7 +310,7 @@ public class Main extends JavaPlugin {
 
         // 2. Process Factions independently
         try (
-                Connection conn2 = DriverManager.getConnection(dbUrl);
+                Connection conn2 = databaseManager.getConnection();
                 PreparedStatement factionsStatement = conn2.prepareStatement(factionsSql);
                 ResultSet factionsResultSet = factionsStatement.executeQuery()
         ) {
@@ -313,6 +321,64 @@ public class Main extends JavaPlugin {
             }
         } catch (SQLException exception) {
             exception.printStackTrace();
+        }
+    }
+
+    private void loadClaims() {
+        String sql = """
+            SELECT claimID, faction, world, minX, maxX, minZ, maxZ
+            FROM factionClaims
+        """;
+
+        try (
+                Connection connection = databaseManager.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet results = statement.executeQuery()
+        ) {
+            claims.clear();
+
+            while (results.next()) {
+                Claim claim = new Claim(
+                        UUID.fromString(results.getString("faction")),
+                        UUID.fromString(results.getString("world")),
+                        results.getInt("minX"),
+                        results.getInt("maxX"),
+                        results.getInt("minZ"),
+                        results.getInt("maxZ")
+                );
+
+                claims.add(claim);
+                indexClaim(claim);
+            }
+
+            getLogger().info("Loaded " + claims.size() + " faction claim(s).");
+        } catch (SQLException | IllegalArgumentException exception) {
+            getLogger().log(
+                    Level.SEVERE,
+                    "Could not load faction claims",
+                    exception
+            );
+        }
+    }
+
+    private void indexClaim(Claim claim) {
+        int minChunkX = Math.floorDiv(claim.minX(), 16);
+        int maxChunkX = Math.floorDiv(claim.maxX(), 16);
+        int minChunkZ = Math.floorDiv(claim.minZ(), 16);
+        int maxChunkZ = Math.floorDiv(claim.maxZ(), 16);
+
+        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                ChunkKey key = new ChunkKey(
+                        claim.world(),
+                        chunkX,
+                        chunkZ
+                );
+
+                claimsByChunk
+                        .computeIfAbsent(key, ignored -> new ArrayList<>())
+                        .add(claim);
+            }
         }
     }
 
@@ -437,6 +503,14 @@ public class Main extends JavaPlugin {
         }
     }
 
+    public void renameFaction(UUID uuid, String name) {
+        Faction faction = factions.get(uuid);
+        if (faction != null) {
+            factionNames.remove(faction.getName().toUpperCase(Locale.ROOT));
+            factionNames.put(name.toUpperCase(Locale.ROOT), faction);
+        }
+    }
+
     public Map<UUID, User> getAllUsers() {
         return users;
     }
@@ -451,5 +525,139 @@ public class Main extends JavaPlugin {
 
     public void setFactionDebug(boolean factionDebug) {
         this.factionDebug = factionDebug;
+    }
+
+
+    public List<Claim> getClaimsByChunk(ChunkKey key) {
+        return claimsByChunk.get(key);
+    }
+
+    public boolean saveClaim(Claim claim) {
+        String sql = """
+        INSERT INTO factionClaims (
+            faction,
+            world,
+            minX,
+            maxX,
+            minZ,
+            maxZ
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """;
+
+        try (
+                Connection connection = databaseManager.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)
+        ) {
+            statement.setString(1, claim.faction().toString());
+            statement.setString(2, claim.world().toString());
+            statement.setInt(3, claim.minX());
+            statement.setInt(4, claim.maxX());
+            statement.setInt(5, claim.minZ());
+            statement.setInt(6, claim.maxZ());
+
+            statement.executeUpdate();
+            return true;
+        } catch (SQLException exception) {
+            getLogger().log(
+                    Level.SEVERE,
+                    "Could not save faction claim",
+                    exception
+            );
+
+            return false;
+        }
+    }
+
+    public void saveClaimAsync(Claim claim) {
+        String sql = """
+        INSERT INTO factionClaims (
+            faction,
+            world,
+            minX,
+            maxX,
+            minZ,
+            maxZ
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """;
+
+        Bukkit.getScheduler().runTaskAsynchronously(
+                this,
+                () -> {
+                    try (
+                            Connection connection = databaseManager.getConnection();
+                            PreparedStatement statement =
+                                    connection.prepareStatement(sql)
+                    ) {
+                        statement.setString(1, claim.faction().toString());
+                        statement.setString(2, claim.world().toString());
+                        statement.setInt(3, claim.minX());
+                        statement.setInt(4, claim.maxX());
+                        statement.setInt(5, claim.minZ());
+                        statement.setInt(6, claim.maxZ());
+
+                        statement.executeUpdate();
+                    } catch (SQLException exception) {
+                        getLogger().log(
+                                Level.SEVERE,
+                                "Could not save faction claim",
+                                exception
+                        );
+                    }
+                }
+        );
+    }
+
+
+    public List<Claim> getClaims() {
+        return claims;
+    }
+
+    public boolean addClaim(
+            UUID faction,
+            Location one,
+            Location two
+    ) {
+        if (one.getWorld() == null || two.getWorld() == null) {
+            return false;
+        }
+
+        if (!one.getWorld().equals(two.getWorld())) {
+            return false;
+        }
+
+        int firstX = one.getBlockX();
+        int secondX = two.getBlockX();
+        int firstZ = one.getBlockZ();
+        int secondZ = two.getBlockZ();
+
+        int minX = Math.min(firstX, secondX);
+        int maxX = Math.max(firstX, secondX);
+        int minZ = Math.min(firstZ, secondZ);
+        int maxZ = Math.max(firstZ, secondZ);
+
+        UUID worldId = one.getWorld().getUID();
+
+        Claim candidate = new Claim(
+                faction,
+                worldId,
+                minX,
+                maxX,
+                minZ,
+                maxZ
+        );
+
+        for (Claim existing : claims) {
+            if (existing.intersects(candidate)) {
+                return false;
+            }
+        }
+
+        claims.add(candidate);
+        indexClaim(candidate);
+        saveClaimAsync(candidate);
+
+        return true;
     }
 }

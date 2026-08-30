@@ -25,7 +25,7 @@ factions:
       - "&e/%alias% subclaim &7- Show the subclaim help page"
       - " "
       - "&9Information Commands:"
-      - "&e/%alias% [faction;player] &7- Show faction information"
+      - "&e/%alias% show [faction;player] &7- Show faction information"
       - "&e/%alias% list &7- Show a list of online factions"
       - "&e/%alias% map &7- Show nearby claims"
       - " "

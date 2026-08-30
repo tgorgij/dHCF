@@ -38,19 +38,7 @@ public class CreateSystemCommand implements Subcommand {
             return true;
         }
         String name = args[0];
-        if (Main.getInstance().getFaction(name) != null) {
-            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.create.already-exists")));
-            return true;
-        }
-        if (Main.getInstance().getConfig().getStringList("factions.name.blocked").stream()
-                .anyMatch(name::equalsIgnoreCase)) {
-            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.create.blocked")));
-            return true;
-        }
-        if (name.length() < Main.getInstance().getConfig().getInt("factions.name.min") || name.length() > Main.getInstance().getConfig().getInt("factions.name.max")) {
-            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.create.invalid-length")));
-            return true;
-        }
+        if (Faction.isNameInvalid(name, sender)) return true;
 
         UUID uuid = UUID.randomUUID();
         Faction faction = new Faction(uuid, name);

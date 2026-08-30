@@ -43,19 +43,7 @@ public class CreateCommand implements Subcommand {
             p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.already-in")));
             return true;
         }
-        if (Main.getInstance().getFaction(name) != null) {
-            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.create.already-exists")));
-            return true;
-        }
-        if (Main.getInstance().getConfig().getStringList("factions.name.blocked").stream()
-                .anyMatch(name::equalsIgnoreCase)) {
-            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.create.blocked")));
-            return true;
-        }
-        if (name.length() < Main.getInstance().getConfig().getInt("factions.name.min") || name.length() > Main.getInstance().getConfig().getInt("factions.name.max")) {
-            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.create.invalid-length")));
-            return true;
-        }
+        if (Faction.isNameInvalid(name, p)) return true;
 
         UUID uuid = UUID.randomUUID();
         Faction faction = new Faction(uuid, p.getUniqueId(), name);

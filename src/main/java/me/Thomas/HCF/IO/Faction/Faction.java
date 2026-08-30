@@ -1,10 +1,18 @@
 package me.Thomas.HCF.IO.Faction;
 
+import me.Thomas.HCF.IO.Claims.ChunkKey;
+import me.Thomas.HCF.IO.Claims.Claim;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
+import me.Thomas.HCF.Utils.Chat.C;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
@@ -69,7 +77,6 @@ public class Faction {
 
     private boolean modified;
 
-    private Set<String> claims = new HashSet<>();
     private Map<UUID, Integer> members = new HashMap<>();
 
     /**
@@ -92,7 +99,6 @@ public class Faction {
         this.lives = 0;
         this.color = "BLUE";
         this.home = null;
-        this.claims = new HashSet<>();
         this.members = new HashMap<>();
         this.modified = true;
         this.open = false;
@@ -114,7 +120,6 @@ public class Faction {
         this.lives = 0;
         this.color = "BLUE";
         this.home = null;
-        this.claims = new HashSet<>();
         this.members = new HashMap<>();
         this.members.put(leader, MemberType.LEADER.getValue());
         this.modified = true;
@@ -163,10 +168,6 @@ public class Faction {
                 this.balance = resultSet.getDouble("balance");
                 this.lives = resultSet.getInt("lives");
 
-                this.claims = deserializeClaims(
-                        resultSet.getString("claims")
-                );
-
                 this.members = deserializeMembers(
                         resultSet.getString("members")
                 );
@@ -205,7 +206,6 @@ public class Faction {
         this.lives = 0;
         this.color = "BLUE";
         this.home = null;
-        this.claims = new HashSet<>();
         this.members = new HashMap<>();
         this.modified = true;
     }
@@ -217,11 +217,10 @@ public class Faction {
 
         String sql =
                 "INSERT OR REPLACE INTO factions "
-                        + "(uuid, type, name, leader, balance, lives, claims, "
+                        + "(uuid, type, name, leader, balance, lives, "
                         + "members, color, home, open, dtr, points, kothCaptures, announcement) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        String claimsValue = serializeClaims();
         String membersValue = serializeMembers();
         String homeValue = serializeLocation(home);
 
@@ -244,21 +243,20 @@ public class Faction {
 
             statement.setDouble(5, balance);
             statement.setInt(6, lives);
-            statement.setString(7, claimsValue);
-            statement.setString(8, membersValue);
-            statement.setString(9, color);
+            statement.setString(7, membersValue);
+            statement.setString(8, color);
 
             if (homeValue == null) {
-                statement.setNull(10, Types.VARCHAR);
+                statement.setNull(9, Types.VARCHAR);
             } else {
-                statement.setString(10, homeValue);
+                statement.setString(9, homeValue);
             }
 
-            statement.setBoolean(11, open);
-            statement.setDouble(12, dtr);
-            statement.setInt(13, points);
-            statement.setInt(14, kothCaptures);
-            statement.setString(15, announcement == null ? null : announcement);
+            statement.setBoolean(10, open);
+            statement.setDouble(11, dtr);
+            statement.setInt(12, points);
+            statement.setInt(13, kothCaptures);
+            statement.setString(14, announcement == null ? null : announcement);
 
             statement.executeUpdate();
 
@@ -271,20 +269,6 @@ public class Faction {
                     exception
             );
         }
-    }
-
-    private String serializeClaims() {
-        StringBuilder result = new StringBuilder();
-
-        for (String claim : claims) {
-            if (!result.isEmpty()) {
-                result.append(';');
-            }
-
-            result.append(claim);
-        }
-
-        return result.toString();
     }
 
     private String serializeMembers() {
@@ -466,26 +450,6 @@ public class Faction {
         return modified;
     }
 
-    public Set<String> getClaims() {
-        return claims;
-    }
-
-    public void addClaim(String claim) {
-        if (claims.add(claim)) {
-            modified = true;
-        }
-    }
-
-    public void removeClaim(String claim) {
-        if (claims.remove(claim)) {
-            modified = true;
-        }
-    }
-
-    public boolean hasClaim(String claim) {
-        return claims.contains(claim);
-    }
-
     public Map<UUID, Integer> getMembers() {
         return members;
     }
@@ -510,22 +474,6 @@ public class Faction {
 
     public Integer getMember(UUID member) {
         return members.get(member);
-    }
-
-    private Set<String> deserializeClaims(String serialized) {
-        Set<String> result = new HashSet<>();
-
-        if (serialized == null || serialized.isEmpty()) {
-            return result;
-        }
-
-        for (String claim : serialized.split(";")) {
-            if (!claim.isEmpty()) {
-                result.add(claim);
-            }
-        }
-
-        return result;
     }
 
     private Map<UUID, Integer> deserializeMembers(String serialized) {
@@ -664,5 +612,72 @@ public class Faction {
                 Main.getInstance(),
                 this::save
         );
+    }
+
+    public static boolean isNameInvalid(@NotNull String name, CommandSender p) {
+        if (Main.getInstance().getFaction(name) != null) {
+            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.already-exists")));
+            return true;
+        }
+        if (Main.getInstance().getConfig().getStringList("factions.name.blocked").stream()
+                .anyMatch(name::equalsIgnoreCase)) {
+            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.blocked")));
+            return true;
+        }
+        if (name.length() < Main.getInstance().getConfig().getInt("factions.name.min") || name.length() > Main.getInstance().getConfig().getInt("factions.name.max")) {
+            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.invalid-length")));
+            return true;
+        }
+        return false;
+    }
+
+    public static ItemStack getClaimWand() {
+        ItemStack wand = new ItemStack(Objects.requireNonNull(Material.matchMaterial(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.claim-wand.item")))));
+        ItemMeta meta = wand.getItemMeta();
+        ArrayList<Component> lore = new ArrayList<>();
+        for (String s : Main.getInstance().getConfig().getStringList("factions.claim-wand.lore")) {
+            lore.add(C.chat(s));
+        }
+        meta.lore(lore);
+        meta.displayName(C.chat(Main.getInstance().getConfig().getString("factions.claim-wand.name")));
+        wand.setItemMeta(meta);
+        return wand;
+    }
+
+    public static Faction getAtLocation(Location location) {
+        if (location == null || location.getWorld() == null) {
+            return null;
+        }
+
+        int x = location.getBlockX();
+        int z = location.getBlockZ();
+
+        ChunkKey key = new ChunkKey(
+                location.getWorld().getUID(),
+                Math.floorDiv(x, 16),
+                Math.floorDiv(z, 16)
+        );
+
+        List<Claim> possibleClaims =
+                Main.getInstance().getClaimsByChunk(key);
+
+        if (possibleClaims == null) {
+            return null;
+        }
+
+        for (Claim claim : possibleClaims) {
+            if (claim.contains(x, z)) {
+                return Faction.get(claim.faction());
+            }
+        }
+
+        return null;
+    }
+
+    public boolean hasClaim() {
+        for (Claim claim : Main.getInstance().getClaims()) {
+            if (claim.faction().equals(uuid)) return true;
+        }
+        return false;
     }
 }

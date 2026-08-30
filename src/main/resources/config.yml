@@ -47,4 +47,12 @@ factions:
     focus: PINK
   members:
     max: 10
+  claim-wand:
+    item: DIAMOND_HOE
+    name: "&bClaim Wand"
+    lore:
+      - "&eLeft click block for position one"
+      - "&eRight click block for position two"
+      - "&eShift left click air to claim"
+      - "&eShift right click air to cancel"
 

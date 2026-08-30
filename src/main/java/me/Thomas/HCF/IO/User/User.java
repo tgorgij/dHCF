@@ -1,5 +1,6 @@
 package me.Thomas.HCF.IO.User;
 
+import me.Thomas.HCF.IO.Claims.Claiming;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.Bukkit;
@@ -25,6 +26,7 @@ public class User {
     private long deathbanExpiry;
 
     private boolean modified;
+    private Claiming claiming;
 
     private Map<Timer.Type, Timer> timers =
             new EnumMap<>(Timer.Type.class);
@@ -104,6 +106,7 @@ public class User {
 
 
                 this.modified = false;
+                this.claiming = null;
             }
         } catch (SQLException | IllegalArgumentException exception) {
             Main.getInstance().getLogger().log(
@@ -124,6 +127,7 @@ public class User {
         this.timers = new EnumMap<>(Timer.Type.class);
         this.deathbanExpiry = 0;
         this.modified = true;
+        this.claiming = null;
 
         saveAsync();
     }
@@ -417,5 +421,13 @@ public class User {
                 Main.getInstance(),
                 this::save
         );
+    }
+
+    public Claiming getClaiming() {
+        return claiming;
+    }
+
+    public void setClaiming(Claiming claiming) {
+        this.claiming = claiming;
     }
 }

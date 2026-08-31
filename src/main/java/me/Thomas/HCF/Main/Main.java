@@ -7,6 +7,8 @@ import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserQuitEvent;
 import me.Thomas.HCF.Events.Player.Item.UserClaimEvent;
 import me.Thomas.HCF.Events.Player.Item.UserPearlEvent;
+import me.Thomas.HCF.Events.Player.Interact.UserInteractInFactionEvent;
+import me.Thomas.HCF.Events.Player.Movement.UserMoveFactionEvent;
 import me.Thomas.HCF.IO.Claims.ChunkKey;
 import me.Thomas.HCF.IO.Claims.Claim;
 import me.Thomas.HCF.IO.Database.DatabaseManager;
@@ -112,6 +114,8 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserPearlEvent(), this);
         pm.registerEvents(new UserQuitEvent(), this);
         pm.registerEvents(new UserClaimEvent(), this);
+        pm.registerEvents(new UserMoveFactionEvent(), this);
+        pm.registerEvents(new UserInteractInFactionEvent(), this);
     }
 
     private void loadInvites() {

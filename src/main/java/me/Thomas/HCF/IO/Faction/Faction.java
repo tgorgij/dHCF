@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +25,8 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class Faction {
+
+    private static final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
 
     public enum Type {
         SYSTEM,
@@ -73,6 +76,7 @@ public class Faction {
     private int points;
     private int kothCaptures;
     private String announcement;
+    private boolean deathban;
 
 
     private boolean modified;
@@ -106,6 +110,7 @@ public class Faction {
         this.points = 0;
         this.kothCaptures = 0;
         this.announcement = null;
+        this.deathban = true;
     }
 
     /**
@@ -128,6 +133,7 @@ public class Faction {
         this.points = 0;
         this.kothCaptures = 0;
         this.announcement = null;
+        this.deathban = true;
     }
 
     public static Faction get(UUID uuid) {
@@ -187,6 +193,8 @@ public class Faction {
 
                 this.announcement = resultSet.getString("announcement") == null ? null : resultSet.getString("announcement");
 
+                this.deathban = resultSet.getBoolean("deathban");
+
                 this.modified = false;
             }
         } catch (SQLException | IllegalArgumentException exception) {
@@ -208,6 +216,7 @@ public class Faction {
         this.home = null;
         this.members = new HashMap<>();
         this.modified = true;
+        this.deathban = true;
     }
 
     public void save() {
@@ -218,8 +227,8 @@ public class Faction {
         String sql =
                 "INSERT OR REPLACE INTO factions "
                         + "(uuid, type, name, leader, balance, lives, "
-                        + "members, color, home, open, dtr, points, kothCaptures, announcement) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        + "members, color, home, open, dtr, points, kothCaptures, announcement, deathban) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         String membersValue = serializeMembers();
         String homeValue = serializeLocation(home);
@@ -257,6 +266,7 @@ public class Faction {
             statement.setInt(12, points);
             statement.setInt(13, kothCaptures);
             statement.setString(14, announcement == null ? null : announcement);
+            statement.setBoolean(15, deathban);
 
             statement.executeUpdate();
 
@@ -679,5 +689,79 @@ public class Faction {
             if (claim.faction().equals(uuid)) return true;
         }
         return false;
+    }
+
+    public static boolean isInWilderness(Location location) {
+        if (location == null || location.getWorld() == null) return false;
+        int warzoneLimit;
+        switch (location.getWorld().getEnvironment()) {
+            case NETHER -> warzoneLimit = Main.getInstance().getConfig().getInt("factions.sizes.worlds.nether.warzone");
+            case THE_END -> {
+                return true;
+            }
+            default -> warzoneLimit = Main.getInstance().getConfig().getInt("factions.sizes.worlds.default.warzone");
+        }
+
+        int x = location.getBlockX();
+        int z = location.getBlockZ();
+
+        return Math.abs((long) x) > warzoneLimit
+                || Math.abs((long) z) > warzoneLimit;
+    }
+
+    public static boolean isInWarzoneBuildLimit(Location location) {
+        if (location == null || location.getWorld() == null) return false;
+        int warzoneLimit;
+        switch (location.getWorld().getEnvironment()) {
+            case NETHER -> warzoneLimit = Main.getInstance().getConfig().getInt("factions.sizes.worlds.nether.warzone-build-limit");
+            case THE_END -> {
+                return true;
+            }
+            default -> warzoneLimit = Main.getInstance().getConfig().getInt("factions.sizes.worlds.default.warzone-build-limit");
+        }
+
+        int x = location.getBlockX();
+        int z = location.getBlockZ();
+
+        return !(Math.abs((long) x) > warzoneLimit
+                || Math.abs((long) z) > warzoneLimit);
+    }
+
+    public boolean isDeathban() {
+        return deathban;
+    }
+
+    public void setDeathban(boolean deathban) {
+        this.deathban = deathban;
+    }
+
+    public String getFormattedName(User receiver) {
+        String name;
+        switch (type) {
+            case PLAYER -> {
+                if (!receiver.hasFaction()) {
+                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.color.enemy"))) + this.name;
+                } else if (receiver.getFaction().equals(this.uuid)) {
+                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.color.team"))) + this.name;
+                } else {
+                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.color.enemy"))) + this.name;
+                }
+            }
+            case KOTH -> name = C.getColorCode(this.color) + this.name + " KOTH";
+            case ROAD -> name = C.getColorCode(this.color) + this.name + " Road";
+            default -> name = C.getColorCode(this.color) + this.name;
+        }
+        return name;
+    }
+
+    public static String getNameAtLocation(Location location, User user) {
+        Faction faction = getAtLocation(location);
+        if (faction != null) {
+            return faction.getFormattedName(user);
+        }
+        if (isInWilderness(location)) {
+            return localeConfig.getString("faction.wilderness");
+        }
+        return localeConfig.getString("faction.warzone");
     }
 }

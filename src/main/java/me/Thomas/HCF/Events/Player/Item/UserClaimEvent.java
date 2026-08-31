@@ -40,11 +40,8 @@ public class UserClaimEvent implements Listener {
 
         Claiming claiming = user.getClaiming();
 
-        if (claiming.getOne() != null) {
-            resetPillar(claiming.getOne(), p);
-        }
-
         if (claiming.getTwo() == null) {
+            if (claiming.getOne() != null) resetPillar(claiming.getOne(), p);
             claiming.setOne(e.getClickedBlock().getLocation());
             generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
             p.sendMessage(C.chat(localeConfig.getString("claiming.success.one")));
@@ -58,11 +55,13 @@ public class UserClaimEvent implements Listener {
         }
 
         Claim claim = new Claim(claiming.getFaction(), one, two);
+        if (invalidSize(p, claim)) return;
         if (claim.intersects()) {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.intersects")));
             return;
         }
 
+        if (claiming.getOne() != null) resetPillar(claiming.getOne(), p);
         claiming.setOne(e.getClickedBlock().getLocation());
         generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.one")));
@@ -86,11 +85,8 @@ public class UserClaimEvent implements Listener {
 
         Claiming claiming = user.getClaiming();
 
-        if (claiming.getTwo() != null) {
-            resetPillar(claiming.getTwo(), p);
-        }
-
         if (claiming.getOne() == null) {
+            if (claiming.getTwo() != null) resetPillar(claiming.getTwo(), p);
             claiming.setTwo(e.getClickedBlock().getLocation());
             generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
             p.sendMessage(C.chat(localeConfig.getString("claiming.success.two")));
@@ -104,11 +100,13 @@ public class UserClaimEvent implements Listener {
         }
 
         Claim claim = new Claim(claiming.getFaction(), one, two);
+        if (invalidSize(p, claim)) return;
         if (claim.intersects()) {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.intersects")));
             return;
         }
 
+        if (claiming.getTwo() != null) resetPillar(claiming.getTwo(), p);
         claiming.setTwo(e.getClickedBlock().getLocation());
         generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.two")));
@@ -144,6 +142,7 @@ public class UserClaimEvent implements Listener {
         }
 
         Claim claim = new Claim(claiming.getFaction(), one, two);
+        if (invalidSize(p, claim)) return;
         if (claim.intersects()) {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.intersects")));
             return;
@@ -153,6 +152,18 @@ public class UserClaimEvent implements Listener {
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.claim")));
         user.setClaiming(null);
         p.getInventory().remove(claimWand);
+    }
+
+    private boolean invalidSize(Player p, Claim claim) {
+        if (claim.isTooSmall()) {
+            p.sendMessage(C.chat(localeConfig.getString("claiming.error.too-small")));
+            return true;
+        }
+        if (claim.isTooLarge()) {
+            p.sendMessage(C.chat(localeConfig.getString("claiming.error.too-large")));
+            return true;
+        }
+        return false;
     }
 
     private void generatePillar(Material material, Location location, Player p) {

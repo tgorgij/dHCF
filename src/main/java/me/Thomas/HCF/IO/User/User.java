@@ -27,6 +27,8 @@ public class User {
 
     private boolean modified;
     private Claiming claiming;
+    private UUID lastEnteredFaction;
+    private boolean bypass;
 
     private Map<Timer.Type, Timer> timers =
             new EnumMap<>(Timer.Type.class);
@@ -107,6 +109,8 @@ public class User {
 
                 this.modified = false;
                 this.claiming = null;
+                this.lastEnteredFaction = null;
+                this.bypass = false;
             }
         } catch (SQLException | IllegalArgumentException exception) {
             Main.getInstance().getLogger().log(
@@ -128,6 +132,8 @@ public class User {
         this.deathbanExpiry = 0;
         this.modified = true;
         this.claiming = null;
+        this.lastEnteredFaction = null;
+        this.bypass = false;
 
         saveAsync();
     }
@@ -429,5 +435,21 @@ public class User {
 
     public void setClaiming(Claiming claiming) {
         this.claiming = claiming;
+    }
+
+    public UUID getLastEnteredFaction() {
+        return lastEnteredFaction;
+    }
+
+    public void setLastEnteredFaction(UUID lastEnteredFaction) {
+        this.lastEnteredFaction = lastEnteredFaction;
+    }
+
+    public boolean isBypass() {
+        return bypass;
+    }
+
+    public void setBypass(boolean bypass) {
+        this.bypass = bypass;
     }
 }

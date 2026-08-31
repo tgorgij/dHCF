@@ -55,4 +55,16 @@ factions:
       - "&eRight click block for position two"
       - "&eShift left click air to claim"
       - "&eShift right click air to cancel"
+  sizes:
+    worlds:
+      default:
+        warzone-build-limit: 300
+        warzone: 750
+      nether:
+        warzone-build-limit: 80
+        warzone: 200
+  claim:
+    price:
+      base: 250
+      per-block: 0.25
 

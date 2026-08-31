@@ -13,6 +13,11 @@ public record Claim(
         Location one,
         Location two
 ) {
+    public static final int MIN_SIDE_LENGTH = 5;
+    public static final int MAX_CHUNKS = 16;
+    public static final int BLOCKS_PER_CHUNK = 16 * 16;
+    public static final long MAX_AREA = (long) MAX_CHUNKS * BLOCKS_PER_CHUNK;
+
     public Claim(
             UUID faction,
             UUID worldId,
@@ -74,6 +79,33 @@ public record Claim(
                 one.getBlockZ(),
                 two.getBlockZ()
         );
+    }
+
+    public int width() {
+        return maxX() - minX() + 1;
+    }
+
+    public int length() {
+        return maxZ() - minZ() + 1;
+    }
+
+    public long area() {
+        return (long) width() * length();
+    }
+
+    public boolean isTooSmall() {
+        return width() < MIN_SIDE_LENGTH || length() < MIN_SIDE_LENGTH;
+    }
+
+    public boolean isTooLarge() {
+        return area() > MAX_AREA;
+    }
+
+    public double price() {
+        double basePrice = Main.getInstance().getConfig().getDouble("factions.claim.price.base");
+        double pricePerBlock = Main.getInstance().getConfig().getDouble("factions.claim.price.per-block");
+        long includedArea = (long) MIN_SIDE_LENGTH * MIN_SIDE_LENGTH;
+        return basePrice + Math.max(0L, area() - includedArea) * pricePerBlock;
     }
 
     public boolean contains(int x, int z) {

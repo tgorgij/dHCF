@@ -36,7 +36,7 @@ public class SetLocationCommand implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.setcolor.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.setlocation.usage")).replace("%alias%", alias)));
             return true;
         }
         Faction faction = Faction.get(args[0]);

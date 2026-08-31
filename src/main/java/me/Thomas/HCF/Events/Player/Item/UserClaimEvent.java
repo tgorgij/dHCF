@@ -18,6 +18,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.Objects;
+
 public class UserClaimEvent implements Listener {
 
     private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
@@ -36,9 +38,27 @@ public class UserClaimEvent implements Listener {
         if (user.getClaiming() == null) return;
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
+        if (user.getFaction() == null) {
+            user.setClaiming(null);
+            p.getInventory().remove(claimWand);
+            return;
+        }
+        Faction faction = Faction.get(user.getFaction());
+        if (faction == null) {
+            user.setClaiming(null);
+            p.getInventory().remove(claimWand);
+            return;
+        }
         if (e.getClickedBlock() == null) return;
 
         Claiming claiming = user.getClaiming();
+
+        if (!claiming.isClaimingFor()) {
+            if (!Faction.isInWilderness(e.getClickedBlock().getLocation())) {
+                p.sendMessage(C.chat(localeConfig.getString("claiming.error.not-in-wilderness")));
+                return;
+            }
+        }
 
         if (claiming.getTwo() == null) {
             if (claiming.getOne() != null) resetPillar(claiming.getOne(), p);
@@ -65,6 +85,8 @@ public class UserClaimEvent implements Listener {
         claiming.setOne(e.getClickedBlock().getLocation());
         generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.one")));
+        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("claiming.purchase.cost")).replace("%cost%", C.getFormattedMoney(claim.price())).replace("%size-x%", claim.width() + "").replace("%size-z%", claim.length() + "")));
+
     }
 
     @EventHandler
@@ -81,9 +103,28 @@ public class UserClaimEvent implements Listener {
         if (user.getClaiming() == null) return;
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
+        if (user.getFaction() == null) {
+            user.setClaiming(null);
+            p.getInventory().remove(claimWand);
+            return;
+        }
+        Faction faction = Faction.get(user.getFaction());
+        if (faction == null) {
+            user.setClaiming(null);
+            p.getInventory().remove(claimWand);
+            return;
+        }
+
         if (e.getClickedBlock() == null) return;
 
         Claiming claiming = user.getClaiming();
+
+        if (!claiming.isClaimingFor()) {
+            if (!Faction.isInWilderness(e.getClickedBlock().getLocation())) {
+                p.sendMessage(C.chat(localeConfig.getString("claiming.error.not-in-wilderness")));
+                return;
+            }
+        }
 
         if (claiming.getOne() == null) {
             if (claiming.getTwo() != null) resetPillar(claiming.getTwo(), p);
@@ -110,6 +151,38 @@ public class UserClaimEvent implements Listener {
         claiming.setTwo(e.getClickedBlock().getLocation());
         generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.two")));
+
+        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("claiming.purchase.cost")).replace("%cost%", C.getFormattedMoney(claim.price())).replace("%size-x%", claim.width() + "").replace("%size-z%", claim.length() + "")));
+    }
+
+    @EventHandler
+    public void onRightClickAir(PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        Action a = e.getAction();
+        User user = User.get(p);
+        ItemStack claimWand = Faction.getClaimWand();
+        if (!a.equals(Action.RIGHT_CLICK_AIR) || !p.isSneaking()) return;
+        if (e.getItem() == null) return;
+        if (!e.getItem().hasItemMeta()) return;
+        if (!e.getItem().getItemMeta().hasDisplayName()) return;
+        if (!e.getItem().getItemMeta().hasLore()) return;
+        if (user.getClaiming() == null) return;
+        if (!e.getItem().isSimilar(claimWand)) return;
+        e.setCancelled(true);
+        if (user.getFaction() == null) {
+            user.setClaiming(null);
+            p.getInventory().remove(claimWand);
+            return;
+        }
+        Faction faction = Faction.get(user.getFaction());
+        if (faction == null) {
+            user.setClaiming(null);
+            p.getInventory().remove(claimWand);
+            return;
+        }
+        p.sendMessage(C.chat(localeConfig.getString("claiming.success.cancel")));
+        user.setClaiming(null);
+        p.getInventory().remove(claimWand);
     }
 
     @EventHandler
@@ -118,7 +191,7 @@ public class UserClaimEvent implements Listener {
         Action a = e.getAction();
         User user = User.get(p);
         ItemStack claimWand = Faction.getClaimWand();
-        if (!a.equals(Action.LEFT_CLICK_AIR) && !p.isSneaking()) return;
+        if (!a.equals(Action.LEFT_CLICK_AIR) || !p.isSneaking()) return;
         if (e.getItem() == null) return;
         if (!e.getItem().hasItemMeta()) return;
         if (!e.getItem().getItemMeta().hasDisplayName()) return;
@@ -126,6 +199,17 @@ public class UserClaimEvent implements Listener {
         if (user.getClaiming() == null) return;
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
+        if (user.getFaction() == null) {
+            user.setClaiming(null);
+            p.getInventory().remove(claimWand);
+            return;
+        }
+        Faction faction = Faction.get(user.getFaction());
+        if (faction == null) {
+            user.setClaiming(null);
+            p.getInventory().remove(claimWand);
+            return;
+        }
 
         Claiming claiming = user.getClaiming();
 
@@ -148,13 +232,31 @@ public class UserClaimEvent implements Listener {
             return;
         }
 
-        Main.getInstance().addClaim(claiming.getFaction(), one, two);
+        double cost = claim.price();
+        if (!claiming.isClaimingFor()) {
+            if (faction.getBalance() < cost) {
+                p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("claiming.error.not-enough-money"))));
+                return;
+            }
+        }
+
+        if (!Main.getInstance().addClaim(claiming.getFaction(), one, two)) {
+            p.sendMessage(C.chat(localeConfig.getString("claiming.error.save")));
+            return;
+        }
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.claim")));
+        if (!claiming.isClaimingFor()) {
+            faction.setBalance(faction.getBalance() - cost);
+        }
         user.setClaiming(null);
         p.getInventory().remove(claimWand);
     }
 
     private boolean invalidSize(Player p, Claim claim) {
+        User user = User.get(p);
+        Claiming claiming = user.getClaiming();
+        if (claiming == null) return true;
+        if (claiming.isClaimingFor()) return false;
         if (claim.isTooSmall()) {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.too-small")));
             return true;

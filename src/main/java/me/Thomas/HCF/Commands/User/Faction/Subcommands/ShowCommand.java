@@ -149,7 +149,7 @@ public class ShowCommand implements Subcommand {
             if (s.contains("%hq%")) {
                 Location home = faction.getHome();
                 if (home != null) {
-                    s = s.replace("%hq%", Objects.requireNonNull(Main.getInstance().getConfig().getString("primary.location-format")).replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
+                    s = s.replace("%hq%", Objects.requireNonNull(Main.getInstance().getConfig().getString("settings.location-format")).replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
                 } else {
                     s = s.replace("%hq%", Objects.requireNonNull(localeConfig.getString("primary.none")));
                 }
@@ -262,7 +262,7 @@ public class ShowCommand implements Subcommand {
             if (s.contains("%hq%")) {
                 Location home = faction.getHome();
                 if (home != null) {
-                    s = s.replace("%hq%", Objects.requireNonNull(Main.getInstance().getConfig().getString("primary.location-format")).replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
+                    s = s.replace("%hq%", Objects.requireNonNull(Main.getInstance().getConfig().getString("settings.location-format")).replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
                 } else {
                     s = s.replace("%hq%", Objects.requireNonNull(localeConfig.getString("primary.none")));
                 }

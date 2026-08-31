@@ -573,47 +573,6 @@ public class Main extends JavaPlugin {
         }
     }
 
-    public void saveClaimAsync(Claim claim) {
-        String sql = """
-        INSERT INTO factionClaims (
-            faction,
-            world,
-            minX,
-            maxX,
-            minZ,
-            maxZ
-        )
-        VALUES (?, ?, ?, ?, ?, ?)
-        """;
-
-        Bukkit.getScheduler().runTaskAsynchronously(
-                this,
-                () -> {
-                    try (
-                            Connection connection = databaseManager.getConnection();
-                            PreparedStatement statement =
-                                    connection.prepareStatement(sql)
-                    ) {
-                        statement.setString(1, claim.faction().toString());
-                        statement.setString(2, claim.world().toString());
-                        statement.setInt(3, claim.minX());
-                        statement.setInt(4, claim.maxX());
-                        statement.setInt(5, claim.minZ());
-                        statement.setInt(6, claim.maxZ());
-
-                        statement.executeUpdate();
-                    } catch (SQLException exception) {
-                        getLogger().log(
-                                Level.SEVERE,
-                                "Could not save faction claim",
-                                exception
-                        );
-                    }
-                }
-        );
-    }
-
-
     public List<Claim> getClaims() {
         return claims;
     }
@@ -658,10 +617,12 @@ public class Main extends JavaPlugin {
             }
         }
 
+        if (!saveClaim(candidate)) {
+            return false;
+        }
+
         claims.add(candidate);
         indexClaim(candidate);
-        saveClaimAsync(candidate);
-
         return true;
     }
 }

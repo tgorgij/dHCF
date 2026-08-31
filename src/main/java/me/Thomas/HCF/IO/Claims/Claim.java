@@ -1,5 +1,6 @@
 package me.Thomas.HCF.IO.Claims;
 
+import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

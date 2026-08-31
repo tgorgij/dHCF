@@ -80,8 +80,8 @@ public class Faction {
 
 
     private boolean modified;
-
     private Map<UUID, Integer> members = new HashMap<>();
+    private boolean claiming;
 
     /**
      * Loads an existing faction by UUID.
@@ -111,6 +111,7 @@ public class Faction {
         this.kothCaptures = 0;
         this.announcement = null;
         this.deathban = true;
+        this.claiming = false;
     }
 
     /**
@@ -134,6 +135,7 @@ public class Faction {
         this.kothCaptures = 0;
         this.announcement = null;
         this.deathban = true;
+        this.claiming = false;
     }
 
     public static Faction get(UUID uuid) {
@@ -196,6 +198,8 @@ public class Faction {
                 this.deathban = resultSet.getBoolean("deathban");
 
                 this.modified = false;
+
+                this.claiming = false;
             }
         } catch (SQLException | IllegalArgumentException exception) {
             Main.getInstance().getLogger().log(
@@ -217,6 +221,7 @@ public class Faction {
         this.members = new HashMap<>();
         this.modified = true;
         this.deathban = true;
+        this.claiming = false;
     }
 
     public void save() {
@@ -225,10 +230,25 @@ public class Faction {
         }
 
         String sql =
-                "INSERT OR REPLACE INTO factions "
+                "INSERT INTO factions "
                         + "(uuid, type, name, leader, balance, lives, "
                         + "members, color, home, open, dtr, points, kothCaptures, announcement, deathban) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "ON CONFLICT(uuid) DO UPDATE SET "
+                        + "type = excluded.type, "
+                        + "name = excluded.name, "
+                        + "leader = excluded.leader, "
+                        + "balance = excluded.balance, "
+                        + "lives = excluded.lives, "
+                        + "members = excluded.members, "
+                        + "color = excluded.color, "
+                        + "home = excluded.home, "
+                        + "open = excluded.open, "
+                        + "dtr = excluded.dtr, "
+                        + "points = excluded.points, "
+                        + "kothCaptures = excluded.kothCaptures, "
+                        + "announcement = excluded.announcement, "
+                        + "deathban = excluded.deathban";
 
         String membersValue = serializeMembers();
         String homeValue = serializeLocation(home);
@@ -740,11 +760,11 @@ public class Faction {
         switch (type) {
             case PLAYER -> {
                 if (!receiver.hasFaction()) {
-                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.color.enemy"))) + this.name;
+                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.colors.enemy"))) + this.name;
                 } else if (receiver.getFaction().equals(this.uuid)) {
-                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.color.team"))) + this.name;
+                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.colors.team"))) + this.name;
                 } else {
-                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.color.enemy"))) + this.name;
+                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.colors.enemy"))) + this.name;
                 }
             }
             case KOTH -> name = C.getColorCode(this.color) + this.name + " KOTH";
@@ -763,5 +783,13 @@ public class Faction {
             return localeConfig.getString("faction.wilderness");
         }
         return localeConfig.getString("faction.warzone");
+    }
+
+    public boolean isClaiming() {
+        return claiming;
+    }
+
+    public void setClaiming(boolean claiming) {
+        this.claiming = claiming;
     }
 }

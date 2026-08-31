@@ -49,7 +49,7 @@ public class ClaimforCommand implements Subcommand {
         }
         User user = User.get(p);
         if (user.getClaiming() != null) {
-            p.sendMessage(C.chat(localeConfig.getString("commands.faction.claimfor.already")));
+            p.sendMessage(C.chat(localeConfig.getString("claiming.error.faction-already")));
             return true;
         }
         String name = args[0];

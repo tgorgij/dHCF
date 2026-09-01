@@ -4,6 +4,7 @@ import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
+import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -25,6 +26,14 @@ public class UserMoveFactionEvent implements Listener {
     public void onMove(PlayerMoveEvent e) {
         Location from = e.getFrom();
         Location to = e.getTo();
+        Player p = e.getPlayer();
+        User user = User.get(p);
+
+        if (hasChangedPosition(from, to) && user.hasTimer(Timer.Type.HOME)) {
+            user.removeTimer(Timer.Type.HOME);
+            p.sendMessage(C.chat(localeConfig.getString("primary.teleport.cancel")));
+        }
+
         if (from.getWorld().equals(to.getWorld())
                 && from.getBlockX() == to.getBlockX()
                 && from.getBlockZ() == to.getBlockZ()) return;
@@ -33,11 +42,16 @@ public class UserMoveFactionEvent implements Listener {
         Faction toFaction = Faction.getAtLocation(to);
         if (sameTerritory(from, to, fromFaction, toFaction)) return;
 
-        Player p = e.getPlayer();
-        User user = User.get(p);
         sendMessage(p, user, "leaving", from, fromFaction);
         sendMessage(p, user, "entering", to, toFaction);
         user.setLastEnteredFaction(toFaction == null ? null : toFaction.getUUID());
+    }
+
+    private boolean hasChangedPosition(Location from, Location to) {
+        return !from.getWorld().equals(to.getWorld())
+                || from.getBlockX() != to.getBlockX()
+                || from.getBlockY() != to.getBlockY()
+                || from.getBlockZ() != to.getBlockZ();
     }
 
     private boolean sameTerritory(Location from, Location to, Faction fromFaction, Faction toFaction) {

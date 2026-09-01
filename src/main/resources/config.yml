@@ -67,4 +67,6 @@ factions:
     price:
       base: 250
       per-block: 0.25
+  home:
+    disable-in-end: false
 

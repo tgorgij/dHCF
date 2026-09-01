@@ -204,6 +204,10 @@ public class User {
         StringBuilder result = new StringBuilder();
 
         for (Map.Entry<Timer.Type, Timer> entry : timers.entrySet()) {
+            if (entry.getKey() == Timer.Type.HOME) {
+                continue;
+            }
+
             Timer timer = entry.getValue();
 
             if (!result.isEmpty()) {
@@ -243,6 +247,10 @@ public class User {
 
             try {
                 Timer.Type type = Timer.Type.valueOf(values[0]);
+                if (type == Timer.Type.HOME) {
+                    continue;
+                }
+
                 long expires = Long.parseLong(values[1]);
                 long pausedTime = Long.parseLong(values[2]);
                 boolean pauseOnLogout = Boolean.parseBoolean(values[3]);

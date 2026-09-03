@@ -74,6 +74,7 @@ public class ClaimCommand implements Subcommand {
         inventory.setItem(emptySlot, item);
         inventory.setItem(0, Faction.getClaimWand());
         user.setClaiming(new Claiming(faction.getUUID(), false));
+        Claiming.showNearbyClaims(p);
         p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.claim.success"))));
         return true;
     }

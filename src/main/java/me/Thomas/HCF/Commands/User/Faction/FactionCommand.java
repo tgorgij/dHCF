@@ -50,6 +50,7 @@ public class FactionCommand implements TabExecutor {
         register(new ClaimCommand());
         register(new SetHomeCommand());
         register(new HomeCommand());
+        register(new MapCommand());
     }
 
     private void register(Subcommand subcommand) {
@@ -134,4 +135,5 @@ public class FactionCommand implements TabExecutor {
             sender.sendMessage(C.chat(s));
         }
     }
+
 }

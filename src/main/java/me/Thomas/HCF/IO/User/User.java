@@ -1,5 +1,6 @@
 package me.Thomas.HCF.IO.User;
 
+import me.Thomas.HCF.IO.Claims.Claim;
 import me.Thomas.HCF.IO.Claims.Claiming;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Timer.Timer;
@@ -29,6 +30,7 @@ public class User {
     private Claiming claiming;
     private UUID lastEnteredFaction;
     private boolean bypass;
+    private ArrayList<Claim> map;
 
     private Map<Timer.Type, Timer> timers =
             new EnumMap<>(Timer.Type.class);
@@ -111,6 +113,7 @@ public class User {
                 this.claiming = null;
                 this.lastEnteredFaction = null;
                 this.bypass = false;
+                this.map = new ArrayList<>();
             }
         } catch (SQLException | IllegalArgumentException exception) {
             Main.getInstance().getLogger().log(
@@ -134,6 +137,7 @@ public class User {
         this.claiming = null;
         this.lastEnteredFaction = null;
         this.bypass = false;
+        this.map = new ArrayList<>();
 
         saveAsync();
     }
@@ -459,5 +463,9 @@ public class User {
 
     public void setBypass(boolean bypass) {
         this.bypass = bypass;
+    }
+
+    public ArrayList<Claim> getMap() {
+        return map;
     }
 }

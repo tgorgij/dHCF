@@ -11,6 +11,7 @@ import me.Thomas.HCF.Events.Player.Interact.UserInteractInFactionEvent;
 import me.Thomas.HCF.Events.Player.Movement.UserMoveFactionEvent;
 import me.Thomas.HCF.IO.Claims.ChunkKey;
 import me.Thomas.HCF.IO.Claims.Claim;
+import me.Thomas.HCF.IO.Claims.Claiming;
 import me.Thomas.HCF.IO.Database.DatabaseManager;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -503,8 +504,31 @@ public class Main extends JavaPlugin {
         Faction faction = factions.remove(uuid);
         if (faction != null) {
             factionNames.remove(faction.getName().toUpperCase(Locale.ROOT));
-            if (faction.isModified()) faction.saveAsync();
         }
+    }
+
+    public void removeClaimsForFaction(UUID factionId) {
+        for (User user : users.values()) {
+            List<Claim> displayedClaims = user.getMap().stream()
+                    .filter(claim -> claim.faction().equals(factionId))
+                    .toList();
+
+            Player player = Bukkit.getPlayer(user.getUUID());
+            if (player != null) {
+                for (Claim claim : displayedClaims) {
+                    Claiming.resetClaimPillars(claim, player);
+                }
+            }
+
+            user.getMap().removeAll(displayedClaims);
+        }
+
+        claims.removeIf(claim -> claim.faction().equals(factionId));
+
+        claimsByChunk.entrySet().removeIf(entry -> {
+            entry.getValue().removeIf(claim -> claim.faction().equals(factionId));
+            return entry.getValue().isEmpty();
+        });
     }
 
     public void renameFaction(UUID uuid, String name) {

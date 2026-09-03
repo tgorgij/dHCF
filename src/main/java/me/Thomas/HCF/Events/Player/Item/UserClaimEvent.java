@@ -7,8 +7,6 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,7 +14,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Objects;
 
@@ -61,9 +58,9 @@ public class UserClaimEvent implements Listener {
         }
 
         if (claiming.getTwo() == null) {
-            if (claiming.getOne() != null) resetPillar(claiming.getOne(), p);
+            if (claiming.getOne() != null) Claiming.resetPillar(claiming.getOne(), p);
             claiming.setOne(e.getClickedBlock().getLocation());
-            generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
+            Claiming.generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
             p.sendMessage(C.chat(localeConfig.getString("claiming.success.one")));
             return;
         }
@@ -81,9 +78,9 @@ public class UserClaimEvent implements Listener {
             return;
         }
 
-        if (claiming.getOne() != null) resetPillar(claiming.getOne(), p);
+        Claiming.resetSelectionPillars(claiming, p);
         claiming.setOne(e.getClickedBlock().getLocation());
-        generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
+        Claiming.generateClaimPillars(claim, claiming.getPillar(), p);
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.one")));
         p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("claiming.purchase.cost")).replace("%cost%", C.getFormattedMoney(claim.price())).replace("%size-x%", claim.width() + "").replace("%size-z%", claim.length() + "")));
 
@@ -127,9 +124,9 @@ public class UserClaimEvent implements Listener {
         }
 
         if (claiming.getOne() == null) {
-            if (claiming.getTwo() != null) resetPillar(claiming.getTwo(), p);
+            if (claiming.getTwo() != null) Claiming.resetPillar(claiming.getTwo(), p);
             claiming.setTwo(e.getClickedBlock().getLocation());
-            generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
+            Claiming.generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
             p.sendMessage(C.chat(localeConfig.getString("claiming.success.two")));
             return;
         }
@@ -147,9 +144,9 @@ public class UserClaimEvent implements Listener {
             return;
         }
 
-        if (claiming.getTwo() != null) resetPillar(claiming.getTwo(), p);
+        Claiming.resetSelectionPillars(claiming, p);
         claiming.setTwo(e.getClickedBlock().getLocation());
-        generatePillar(claiming.getPillar(), e.getClickedBlock().getLocation(), p);
+        Claiming.generateClaimPillars(claim, claiming.getPillar(), p);
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.two")));
 
         p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("claiming.purchase.cost")).replace("%cost%", C.getFormattedMoney(claim.price())).replace("%size-x%", claim.width() + "").replace("%size-z%", claim.length() + "")));
@@ -169,17 +166,7 @@ public class UserClaimEvent implements Listener {
         if (user.getClaiming() == null) return;
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
-        if (user.getFaction() == null) {
-            user.setClaiming(null);
-            p.getInventory().remove(claimWand);
-            return;
-        }
-        Faction faction = Faction.get(user.getFaction());
-        if (faction == null) {
-            user.setClaiming(null);
-            p.getInventory().remove(claimWand);
-            return;
-        }
+        Claiming.hidePillars(p);
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.cancel")));
         user.setClaiming(null);
         p.getInventory().remove(claimWand);
@@ -244,6 +231,9 @@ public class UserClaimEvent implements Listener {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.save")));
             return;
         }
+        if (!user.getMap().contains(claim)) {
+            user.getMap().add(claim);
+        }
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.claim")));
         if (!claiming.isClaimingFor()) {
             faction.setBalance(faction.getBalance() - cost);
@@ -268,32 +258,4 @@ public class UserClaimEvent implements Listener {
         return false;
     }
 
-    private void generatePillar(Material material, Location location, Player p) {
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                World world = location.getWorld();
-                for (int i = world.getMinHeight(); i < world.getMaxHeight(); i++) {
-                    Location loc = new Location(world, location.getBlockX(), i, location.getBlockZ());
-                    int block = i % 4;
-                    if (!world.getBlockAt(loc).isEmpty()) continue;
-                    if (block == 0) {
-                        p.sendBlockChange(loc, material.createBlockData());
-                    } else {
-                        p.sendBlockChange(loc, Material.GLASS.createBlockData());
-                    }
-                }
-            }
-        }.runTaskLater(Main.getInstance(), 1);
-    }
-
-    private void resetPillar(Location location, Player p) {
-        World world = location.getWorld();
-        for (int i = world.getMinHeight(); i < world.getMaxHeight(); i++) {
-            Location loc = new Location(world, location.getBlockX(), i, location.getBlockZ());
-            if (!world.getBlockAt(loc).isEmpty()) continue;
-            p.sendBlockChange(loc, Material.AIR.createBlockData());
-        }
-    }
 }

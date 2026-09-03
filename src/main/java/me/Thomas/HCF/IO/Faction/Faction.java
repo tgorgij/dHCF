@@ -82,6 +82,7 @@ public class Faction {
     private boolean modified;
     private Map<UUID, Integer> members = new HashMap<>();
     private boolean claiming;
+    private volatile boolean disbanding;
 
     /**
      * Loads an existing faction by UUID.
@@ -224,8 +225,8 @@ public class Faction {
         this.claiming = false;
     }
 
-    public void save() {
-        if (!modified) {
+    public synchronized void save() {
+        if (!modified || disbanding) {
             return;
         }
 
@@ -609,15 +610,9 @@ public class Faction {
         return dtr <= 0;
     }
 
-    public void disband() {
-        for (UUID member : members.keySet()) {
-            User user = Main.getInstance().getUser(member);
-            user.setFaction(null);
-            user.saveAsync();
-        }
-        Main.getInstance().removeFaction(uuid);
-
+    public synchronized void disband() {
         String sql = "DELETE FROM factions WHERE uuid = ?";
+        disbanding = true;
 
         try (
                 Connection connection =
@@ -628,7 +623,17 @@ public class Faction {
         ) {
             statement.setString(1, uuid.toString());
             statement.executeUpdate();
+
+            for (UUID member : members.keySet()) {
+                User user = Main.getInstance().getUser(member);
+                user.setFaction(null);
+                user.saveAsync();
+            }
+
+            Main.getInstance().removeClaimsForFaction(uuid);
+            Main.getInstance().removeFaction(uuid);
         } catch (SQLException exception) {
+            disbanding = false;
             Main.getInstance().getLogger().log(
                     Level.SEVERE,
                     "Could not delete faction " + uuid,
@@ -791,5 +796,30 @@ public class Faction {
 
     public void setClaiming(boolean claiming) {
         this.claiming = claiming;
+    }
+
+    public static List<Claim> getClaimsNearChunk(ChunkKey chunkKey, int radius) {
+        if (chunkKey == null) {
+            return Collections.emptyList();
+        }
+        if (radius < 0) {
+            throw new IllegalArgumentException("Radius cannot be negative");
+        }
+
+        Set<Claim> nearbyClaims = new LinkedHashSet<>();
+
+        for (int chunkX = chunkKey.chunkX() - radius; chunkX <= chunkKey.chunkX() + radius; chunkX++) {
+            for (int chunkZ = chunkKey.chunkZ() - radius; chunkZ <= chunkKey.chunkZ() + radius; chunkZ++) {
+                List<Claim> claimsInChunk = Main.getInstance().getClaimsByChunk(
+                        new ChunkKey(chunkKey.worldId(), chunkX, chunkZ)
+                );
+
+                if (claimsInChunk != null) {
+                    nearbyClaims.addAll(claimsInChunk);
+                }
+            }
+        }
+
+        return new ArrayList<>(nearbyClaims);
     }
 }

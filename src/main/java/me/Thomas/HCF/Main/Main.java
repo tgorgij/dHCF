@@ -11,11 +11,14 @@ import me.Thomas.HCF.Events.Player.Interact.UserInteractInFactionEvent;
 import me.Thomas.HCF.Events.Player.Movement.UserMoveFactionEvent;
 import me.Thomas.HCF.IO.Claims.ChunkKey;
 import me.Thomas.HCF.IO.Claims.Claim;
+import me.Thomas.HCF.IO.Claims.ClaimIndex;
 import me.Thomas.HCF.IO.Claims.Claiming;
 import me.Thomas.HCF.IO.Database.DatabaseManager;
+import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Utils.Scoreboard.BoardHandler;
+import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -23,7 +26,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.*;
 import java.util.*;
@@ -37,6 +39,7 @@ public class Main extends JavaPlugin {
     private FileConfiguration scoreboardConfig;
     private FileConfiguration messagesConfig;
     private BoardHandler boardHandler;
+    private boolean dataLoaded;
 
     // Users
     private final HashMap<UUID, User> users = new HashMap<>();
@@ -52,7 +55,10 @@ public class Main extends JavaPlugin {
 
     // Claims
     private final List<Claim> claims = new ArrayList<>();
-    private final Map<ChunkKey, List<Claim>> claimsByChunk = new HashMap<>();
+    private final ClaimIndex claimIndex = new ClaimIndex();
+
+    // Server Timers
+    private final Map<ServerTimer.Type, ServerTimer> serverTimers = new HashMap<>();
 
     public Main() {
         instance = this;
@@ -71,27 +77,32 @@ public class Main extends JavaPlugin {
         loadLocale();
         loadScoreboard();
         loadMessages();
-        boardHandler = new BoardHandler();
 
         loadData();
         loadInvites();
         loadClaims();
+        dataLoaded = true;
+        boardHandler = new BoardHandler();
 
         getLogger().info("dHCF has been enabled with SQLite support!");
         events();
         commands();
 
-        checkUsers();
-        checkFactions();
+        Bukkit.getScheduler().runTaskTimer(this, this::saveAll, 20 * 60 * 5, 20 * 60 * 5);
     }
 
     @Override
     public void onDisable() {
-        for (User user : users.values()) {
-            user.save();
-        }
-        for (Faction faction : factions.values()) {
-            faction.save();
+        if (boardHandler != null) boardHandler.close();
+        if (databaseManager != null) {
+            if (dataLoaded) {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    User user = users.get(player.getUniqueId());
+                    if (user != null) user.pauseTimers();
+                }
+                saveAll();
+            }
+            databaseManager.close();
         }
 
         getLogger().info("dHCF has been disabled.");
@@ -100,11 +111,17 @@ public class Main extends JavaPlugin {
     private void commands() {
 
         // User
-        Objects.requireNonNull(getCommand("faction")).setExecutor(new FactionCommand()); Objects.requireNonNull(getCommand("faction")).setTabCompleter(new FactionCommand());
-        Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand()); Objects.requireNonNull(getCommand("balance")).setTabCompleter(new BalanceCommand());
+        FactionCommand factionCommand = new FactionCommand();
+        Objects.requireNonNull(getCommand("faction")).setExecutor(factionCommand);
+        Objects.requireNonNull(getCommand("faction")).setTabCompleter(factionCommand);
+        BalanceCommand balanceCommand = new BalanceCommand();
+        Objects.requireNonNull(getCommand("balance")).setExecutor(balanceCommand);
+        Objects.requireNonNull(getCommand("balance")).setTabCompleter(balanceCommand);
 
         // Admin
-        Objects.requireNonNull(getCommand("economy")).setExecutor(new EconomyCommand()); Objects.requireNonNull(getCommand("economy")).setTabCompleter(new EconomyCommand());
+        EconomyCommand economyCommand = new EconomyCommand();
+        Objects.requireNonNull(getCommand("economy")).setExecutor(economyCommand);
+        Objects.requireNonNull(getCommand("economy")).setTabCompleter(economyCommand);
     }
 
     private void events() {
@@ -121,8 +138,8 @@ public class Main extends JavaPlugin {
 
     private void loadInvites() {
         String sql = """
-            SELECT faction, user
-            FROM factionInvites
+            SELECT i.faction, i.user
+            FROM factionInvites i JOIN factions f ON f.uuid = i.faction
             """;
 
         try (
@@ -148,11 +165,7 @@ public class Main extends JavaPlugin {
                         .add(userUuid);
             }
         } catch (SQLException | IllegalArgumentException exception) {
-            getLogger().log(
-                    Level.SEVERE,
-                    "Could not load faction invites",
-                    exception
-            );
+            throw new IllegalStateException("Could not load faction invites", exception);
         }
     }
 
@@ -185,32 +198,9 @@ public class Main extends JavaPlugin {
     }
 
     private void saveInviteAsync(UUID factionUuid, UUID userUuid) {
-        String sql = """
-            INSERT OR IGNORE INTO factionInvites (faction, user)
-            VALUES (?, ?)
-            """;
-
-        Bukkit.getScheduler().runTaskAsynchronously(
-                this,
-                () -> {
-                    try (
-                            Connection connection =
-                                    databaseManager.getConnection();
-                            PreparedStatement statement =
-                                    connection.prepareStatement(sql)
-                    ) {
-                        statement.setString(1, factionUuid.toString());
-                        statement.setString(2, userUuid.toString());
-                        statement.executeUpdate();
-                    } catch (SQLException exception) {
-                        getLogger().log(
-                                Level.SEVERE,
-                                "Could not save faction invite",
-                                exception
-                        );
-                    }
-                }
-        );
+        databaseManager.save(List.of(new SaveSnapshot(
+                "INSERT OR IGNORE INTO factionInvites (faction, user) VALUES (?, ?)", () -> {},
+                factionUuid.toString(), userUuid.toString())));
     }
 
     public boolean removeInvite(UUID factionUuid, UUID userUuid) {
@@ -244,32 +234,9 @@ public class Main extends JavaPlugin {
     }
 
     private void deleteInviteAsync(UUID factionUuid, UUID userUuid) {
-        String sql = """
-            DELETE FROM factionInvites
-            WHERE faction = ? AND user = ?
-            """;
-
-        Bukkit.getScheduler().runTaskAsynchronously(
-                this,
-                () -> {
-                    try (
-                            Connection connection =
-                                    databaseManager.getConnection();
-                            PreparedStatement statement =
-                                    connection.prepareStatement(sql)
-                    ) {
-                        statement.setString(1, factionUuid.toString());
-                        statement.setString(2, userUuid.toString());
-                        statement.executeUpdate();
-                    } catch (SQLException exception) {
-                        getLogger().log(
-                                Level.SEVERE,
-                                "Could not delete faction invite",
-                                exception
-                        );
-                    }
-                }
-        );
+        databaseManager.save(List.of(new SaveSnapshot(
+                "DELETE FROM factionInvites WHERE faction = ? AND user = ?", () -> {},
+                factionUuid.toString(), userUuid.toString())));
     }
 
     public boolean hasInvite(UUID factionUuid, UUID userUuid) {
@@ -305,12 +272,12 @@ public class Main extends JavaPlugin {
                 ResultSet usersResultSet = usersStatement.executeQuery()
         ) {
             while (usersResultSet.next()) {
-                User user = new User(UUID.fromString(usersResultSet.getString("uuid")));
+                User user = new User(usersResultSet);
                 users.put(user.getUUID(), user);
                 userNames.put(user.getName().toUpperCase(Locale.ROOT), user);
             }
         } catch (SQLException exception) {
-            exception.printStackTrace();
+            throw new IllegalStateException("Could not load persisted data", exception);
         }
 
         // 2. Process Factions independently
@@ -320,12 +287,15 @@ public class Main extends JavaPlugin {
                 ResultSet factionsResultSet = factionsStatement.executeQuery()
         ) {
             while (factionsResultSet.next()) {
-                Faction faction = new Faction(UUID.fromString(factionsResultSet.getString("uuid")));
+                Faction faction = new Faction(factionsResultSet);
                 factions.put(faction.getUUID(), faction);
                 factionNames.put(faction.getName().toUpperCase(Locale.ROOT), faction);
             }
         } catch (SQLException exception) {
-            exception.printStackTrace();
+            throw new IllegalStateException("Could not load persisted data", exception);
+        }
+        for (User user : users.values()) {
+            if (user.hasFaction() && !factions.containsKey(user.getFaction())) user.setFaction(null);
         }
     }
 
@@ -341,6 +311,7 @@ public class Main extends JavaPlugin {
                 ResultSet results = statement.executeQuery()
         ) {
             claims.clear();
+            claimIndex.clear();
 
             while (results.next()) {
                 Claim claim = new Claim(
@@ -358,36 +329,16 @@ public class Main extends JavaPlugin {
 
             getLogger().info("Loaded " + claims.size() + " faction claim(s).");
         } catch (SQLException | IllegalArgumentException exception) {
-            getLogger().log(
-                    Level.SEVERE,
-                    "Could not load faction claims",
-                    exception
-            );
+            throw new IllegalStateException("Could not load faction claims", exception);
         }
     }
 
     private void indexClaim(Claim claim) {
-        int minChunkX = Math.floorDiv(claim.minX(), 16);
-        int maxChunkX = Math.floorDiv(claim.maxX(), 16);
-        int minChunkZ = Math.floorDiv(claim.minZ(), 16);
-        int maxChunkZ = Math.floorDiv(claim.maxZ(), 16);
-
-        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
-                ChunkKey key = new ChunkKey(
-                        claim.world(),
-                        chunkX,
-                        chunkZ
-                );
-
-                claimsByChunk
-                        .computeIfAbsent(key, ignored -> new ArrayList<>())
-                        .add(claim);
-            }
-        }
+        claimIndex.add(claim);
     }
 
-
+    public boolean intersectsClaim(Claim claim) { return claimIndex.intersects(claim); }
+    public boolean hasClaim(UUID faction) { return claimIndex.hasFaction(faction); }
 
     private void files() {
         saveResource("config.yml", false);
@@ -411,46 +362,39 @@ public class Main extends JavaPlugin {
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
     }
 
-    private void checkUsers() {
-        new BukkitRunnable() {
-            int count = 0;
-            @Override
-            public void run() {
-                for (User user : users.values()) {
-                    if (user.isModified()) {
-                        user.saveAsync();
-                        count++;
-                    }
-                }
-                getLogger().info("Saved " + count + " user(s)");
-            }
-        }.runTaskTimer(this, 0, 20 * 60 * 5);
+    private void saveAll() {
+        List<SaveSnapshot> snapshots = new ArrayList<>();
+        for (Faction faction : factions.values()) {
+            SaveSnapshot snapshot = faction.snapshot();
+            if (snapshot != null) snapshots.add(snapshot);
+        }
+        for (User user : users.values()) {
+            SaveSnapshot snapshot = user.snapshot();
+            if (snapshot != null) snapshots.add(snapshot);
+        }
+        databaseManager.save(snapshots);
     }
 
-    private void checkFactions() {
-        new BukkitRunnable() {
-            int count = 0;
-            @Override
-            public void run() {
-                for (Faction faction : factions.values()) {
-                    if (faction.isModified()) {
-                        faction.saveAsync();
-                        count++;
-                    }
-                }
-                getLogger().info("Saved " + count + " faction(s)");
-            }
-        }.runTaskTimer(this, 0, 20 * 60 * 5);
+    public void saveTogether(User user, Faction faction) {
+        List<SaveSnapshot> snapshots = new ArrayList<>();
+        SaveSnapshot factionSnapshot = faction.snapshot();
+        SaveSnapshot userSnapshot = user.snapshot();
+        if (factionSnapshot != null) snapshots.add(factionSnapshot);
+        if (userSnapshot != null) snapshots.add(userSnapshot);
+        databaseManager.save(snapshots);
     }
 
     public void addUser(Player p) {
-        User existing = users.get(p.getUniqueId());
-        if (existing != null) {
-            userNames.remove(existing.getName().toUpperCase(Locale.ROOT));
+        User user = users.get(p.getUniqueId());
+        if (user == null) {
+            user = new User(p.getUniqueId(), p.getName());
+            users.put(p.getUniqueId(), user);
+        } else {
+            userNames.remove(user.getName().toUpperCase(Locale.ROOT), user);
+            user.setName(p.getName());
         }
-        User user = new User(p.getUniqueId(), p.getName());
-        users.put(p.getUniqueId(), user);
         userNames.put(p.getName().toUpperCase(Locale.ROOT), user);
+        user.saveAsync();
     }
 
     public User getUser(UUID uuid) {
@@ -462,6 +406,7 @@ public class Main extends JavaPlugin {
                 user.saveAsync();
             }
             users.put(uuid, user);
+            userNames.put(user.getName().toUpperCase(Locale.ROOT), user);
         }
         return users.get(uuid);
     }
@@ -471,10 +416,15 @@ public class Main extends JavaPlugin {
     }
 
     public void removeUser(UUID uuid) {
-        User user = users.remove(uuid);
+        // Offline profiles remain available to faction and economy commands.
+        User user = users.get(uuid);
         if (user != null) {
-            userNames.remove(user.getName().toUpperCase(Locale.ROOT));
-            if (user.isModified()) user.saveAsync();
+            user.setClaiming(null);
+            user.setBypass(false);
+            user.setLastEnteredFaction(null);
+            user.getMap().clear();
+            user.removeTimer(me.Thomas.HCF.Utils.Timer.Timer.Type.HOME);
+            user.saveAsync();
         }
     }
 
@@ -490,9 +440,6 @@ public class Main extends JavaPlugin {
     }
 
     public Faction getFaction(UUID uuid) {
-        if (!factions.containsKey(uuid)) {
-            factions.put(uuid, new Faction(uuid));
-        }
         return factions.get(uuid);
     }
 
@@ -501,6 +448,16 @@ public class Main extends JavaPlugin {
     }
 
     public void removeFaction(UUID uuid) {
+        Set<UUID> invitedUsers = factionInvites.remove(uuid);
+        if (invitedUsers != null) {
+            for (UUID userUuid : invitedUsers) {
+                Set<UUID> invites = userInvites.get(userUuid);
+                if (invites != null) {
+                    invites.remove(uuid);
+                    if (invites.isEmpty()) userInvites.remove(userUuid);
+                }
+            }
+        }
         Faction faction = factions.remove(uuid);
         if (faction != null) {
             factionNames.remove(faction.getName().toUpperCase(Locale.ROOT));
@@ -525,10 +482,7 @@ public class Main extends JavaPlugin {
 
         claims.removeIf(claim -> claim.faction().equals(factionId));
 
-        claimsByChunk.entrySet().removeIf(entry -> {
-            entry.getValue().removeIf(claim -> claim.faction().equals(factionId));
-            return entry.getValue().isEmpty();
-        });
+        claimIndex.removeFaction(factionId);
     }
 
     public void renameFaction(UUID uuid, String name) {
@@ -557,10 +511,14 @@ public class Main extends JavaPlugin {
 
 
     public List<Claim> getClaimsByChunk(ChunkKey key) {
-        return claimsByChunk.get(key);
+        return claimIndex.atChunk(key);
     }
 
     public boolean saveClaim(Claim claim) {
+        return saveClaim(claim, 0);
+    }
+
+    private boolean saveClaim(Claim claim, double cost) {
         String sql = """
         INSERT INTO factionClaims (
             faction,
@@ -573,26 +531,20 @@ public class Main extends JavaPlugin {
         VALUES (?, ?, ?, ?, ?, ?)
         """;
 
-        try (
-                Connection connection = databaseManager.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
-            statement.setString(1, claim.faction().toString());
-            statement.setString(2, claim.world().toString());
-            statement.setInt(3, claim.minX());
-            statement.setInt(4, claim.maxX());
-            statement.setInt(5, claim.minZ());
-            statement.setInt(6, claim.maxZ());
-
-            statement.executeUpdate();
+        Faction faction = factions.get(claim.faction());
+        if (faction == null || !Double.isFinite(cost) || cost < 0 || faction.getBalance() < cost) return false;
+        double previousBalance = faction.getBalance();
+        if (cost > 0) faction.setBalance(previousBalance - cost);
+        List<SaveSnapshot> snapshots = new ArrayList<>();
+        SaveSnapshot factionSnapshot = faction.snapshot();
+        if (factionSnapshot != null) snapshots.add(factionSnapshot);
+        snapshots.add(new SaveSnapshot(sql, () -> {}, claim.faction().toString(), claim.world().toString(),
+                claim.minX(), claim.maxX(), claim.minZ(), claim.maxZ()));
+        try {
+            databaseManager.save(snapshots).join();
             return true;
-        } catch (SQLException exception) {
-            getLogger().log(
-                    Level.SEVERE,
-                    "Could not save faction claim",
-                    exception
-            );
-
+        } catch (java.util.concurrent.CompletionException exception) {
+            if (cost > 0) faction.setBalance(previousBalance);
             return false;
         }
     }
@@ -606,6 +558,10 @@ public class Main extends JavaPlugin {
             Location one,
             Location two
     ) {
+        return addClaim(faction, one, two, 0);
+    }
+
+    public boolean addClaim(UUID faction, Location one, Location two, double cost) {
         if (one.getWorld() == null || two.getWorld() == null) {
             return false;
         }
@@ -635,18 +591,31 @@ public class Main extends JavaPlugin {
                 maxZ
         );
 
-        for (Claim existing : claims) {
-            if (existing.intersects(candidate)) {
-                return false;
-            }
-        }
+        if (candidate.intersects()) return false;
 
-        if (!saveClaim(candidate)) {
+        if (!saveClaim(candidate, cost)) {
             return false;
         }
 
         claims.add(candidate);
         indexClaim(candidate);
         return true;
+    }
+
+    public boolean hasServerTimer(ServerTimer.Type type) {
+        return serverTimers.containsKey(type);
+    }
+
+    public void addServerTimer(ServerTimer timer) {
+        serverTimers.put(timer.getType(), timer);
+    }
+
+    public void removeServerTimer(ServerTimer.Type type) {
+        serverTimers.remove(type);
+    }
+
+    public void pauseServerTimer(ServerTimer.Type type) {
+        ServerTimer timer = serverTimers.get(type);
+        if (timer != null) timer.pause();
     }
 }

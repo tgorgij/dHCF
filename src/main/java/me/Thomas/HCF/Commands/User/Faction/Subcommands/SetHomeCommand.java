@@ -56,7 +56,7 @@ public class SetHomeCommand implements Subcommand {
         if (factionAtLocation == null
                 || !factionAtLocation.getUUID().equals(faction.getUUID())) {
 
-            p.sendMessage(C.chat(localeConfig.getString("commands.faction.sethome.no-claim")));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.sethome.cannot")));
             return true;
         }
 

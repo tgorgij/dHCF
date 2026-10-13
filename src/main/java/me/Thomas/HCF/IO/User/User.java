@@ -7,6 +7,7 @@ import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,7 +27,8 @@ public class User {
     private int lives;
     private long deathbanExpiry;
 
-    private boolean modified;
+    private long revision;
+    private volatile long savedRevision;
     private Claiming claiming;
     private UUID lastEnteredFaction;
     private boolean bypass;
@@ -44,16 +46,12 @@ public class User {
     }
 
     /**
-     * Creates or updates a user and saves the name immediately.
+     * Loads a user or initializes defaults, then updates the name.
      */
     public User(UUID uuid, String name) {
         this.uuid = uuid;
 
-        if (exists(uuid)) {
-            load();
-        } else {
-            initializeDefaults();
-        }
+        load();
 
         setName(name);
     }
@@ -89,39 +87,45 @@ public class User {
                     return;
                 }
 
-                this.name = resultSet.getString("name");
-
-                String factionValue = resultSet.getString("faction");
-
-                this.faction = factionValue == null || factionValue.isEmpty()
-                        ? null
-                        : UUID.fromString(factionValue);
-
-                this.balance = resultSet.getDouble("balance");
-                this.kills = resultSet.getInt("kills");
-                this.deaths = resultSet.getInt("deaths");
-                this.lives = resultSet.getInt("lives");
-
-                this.timers = deserialize(
-                        resultSet.getString("timers")
-                );
-
-                this.deathbanExpiry = resultSet.getLong("deathbanExpiry");
-
-
-                this.modified = false;
-                this.claiming = null;
-                this.lastEnteredFaction = null;
-                this.bypass = false;
-                this.map = new ArrayList<>();
+                readRow(resultSet);
             }
         } catch (SQLException | IllegalArgumentException exception) {
-            Main.getInstance().getLogger().log(
-                    Level.SEVERE,
-                    "Could not load user data for " + uuid,
-                    exception
-            );
+            throw new IllegalStateException("Could not load user data for " + uuid, exception);
         }
+    }
+
+    /** Hydrates an existing row without another query. */
+    public User(ResultSet row) throws SQLException {
+        this.uuid = UUID.fromString(row.getString("uuid"));
+        readRow(row);
+    }
+
+    private void readRow(ResultSet resultSet) throws SQLException {
+        this.name = resultSet.getString("name");
+
+        String factionValue = resultSet.getString("faction");
+
+        this.faction = factionValue == null || factionValue.isEmpty()
+                ? null
+                : UUID.fromString(factionValue);
+
+        this.balance = resultSet.getDouble("balance");
+        this.kills = resultSet.getInt("kills");
+        this.deaths = resultSet.getInt("deaths");
+        this.lives = resultSet.getInt("lives");
+
+        this.timers = deserialize(
+                resultSet.getString("timers")
+        );
+
+        this.deathbanExpiry = resultSet.getLong("deathbanExpiry");
+
+
+        this.savedRevision = revision;
+        this.claiming = null;
+        this.lastEnteredFaction = null;
+        this.bypass = false;
+        this.map = new ArrayList<>();
     }
 
     private void initializeDefaults() {
@@ -133,62 +137,34 @@ public class User {
         this.lives = 0;
         this.timers = new EnumMap<>(Timer.Type.class);
         this.deathbanExpiry = 0;
-        this.modified = true;
+        this.revision++;
         this.claiming = null;
         this.lastEnteredFaction = null;
         this.bypass = false;
         this.map = new ArrayList<>();
 
-        saveAsync();
     }
 
     public void save() {
-        if (!modified) {
-            return;
-        }
+        SaveSnapshot snapshot = snapshot();
+        if (snapshot != null) Main.getInstance().getDatabaseManager().save(List.of(snapshot)).join();
+    }
 
+    /** Call on the server thread before submitting database work. */
+    public SaveSnapshot snapshot() {
+        if (!isModified()) return null;
         String sql =
-                "INSERT OR REPLACE INTO players "
+                "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
                         + "timers, deathbanExpiry) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        String timersValue = serializeTimers();
-
-        try (
-                Connection connection =
-                        Main.getInstance()
-                                .getDatabaseManager()
-                                .getConnection();
-                PreparedStatement statement =
-                        connection.prepareStatement(sql)
-        ) {
-            statement.setString(1, uuid.toString());
-            statement.setString(2, name);
-
-            if (faction == null) {
-                statement.setNull(3, java.sql.Types.VARCHAR);
-            } else {
-                statement.setString(3, faction.toString());
-            }
-
-            statement.setDouble(4, balance);
-            statement.setInt(5, kills);
-            statement.setInt(6, deaths);
-            statement.setInt(7, lives);
-            statement.setString(8, timersValue);
-            statement.setLong(9, deathbanExpiry);
-
-            statement.executeUpdate();
-
-            modified = false;
-        } catch (SQLException exception) {
-            Main.getInstance().getLogger().log(
-                    Level.SEVERE,
-                    "Could not save user data for " + uuid,
-                    exception
-            );
-        }
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
+                        + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
+                        + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry";
+        long version = revision;
+        return new SaveSnapshot(sql, () -> savedRevision = version,
+                uuid.toString(), name, faction == null ? null : faction.toString(),
+                balance, kills, deaths, lives, serializeTimers(), deathbanExpiry);
     }
 
     public long getDeathbanExpiry() {
@@ -201,7 +177,7 @@ public class User {
         }
 
         this.deathbanExpiry = deathbanExpiry;
-        modified = true;
+        revision++;
     }
 
     private String serializeTimers() {
@@ -321,7 +297,7 @@ public class User {
         }
 
         this.name = name;
-        modified = true;
+        revision++;
     }
 
     public UUID getFaction() {
@@ -333,8 +309,11 @@ public class User {
             return;
         }
 
+        if (claiming != null && !claiming.isClaimingFor() && !Objects.equals(claiming.getFaction(), faction)) {
+            setClaiming(null);
+        }
         this.faction = faction;
-        modified = true;
+        revision++;
     }
 
     public double getBalance() {
@@ -347,7 +326,7 @@ public class User {
         }
 
         this.balance = balance;
-        modified = true;
+        revision++;
     }
 
     public int getKills() {
@@ -360,7 +339,7 @@ public class User {
         }
 
         this.kills = kills;
-        modified = true;
+        revision++;
     }
 
     public int getDeaths() {
@@ -373,7 +352,7 @@ public class User {
         }
 
         this.deaths = deaths;
-        modified = true;
+        revision++;
     }
 
     public int getLives() {
@@ -386,20 +365,21 @@ public class User {
         }
 
         this.lives = lives;
-        modified = true;
+        revision++;
     }
 
     public boolean isModified() {
-        return modified;
+        return revision != savedRevision;
     }
 
     public void addTimer(Timer.Type type, Timer timer) {
         timers.put(type, timer);
-        modified = true;
+        revision++;
     }
 
     public boolean hasTimer(Timer.Type type) {
-        return timers.containsKey(type);
+        Timer timer = timers.get(type);
+        return timer != null && timer.getRemainingTimeMillis() > 0;
     }
 
     public Timer getTimer(Timer.Type type) {
@@ -408,7 +388,23 @@ public class User {
 
     public void removeTimer(Timer.Type type) {
         if (timers.remove(type) != null) {
-            modified = true;
+            revision++;
+        }
+    }
+
+    public void expireTimers() {
+        Iterator<Map.Entry<Timer.Type, Timer>> iterator = timers.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Timer.Type, Timer> entry = iterator.next();
+            if (entry.getKey() == Timer.Type.HOME || entry.getValue().getRemainingTimeMillis() > 0) continue;
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                player.sendMessage(me.Thomas.HCF.Utils.Chat.C.chat(
+                        Main.getInstance().getLocaleConfig().getString("events.player.timer.end.default", "")
+                                .replace("%timer%", entry.getKey().name().toLowerCase(Locale.ROOT))));
+            }
+            iterator.remove();
+            revision++;
         }
     }
 
@@ -416,7 +412,7 @@ public class User {
         for (Timer timer : timers.values()) {
             if (timer.isPauseOnLogout() && !timer.isPaused()) {
                 timer.pause();
-                modified = true;
+                revision++;
             }
         }
     }
@@ -425,7 +421,7 @@ public class User {
         for (Timer timer : timers.values()) {
             if (timer.isPauseOnLogout() && timer.isPaused()) {
                 timer.pause();
-                modified = true;
+                revision++;
             }
         }
     }
@@ -435,10 +431,8 @@ public class User {
     }
 
     public void saveAsync() {
-        Bukkit.getScheduler().runTaskAsynchronously(
-                Main.getInstance(),
-                this::save
-        );
+        SaveSnapshot snapshot = snapshot();
+        if (snapshot != null) Main.getInstance().getDatabaseManager().save(List.of(snapshot));
     }
 
     public Claiming getClaiming() {
@@ -446,7 +440,15 @@ public class User {
     }
 
     public void setClaiming(Claiming claiming) {
+        if (this.claiming != null && !this.claiming.isClaimingFor()) {
+            me.Thomas.HCF.IO.Faction.Faction oldFaction = Main.getInstance().getFaction(this.claiming.getFaction());
+            if (oldFaction != null) oldFaction.setClaiming(false);
+        }
         this.claiming = claiming;
+        if (claiming != null && !claiming.isClaimingFor()) {
+            me.Thomas.HCF.IO.Faction.Faction newFaction = Main.getInstance().getFaction(claiming.getFaction());
+            if (newFaction != null) newFaction.setClaiming(true);
+        }
     }
 
     public UUID getLastEnteredFaction() {

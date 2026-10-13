@@ -223,6 +223,11 @@ public class UserInteractInFactionEvent implements Listener {
         return disallowed;
     }
 
+    @EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        pressurePlateMessageCooldowns.remove(event.getPlayer().getUniqueId());
+    }
+
     private boolean canSendPressurePlateMessage(Player p) {
         long now = System.currentTimeMillis();
         long lastMessage = pressurePlateMessageCooldowns.getOrDefault(p.getUniqueId(), 0L);

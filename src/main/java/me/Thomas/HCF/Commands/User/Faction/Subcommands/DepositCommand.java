@@ -56,7 +56,9 @@ public class DepositCommand implements Subcommand {
                 return true;
             }
         }
-        if (amount <= Main.getInstance().getConfig().getDouble("economy.minimum-transfer")) {
+        if (!Double.isFinite(amount) || amount <= 0
+                || amount < Main.getInstance().getConfig().getDouble("economy.minimum-transfer")
+                || !Double.isFinite(faction.getBalance() + amount)) {
             p.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
             return true;
         }
@@ -66,8 +68,7 @@ public class DepositCommand implements Subcommand {
         }
         user.setBalance(user.getBalance() - amount);
         faction.setBalance(faction.getBalance() + amount);
-        user.saveAsync();
-        faction.saveAsync();
+        Main.getInstance().saveTogether(user, faction);
         p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.deposit.success")).replace("%amount%", C.getFormattedMoney(amount))));
         for (UUID uuid : faction.getOnlineMembers().keySet()) {
             Player player = Main.getInstance().getServer().getPlayer(uuid);

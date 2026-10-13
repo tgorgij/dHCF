@@ -78,8 +78,7 @@ public class JoinCommand implements Subcommand {
             Main.getInstance().removeInvite(faction.getUUID(), p.getUniqueId());
         }
 
-        user.saveAsync();
-        faction.saveAsync();
+        Main.getInstance().saveTogether(user, faction);
         return true;
     }
 

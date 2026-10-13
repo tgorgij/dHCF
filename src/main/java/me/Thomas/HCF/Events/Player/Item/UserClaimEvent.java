@@ -26,21 +26,21 @@ public class UserClaimEvent implements Listener {
         Player p = e.getPlayer();
         Action a = e.getAction();
         User user = User.get(p);
-        ItemStack claimWand = Faction.getClaimWand();
         if (!a.equals(Action.LEFT_CLICK_BLOCK)) return;
         if (e.getItem() == null) return;
         if (!e.getItem().hasItemMeta()) return;
         if (!e.getItem().getItemMeta().hasDisplayName()) return;
         if (!e.getItem().getItemMeta().hasLore()) return;
         if (user.getClaiming() == null) return;
+        ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
-        if (user.getFaction() == null) {
+        if (!user.getClaiming().isClaimingFor() && user.getFaction() == null) {
             user.setClaiming(null);
             p.getInventory().remove(claimWand);
             return;
         }
-        Faction faction = Faction.get(user.getFaction());
+        Faction faction = Faction.get(user.getClaiming().getFaction());
         if (faction == null) {
             user.setClaiming(null);
             p.getInventory().remove(claimWand);
@@ -91,21 +91,21 @@ public class UserClaimEvent implements Listener {
         Player p = e.getPlayer();
         Action a = e.getAction();
         User user = User.get(p);
-        ItemStack claimWand = Faction.getClaimWand();
         if (!a.equals(Action.RIGHT_CLICK_BLOCK)) return;
         if (e.getItem() == null) return;
         if (!e.getItem().hasItemMeta()) return;
         if (!e.getItem().getItemMeta().hasDisplayName()) return;
         if (!e.getItem().getItemMeta().hasLore()) return;
         if (user.getClaiming() == null) return;
+        ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
-        if (user.getFaction() == null) {
+        if (!user.getClaiming().isClaimingFor() && user.getFaction() == null) {
             user.setClaiming(null);
             p.getInventory().remove(claimWand);
             return;
         }
-        Faction faction = Faction.get(user.getFaction());
+        Faction faction = Faction.get(user.getClaiming().getFaction());
         if (faction == null) {
             user.setClaiming(null);
             p.getInventory().remove(claimWand);
@@ -157,13 +157,13 @@ public class UserClaimEvent implements Listener {
         Player p = e.getPlayer();
         Action a = e.getAction();
         User user = User.get(p);
-        ItemStack claimWand = Faction.getClaimWand();
         if (!a.equals(Action.RIGHT_CLICK_AIR) || !p.isSneaking()) return;
         if (e.getItem() == null) return;
         if (!e.getItem().hasItemMeta()) return;
         if (!e.getItem().getItemMeta().hasDisplayName()) return;
         if (!e.getItem().getItemMeta().hasLore()) return;
         if (user.getClaiming() == null) return;
+        ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
         Claiming.hidePillars(p);
@@ -177,21 +177,21 @@ public class UserClaimEvent implements Listener {
         Player p = e.getPlayer();
         Action a = e.getAction();
         User user = User.get(p);
-        ItemStack claimWand = Faction.getClaimWand();
         if (!a.equals(Action.LEFT_CLICK_AIR) || !p.isSneaking()) return;
         if (e.getItem() == null) return;
         if (!e.getItem().hasItemMeta()) return;
         if (!e.getItem().getItemMeta().hasDisplayName()) return;
         if (!e.getItem().getItemMeta().hasLore()) return;
         if (user.getClaiming() == null) return;
+        ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
-        if (user.getFaction() == null) {
+        if (!user.getClaiming().isClaimingFor() && user.getFaction() == null) {
             user.setClaiming(null);
             p.getInventory().remove(claimWand);
             return;
         }
-        Faction faction = Faction.get(user.getFaction());
+        Faction faction = Faction.get(user.getClaiming().getFaction());
         if (faction == null) {
             user.setClaiming(null);
             p.getInventory().remove(claimWand);
@@ -227,7 +227,7 @@ public class UserClaimEvent implements Listener {
             }
         }
 
-        if (!Main.getInstance().addClaim(claiming.getFaction(), one, two)) {
+        if (!Main.getInstance().addClaim(claiming.getFaction(), one, two, claiming.isClaimingFor() ? 0 : cost)) {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.save")));
             return;
         }
@@ -235,9 +235,6 @@ public class UserClaimEvent implements Listener {
             user.getMap().add(claim);
         }
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.claim")));
-        if (!claiming.isClaimingFor()) {
-            faction.setBalance(faction.getBalance() - cost);
-        }
         user.setClaiming(null);
         p.getInventory().remove(claimWand);
     }

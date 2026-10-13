@@ -49,6 +49,10 @@ public class SetCommand implements Subcommand {
             sender.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
             return true;
         }
+        if (!Double.isFinite(amount)) {
+            sender.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
+            return true;
+        }
         if (amount < 0) {
             amount = 0;
         }
@@ -61,11 +65,11 @@ public class SetCommand implements Subcommand {
     @Override
     public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String @NonNull [] args) {
         if (!Permission.has(sender, "command.economy.set", "admin")) return List.of();
-        String input = args[0].toUpperCase();
         if (args.length == 1) {
+            String input = args[0].toUpperCase(java.util.Locale.ROOT);
             return Main.getInstance().getAllUsers().values().stream()
                     .map(User::getName)
-                    .filter(name -> name.toUpperCase().startsWith(input))
+                    .filter(name -> name.toUpperCase(java.util.Locale.ROOT).startsWith(input))
                     .toList();
         }
         if (args.length == 2) {

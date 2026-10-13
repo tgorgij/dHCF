@@ -56,6 +56,10 @@ public class SetTypeCommand implements Subcommand {
             sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.settype.invalid-type"))));
             return true;
         }
+        if (type == Faction.Type.PLAYER) {
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.settype.invalid-type")));
+            return true;
+        }
         faction.setType(type);
         sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.settype.success")).replace("%faction%", faction.getName()).replace("%type%", type.toString())));
         return true;

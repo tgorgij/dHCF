@@ -1,0 +1,209 @@
+primary:
+  no-permission: "&cNo permission."
+  not-player: "&cOnly players can use this command."
+  not-console: "&cOnly console can use this command."
+  no-player: "&cA player by this name does not exist."
+  no-faction: "&cA faction by this name does not exist."
+  none: "&fNone"
+  invalid-color: "&cThe specified color is invalid. Valid colors: BLACK, DARKBLUE, GREEN, CYAN, DARKRED, PURPLE, GOLD, GRAY, DARKGRAY, BLUE, LIME, AQUA, RED, PINK, YELLOW, WHITE"
+  only-system: "&cYou can only do this to non-player factions."
+  status:
+    enabled: "&aEnabled"
+    disabled: "&cDisabled"
+    open: "&aOpen"
+    closed: "&cClosed"
+  invalid-amount: "&cThe specified amount is invalid."
+  invalid-time: "&cThe specified time is invalid."
+  insufficient-funds: "&cYou do not have enough funds to do this."
+  teleport:
+    already: "&cYou are already teleporting..."
+    cancel: "&eTeleport &c&lCANCELLED"
+    hq: "&eWarped to &d%faction%&e's HQ."
+
+events:
+  player:
+    first-join: "&eSince this is your first time joining, you have been given &b$500&e."
+    timer:
+      ongoing:
+        default: "&cYou cannot do %timer% for %time%"
+      end:
+        default: "&eYour &b%timer% timer &ehas expired."
+
+
+claiming:
+  purchase:
+    cost: "&eCost of Area: &b%cost% &7(%size-x%x%size-z%)"
+  error:
+    not-in-wilderness: "&cYou must be in the wilderness to claim."
+    already: "&cYou are already claiming for a faction."
+    faction-already: "&cSomeone in your faction is already claiming."
+    has: "&cYour faction already has a claim."
+    world: "&cYou cannot select this point, as it is in a different world."
+    intersects: "&cYou cannot select this point, as it intersects with another claim."
+    both: "&cYou must select two points before you can claim."
+    too-small: "&cClaims must be at least 5 blocks wide and 5 blocks long."
+    too-large: "&cClaims cannot be larger than 16 chunks (4,096 blocks)."
+    not-enough-money: "&cYour faction does not have enough money to purchase this claim."
+    save: "&cYour claim could not be saved. Please try again."
+  success:
+    one: "&ePosition one selected."
+    two: "&ePosition two selected."
+    claim: "&aClaim succeeded."
+    cancel: "&cClaim cancelled."
+
+
+faction:
+  wilderness: "&7The Wilderness"
+  warzone: "&cWarzone"
+  deathban: "&e(&cDeathban&e)"
+  non-deathban: "&e(&aNon-Deathban&e)"
+  moving:
+    leaving: "&eNow leaving: %faction% %deathban%"
+    entering: "&eNow entering: %faction% %deathban%"
+  debug:
+    type: "&eFaction Type: &b%type%"
+  modify:
+    build: "&eYou cannot build in %faction%&e's territory!"
+    interact: "&eYou cannot do this in %faction%&e's territory!"
+
+commands:
+  faction:
+    already-in: "&cYou already have a faction."
+    not-in: "&cYou do not have a faction."
+    already-exists: "&cA faction by this name already exists."
+    blocked: "&cYou cannot create a faction by this name."
+    invalid-length: "&cFaction names must be between 3 and 16 characters."
+    claim-full: "&cYou cannot claim while your inventory is full."
+    captain:
+      not: "&cOnly a captain and above can perform this command."
+    coleader:
+      not: "&cOnly a co-leader and above can perform this command."
+    leader:
+      not: "&cOnly the leader can perform this command."
+    create:
+      usage: "&cUsage: /%alias% create <name>"
+      already-exists: "&cA faction by this name already exists."
+      blocked: "&cYou cannot create a faction by this name."
+      invalid-length: "&cFaction names must be between 3 and 16 characters."
+      success: "&eYou have created a faction named &b%faction%&e."
+      broadcast: "&e%player% has created a faction named &b%faction%&e."
+    createsystem:
+      usage: "&cUsage: /%alias% createsystem <name>"
+      success: "&eYou have created a system faction named &b%faction%&e."
+      broadcast: "&e%player% has created a system faction named &b%faction%&e."
+    show:
+      usage: "&cUsage: /%alias% show <name>"
+      none: "&cThere is no player or faction by this name."
+      no-faction: "&c%player% is not in a faction."
+      teleport-hover: "&eClick to teleport to &b%faction%&e"
+    setcolor:
+      usage: "&cUsage: /%alias% setcolor <faction> <color>"
+      only-system: "&cYou can only set the color of non-player factions."
+      success: "&eYou have set the color of &b%faction%&e to %color%this&e."
+    settype:
+      usage: "&cUsage: /%alias% settype <faction> <type>"
+      invalid-type: "&cThe specified type is invalid. Valid types: SYSTEM, SAFEZONE, ROAD, KOTH"
+      success: "&eYou have set the type of &b%faction%&e to &b%type%&e."
+    setlocation:
+      usage: "&cUsage: /%alias% setlocation <faction>"
+      success: "&eYou have set the location of &b%faction% &eto&b your current location&e."
+    debug:
+      usage: "&cUsage: /%alias% debug"
+      toggle: "&eFaction Debug: %status%"
+    disband:
+      usage: "&cUsage: /%alias% disband"
+      raidable: "&cYou cannot disband your faction while it is raidable."
+      success: "&c&lYou have disbanded your faction."
+      broadcast: "&c&l%player% has disbanded the faction."
+    forcedisband:
+      usage: "&cUsage: /%alias% forcedisband <faction>"
+      raidable: "&cYou cannot disband a faction while it is raidable."
+      success: "&c&lYou have disbanded %faction%."
+      broadcast: "&c&l%player% has disbanded the faction."
+    invite:
+      usage: "&cUsage: /%alias% invite <player>"
+      other-faction: "&c%player% already has a faction."
+      your-faction: "&c%player% is already in your faction."
+      self: "&cYou cannot invite yourself."
+      pending: "&cYou have already invited %player%."
+      open: "&cYou cannot invite players while your faction is open."
+      success: "&eYou have invited &b%player% &eto your faction."
+      other: "&b%player% &ehas invited you to &b%faction%&e."
+    uninvite:
+      usage: "&cUsage: /%alias% uninvite <player>"
+      not-invited: "&c%player% is not invited to your faction."
+      success: "&eYou have uninvited &b%player% &efrom your faction."
+    join:
+      usage: "&cUsage: /%alias% join <faction>"
+      system: "&cYou cannot join a non-player faction."
+      already-in: "&cYou are already in a faction."
+      raidable: "&cYou cannot join a faction while it is raidable."
+      not-invited: "&cYou have not been invited to this faction."
+      max: "&cYou cannot join this faction, as it is full."
+      success: "&eYou have joined &b%faction%&e."
+      broadcast: "&b%player% &ehas joined your faction."
+    open:
+      usage: "&cUsage: /%alias% open"
+      success: "&eYour faction is now &b%status%&e."
+    invites:
+      usage: "&cUsage: /%alias% invites"
+      none: "&cYou have no pending invites."
+      has: "&ePending Invites: &b%invites%"
+    leave:
+      usage: "&cUsage: /%alias% leave"
+      leader: "&cYou cannot leave your faction, as you are the leader. Use &b/%alias% disband&c to disband your faction."
+      raidable: "&cYou cannot leave a faction while it is raidable."
+      success: "&eYou have left your faction."
+      broadcast: "&b%player% &ehas left the faction."
+    deposit:
+      usage: "&cUsage: /%alias% deposit <all;amount>"
+      success: "&eYou have deposited &b%amount%&e."
+      broadcast: "&e%player% has deposited &b%amount%&e."
+    rename:
+      usage: "&cUsage: /%alias% rename <name>"
+      success: "&eYou have renamed your faction to &b%faction%&e."
+      broadcast: "&e%player% has renamed your faction to &b%faction%&e."
+    claimfor:
+      usage: "&cUsage: /%alias% claimfor <player>"
+      success: "&eYou are now claiming for &b%faction%&e."
+    setdeathban:
+      usage: "&cUsage: /%alias% setdeathban <faction>"
+      success: "&b%faction%&e Deathban: &b%status%"
+    bypass:
+      usage: "&cUsage: /%alias% bypass"
+      toggle: "&eFaction Bypass: %status%"
+    claim:
+      usage: "&cUsage: /%alias% claim"
+      success: "&eClaim started."
+    home:
+      usage: "&cUsage: /%alias% home"
+      none: "&cYour faction does not have a home."
+      end: "&cYou cannot teleport to your faction's home while you're in the end"
+      success: "&eTeleporting to your faction's HQ. Please wait &d10 seconds&e..."
+    sethome:
+      usage: "&cUsage: /%alias% sethome"
+      cannot: "&cYou must set your factions home in your claim."
+      success: "&eYour faction's home has been set."
+      broadcast: "&3%player% has set your faction's home."
+    map:
+      usage: "&cUsage: /%alias% map"
+      format: "&eFaction %faction% &eshown by &d%material%&e."
+      hidden: "&eClaim pillars have been hidden."
+      none: "&cThere are no factions near you."
+  balance:
+    usage: "&cUsage: /%alias% <player>"
+    self: "&eBalance: &b%balance%"
+    other: "&b%player%&e's Balance: &b%balance%"
+  economy:
+    set:
+      usage: "&cUsage: /%alias% set <player> <amount>"
+      success: "&eYou have set &b%player%&e's balance to &b%amount%&e."
+  sotw:
+    alt-usage: "&cUsage: /sotw enable"
+    not-running: "&cSOTW is not currently running."
+    running: "&cSOTW is already running."
+    enable:
+      already: "&cYou are already enabled."
+    start:
+      usage: "&cUsage: /sotw start <time>"
+      success: "&eYou have started the SOTW"

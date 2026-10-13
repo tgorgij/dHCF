@@ -65,8 +65,7 @@ public class Claiming {
         return pillar;
     }
 
-    public static Material getRandomPillar() {
-        List<Material> blocks = Arrays.stream(Material.values())
+    private static final List<Material> PILLAR_BLOCKS = Arrays.stream(Material.values())
                 .filter(Material::isBlock)
                 .filter(Material::isSolid)
                 .filter(material -> !Tag.DOORS.isTagged(material))
@@ -80,7 +79,8 @@ public class Claiming {
                 .filter(material -> !Tag.ITEMS_CANDLES.isTagged(material))
                 .toList();
 
-        return blocks.get(ThreadLocalRandom.current().nextInt(blocks.size()));
+    public static Material getRandomPillar() {
+        return PILLAR_BLOCKS.get(ThreadLocalRandom.current().nextInt(PILLAR_BLOCKS.size()));
     }
 
     public static boolean hasVisiblePillars(Player player) {
@@ -147,12 +147,7 @@ public class Claiming {
         if (claiming == null) {
             return;
         }
-        if (claiming.getOne() != null) {
-            resetPillar(claiming.getOne(), player);
-        }
-        if (claiming.getTwo() != null) {
-            resetPillar(claiming.getTwo(), player);
-        }
+        resetSelectionPillars(claiming, player);
     }
 
     public static void generateClaimPillars(Claim claim, Material material, Player player) {
@@ -198,10 +193,12 @@ public class Claiming {
             @Override
             public void run() {
                 World world = location.getWorld();
-                if (world == null) {
+                if (world == null || !player.isOnline() || !player.getWorld().equals(world)) {
                     return;
                 }
 
+                org.bukkit.block.data.BlockData accent = material.createBlockData();
+                org.bukkit.block.data.BlockData glass = Material.GLASS.createBlockData();
                 for (int y = world.getMinHeight(); y < world.getMaxHeight(); y++) {
                     Location pillarLocation = new Location(
                             world,
@@ -213,8 +210,7 @@ public class Claiming {
                         continue;
                     }
 
-                    Material pillarMaterial = y % 4 == 0 ? material : Material.GLASS;
-                    player.sendBlockChange(pillarLocation, pillarMaterial.createBlockData());
+                    player.sendBlockChange(pillarLocation, y % 4 == 0 ? accent : glass);
                 }
             }
         }.runTaskLater(Main.getInstance(), 1);
@@ -222,7 +218,7 @@ public class Claiming {
 
     public static void resetPillar(Location location, Player player) {
         World world = location.getWorld();
-        if (world == null) {
+        if (world == null || !player.getWorld().equals(world)) {
             return;
         }
 
@@ -236,7 +232,7 @@ public class Claiming {
             if (!world.getBlockAt(pillarLocation).isEmpty()) {
                 continue;
             }
-            player.sendBlockChange(pillarLocation, Material.AIR.createBlockData());
+            player.sendBlockChange(pillarLocation, world.getBlockAt(pillarLocation).getBlockData());
         }
     }
 }

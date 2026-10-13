@@ -14,7 +14,7 @@ public class UserJoinEvent implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
-        if (!User.exists(p.getUniqueId())) {
+        if (!Main.getInstance().getAllUsers().containsKey(p.getUniqueId())) {
             p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("events.player.first-join")));
         }
         Main.getInstance().addUser(p);

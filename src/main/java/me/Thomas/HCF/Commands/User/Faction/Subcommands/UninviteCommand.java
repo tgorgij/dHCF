@@ -72,7 +72,7 @@ public class UninviteCommand implements Subcommand {
         }
 
         if (args.length == 1) {
-            String input = args[0].toUpperCase();
+            String input = args[0].toUpperCase(java.util.Locale.ROOT);
             User user = User.get(p);
             if (!user.hasFaction()) return List.of();
             ArrayList<String> list = new ArrayList<>();
@@ -82,7 +82,7 @@ public class UninviteCommand implements Subcommand {
             }
 
             return list.stream()
-                    .filter(name -> name.toUpperCase().startsWith(input))
+                    .filter(name -> name.toUpperCase(java.util.Locale.ROOT).startsWith(input))
                     .toList();
         }
         return List.of();

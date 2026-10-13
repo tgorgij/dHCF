@@ -1,6 +1,8 @@
 package me.Thomas.HCF.Utils.Scoreboard;
 
 import me.Thomas.HCF.Main.Main;
+import me.Thomas.HCF.IO.User.User;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,14 +20,22 @@ public class BoardHandler implements Listener {
 
     private final Map<UUID, Board> boards = new HashMap<>();
 
+    private final BukkitTask updateTask;
+
     public BoardHandler() {
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
 
-        new BukkitRunnable() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Main.getInstance().addUser(player);
+            User.get(player).unpauseTimers();
+            boards.put(player.getUniqueId(), new Board(player));
+        }
+        updateTask = new BukkitRunnable() {
             @Override
             public void run() {
                 for (Board board : boards.values()) {
                     if (board.getPlayer().isOnline()) {
+                        User.get(board.getPlayer()).expireTimers();
                         board.update();
                     }
                 }
@@ -52,6 +62,12 @@ public class BoardHandler implements Listener {
         if (board != null) {
             board.remove();
         }
+    }
+
+    public void close() {
+        updateTask.cancel();
+        for (Board board : boards.values()) board.remove();
+        boards.clear();
     }
 
     public Board getBoard(Player player) {

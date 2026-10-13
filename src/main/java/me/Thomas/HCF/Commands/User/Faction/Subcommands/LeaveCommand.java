@@ -62,8 +62,7 @@ public class LeaveCommand implements Subcommand {
             if (player == null) continue;
             player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.leave.broadcast")).replace("%player%", p.getName())));
         }
-        user.saveAsync();
-        faction.saveAsync();
+        Main.getInstance().saveTogether(user, faction);
         return true;
     }
 }

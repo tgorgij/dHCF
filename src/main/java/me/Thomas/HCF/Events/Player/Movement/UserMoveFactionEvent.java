@@ -9,8 +9,10 @@ import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Objects;
 
@@ -22,10 +24,21 @@ public class UserMoveFactionEvent implements Listener {
     private final String deathban = localeConfig.getString("faction.deathban");
     private final String nonDeathban = localeConfig.getString("faction.non-deathban");
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMove(PlayerMoveEvent e) {
+        if (e instanceof PlayerTeleportEvent) return;
+        handleTransition(e);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTeleport(PlayerTeleportEvent e) {
+        handleTransition(e);
+    }
+
+    private void handleTransition(PlayerMoveEvent e) {
         Location from = e.getFrom();
         Location to = e.getTo();
+        if (to == null || from.getWorld() == null || to.getWorld() == null) return;
         Player p = e.getPlayer();
         User user = User.get(p);
 

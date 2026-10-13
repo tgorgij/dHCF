@@ -50,11 +50,11 @@ public class BalanceCommand implements TabExecutor {
             @NotNull String @NotNull [] args
     ) {
         if (args.length == 1) {
-            String input = args[0].toUpperCase();
+            String input = args[0].toUpperCase(java.util.Locale.ROOT);
 
             return Main.getInstance().getAllUsers().values().stream()
                     .map(User::getName)
-                    .filter(name -> name.toUpperCase().startsWith(input))
+                    .filter(name -> name.toUpperCase(java.util.Locale.ROOT).startsWith(input))
                     .toList();
         }
 

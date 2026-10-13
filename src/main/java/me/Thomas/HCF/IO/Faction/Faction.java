@@ -11,22 +11,20 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
+import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.*;
 import java.util.logging.Level;
 
 public class Faction {
 
-    private static final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
 
     public enum Type {
         SYSTEM,
@@ -79,7 +77,8 @@ public class Faction {
     private boolean deathban;
 
 
-    private boolean modified;
+    private long revision;
+    private volatile long savedRevision;
     private Map<UUID, Integer> members = new HashMap<>();
     private boolean claiming;
     private volatile boolean disbanding;
@@ -93,7 +92,7 @@ public class Faction {
     }
 
     /**
-     * Creates a system faction and saves it immediately.
+     * Creates a new system faction; the caller schedules persistence.
      */
     public Faction(UUID uuid, String name) {
         this.uuid = uuid;
@@ -105,7 +104,7 @@ public class Faction {
         this.color = "BLUE";
         this.home = null;
         this.members = new HashMap<>();
-        this.modified = true;
+        this.revision++;
         this.open = false;
         this.dtr = 0;
         this.points = 0;
@@ -116,7 +115,7 @@ public class Faction {
     }
 
     /**
-     * Creates a player faction and saves it immediately.
+     * Creates a new player faction; the caller schedules persistence.
      */
     public Faction(UUID uuid, UUID leader, String name) {
         this.uuid = uuid;
@@ -129,7 +128,7 @@ public class Faction {
         this.home = null;
         this.members = new HashMap<>();
         this.members.put(leader, MemberType.LEADER.getValue());
-        this.modified = true;
+        this.revision++;
         this.open = false;
         this.dtr = 1.01;
         this.points = 0;
@@ -157,79 +156,72 @@ public class Faction {
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) {
-                    initializeDefaults();
-                    saveAsync();
-                    return;
+                    throw new IllegalStateException("Faction does not exist: " + uuid);
                 }
 
-                this.type = Type.valueOf(
-                        resultSet.getString("type").toUpperCase(Locale.ROOT)
-                );
-
-                this.name = resultSet.getString("name");
-
-                String leaderValue = resultSet.getString("leader");
-
-                this.leader = leaderValue == null || leaderValue.isEmpty()
-                        ? null
-                        : UUID.fromString(leaderValue);
-
-                this.balance = resultSet.getDouble("balance");
-                this.lives = resultSet.getInt("lives");
-
-                this.members = deserializeMembers(
-                        resultSet.getString("members")
-                );
-
-                this.color = resultSet.getString("color");
-                this.home = deserializeLocation(
-                        resultSet.getString("home")
-                );
-
-                this.open = resultSet.getBoolean("open");
-
-                this.dtr = resultSet.getDouble("dtr");
-
-                this.points = resultSet.getInt("points");
-
-                this.kothCaptures = resultSet.getInt("kothCaptures");
-
-                this.announcement = resultSet.getString("announcement") == null ? null : resultSet.getString("announcement");
-
-                this.deathban = resultSet.getBoolean("deathban");
-
-                this.modified = false;
-
-                this.claiming = false;
+                readRow(resultSet);
             }
         } catch (SQLException | IllegalArgumentException exception) {
-            Main.getInstance().getLogger().log(
-                    Level.SEVERE,
-                    "Could not load faction data for " + uuid,
-                    exception
-            );
+            throw new IllegalStateException("Could not load faction data for " + uuid, exception);
         }
     }
 
-    private void initializeDefaults() {
-        this.type = Type.SYSTEM;
-        this.name = "";
-        this.leader = null;
-        this.balance = 0.0;
-        this.lives = 0;
-        this.color = "BLUE";
-        this.home = null;
-        this.members = new HashMap<>();
-        this.modified = true;
-        this.deathban = true;
+    /** Hydrates an existing row without another query. */
+    public Faction(ResultSet row) throws SQLException {
+        this.uuid = UUID.fromString(row.getString("uuid"));
+        readRow(row);
+    }
+
+    private void readRow(ResultSet resultSet) throws SQLException {
+        this.type = Type.valueOf(
+                resultSet.getString("type").toUpperCase(Locale.ROOT)
+        );
+
+        this.name = resultSet.getString("name");
+
+        String leaderValue = resultSet.getString("leader");
+
+        this.leader = leaderValue == null || leaderValue.isEmpty()
+                ? null
+                : UUID.fromString(leaderValue);
+
+        this.balance = resultSet.getDouble("balance");
+        this.lives = resultSet.getInt("lives");
+
+        this.members = deserializeMembers(
+                resultSet.getString("members")
+        );
+
+        this.color = resultSet.getString("color");
+        this.home = deserializeLocation(
+                resultSet.getString("home")
+        );
+
+        this.open = resultSet.getBoolean("open");
+
+        this.dtr = resultSet.getDouble("dtr");
+
+        this.points = resultSet.getInt("points");
+
+        this.kothCaptures = resultSet.getInt("kothCaptures");
+
+        this.announcement = resultSet.getString("announcement");
+
+        this.deathban = resultSet.getBoolean("deathban");
+
+        this.savedRevision = revision;
+
         this.claiming = false;
     }
 
-    public synchronized void save() {
-        if (!modified || disbanding) {
-            return;
-        }
+    public void save() {
+        SaveSnapshot snapshot = snapshot();
+        if (snapshot != null) Main.getInstance().getDatabaseManager().save(List.of(snapshot)).join();
+    }
 
+    /** Call on the server thread before submitting database work. */
+    public SaveSnapshot snapshot() {
+        if (!isModified() || disbanding) return null;
         String sql =
                 "INSERT INTO factions "
                         + "(uuid, type, name, leader, balance, lives, "
@@ -250,56 +242,11 @@ public class Faction {
                         + "kothCaptures = excluded.kothCaptures, "
                         + "announcement = excluded.announcement, "
                         + "deathban = excluded.deathban";
-
-        String membersValue = serializeMembers();
-        String homeValue = serializeLocation(home);
-
-        try (
-                Connection connection =
-                        Main.getInstance()
-                                .getDatabaseManager()
-                                .getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
-            statement.setString(1, uuid.toString());
-            statement.setString(2, type.name());
-            statement.setString(3, name);
-
-            if (leader == null) {
-                statement.setNull(4, Types.VARCHAR);
-            } else {
-                statement.setString(4, leader.toString());
-            }
-
-            statement.setDouble(5, balance);
-            statement.setInt(6, lives);
-            statement.setString(7, membersValue);
-            statement.setString(8, color);
-
-            if (homeValue == null) {
-                statement.setNull(9, Types.VARCHAR);
-            } else {
-                statement.setString(9, homeValue);
-            }
-
-            statement.setBoolean(10, open);
-            statement.setDouble(11, dtr);
-            statement.setInt(12, points);
-            statement.setInt(13, kothCaptures);
-            statement.setString(14, announcement == null ? null : announcement);
-            statement.setBoolean(15, deathban);
-
-            statement.executeUpdate();
-
-            // Only mark it clean after the database operation succeeds.
-            modified = false;
-        } catch (SQLException exception) {
-            Main.getInstance().getLogger().log(
-                    Level.SEVERE,
-                    "Could not save faction data for " + uuid,
-                    exception
-            );
-        }
+        long version = revision;
+        return new SaveSnapshot(sql, () -> savedRevision = version,
+                uuid.toString(), type.name(), name, leader == null ? null : leader.toString(),
+                balance, lives, serializeMembers(), color, serializeLocation(home), open, dtr,
+                points, kothCaptures, announcement, deathban);
     }
 
     private String serializeMembers() {
@@ -415,8 +362,9 @@ public class Faction {
     }
 
     public void setType(Type type) {
+        if (Objects.equals(this.type, type)) return;
         this.type = type;
-        this.modified = true;
+        this.revision++;
     }
 
     public String getName() {
@@ -424,8 +372,9 @@ public class Faction {
     }
 
     public void setName(String name) {
+        if (Objects.equals(this.name, name)) return;
         this.name = name;
-        this.modified = true;
+        this.revision++;
     }
 
     public UUID getLeader() {
@@ -433,8 +382,9 @@ public class Faction {
     }
 
     public void setLeader(UUID leader) {
+        if (Objects.equals(this.leader, leader)) return;
         this.leader = leader;
-        this.modified = true;
+        this.revision++;
     }
 
     public double getBalance() {
@@ -442,8 +392,9 @@ public class Faction {
     }
 
     public void setBalance(double balance) {
+        if (this.balance == balance) return;
         this.balance = balance;
-        this.modified = true;
+        this.revision++;
     }
 
     public int getLives() {
@@ -451,8 +402,9 @@ public class Faction {
     }
 
     public void setLives(int lives) {
+        if (this.lives == lives) return;
         this.lives = lives;
-        this.modified = true;
+        this.revision++;
     }
 
     public String getColor() {
@@ -460,8 +412,9 @@ public class Faction {
     }
 
     public void setColor(String color) {
+        if (Objects.equals(this.color, color)) return;
         this.color = color;
-        this.modified = true;
+        this.revision++;
     }
 
     public Location getHome() {
@@ -470,7 +423,7 @@ public class Faction {
 
     public void setHome(Location home) {
         this.home = home == null ? null : home.clone();
-        this.modified = true;
+        this.revision++;
     }
 
     public boolean hasHome() {
@@ -478,24 +431,24 @@ public class Faction {
     }
 
     public boolean isModified() {
-        return modified;
+        return revision != savedRevision;
     }
 
     public Map<UUID, Integer> getMembers() {
-        return members;
+        return Collections.unmodifiableMap(members);
     }
 
     public void addMember(UUID member, int value) {
         Integer oldValue = members.put(member, value);
 
         if (oldValue == null || oldValue != value) {
-            modified = true;
+            revision++;
         }
     }
 
     public void removeMember(UUID member) {
         if (members.remove(member) != null) {
-            modified = true;
+            revision++;
         }
     }
 
@@ -558,8 +511,9 @@ public class Faction {
     }
 
     public void setOpen(boolean open) {
+        if (this.open == open) return;
         this.open = open;
-        modified = true;
+        revision++;
     }
 
     public double getDTR() {
@@ -567,8 +521,9 @@ public class Faction {
     }
 
     public void setDTR(double dtr) {
+        if (this.dtr == dtr) return;
         this.dtr = dtr;
-        modified = true;
+        revision++;
     }
 
     public int getPoints() {
@@ -576,8 +531,9 @@ public class Faction {
     }
 
     public void setPoints(int points) {
+        if (this.points == points) return;
         this.points = points;
-        modified = true;
+        revision++;
     }
 
     public int getKOTHCaptures() {
@@ -585,8 +541,9 @@ public class Faction {
     }
 
     public void setKOTHCaptures(int kothCaptures) {
+        if (this.kothCaptures == kothCaptures) return;
         this.kothCaptures = kothCaptures;
-        modified = true;
+        revision++;
     }
 
     public String getAnnouncement() {
@@ -594,8 +551,9 @@ public class Faction {
     }
 
     public void setAnnouncement(String announcement) {
+        if (Objects.equals(this.announcement, announcement)) return;
         this.announcement = announcement;
-        modified = true;
+        revision++;
     }
 
     public static Faction get(String name) {
@@ -610,43 +568,33 @@ public class Faction {
         return dtr <= 0;
     }
 
-    public synchronized void disband() {
-        String sql = "DELETE FROM factions WHERE uuid = ?";
+    public boolean disband() {
+        if (disbanding) return false;
         disbanding = true;
-
-        try (
-                Connection connection =
-                        Main.getInstance()
-                                .getDatabaseManager()
-                                .getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
-            statement.setString(1, uuid.toString());
-            statement.executeUpdate();
-
-            for (UUID member : members.keySet()) {
-                User user = Main.getInstance().getUser(member);
-                user.setFaction(null);
-                user.saveAsync();
+        try {
+            Main.getInstance().getDatabaseManager().save(List.of(
+                    new SaveSnapshot("UPDATE players SET faction = NULL WHERE faction = ?", () -> {}, uuid.toString()),
+                    new SaveSnapshot("DELETE FROM factionInvites WHERE faction = ?", () -> {}, uuid.toString()),
+                    new SaveSnapshot("DELETE FROM factions WHERE uuid = ?", () -> {}, uuid.toString())
+            )).join();
+            for (User user : Main.getInstance().getAllUsers().values()) {
+                if (uuid.equals(user.getFaction())) {
+                    user.setFaction(null);
+                    user.saveAsync();
+                }
             }
-
             Main.getInstance().removeClaimsForFaction(uuid);
             Main.getInstance().removeFaction(uuid);
-        } catch (SQLException exception) {
+            return true;
+        } catch (java.util.concurrent.CompletionException exception) {
             disbanding = false;
-            Main.getInstance().getLogger().log(
-                    Level.SEVERE,
-                    "Could not delete faction " + uuid,
-                    exception
-            );
+            return false;
         }
     }
 
     public void saveAsync() {
-        Bukkit.getScheduler().runTaskAsynchronously(
-                Main.getInstance(),
-                this::save
-        );
+        SaveSnapshot snapshot = snapshot();
+        if (snapshot != null) Main.getInstance().getDatabaseManager().save(List.of(snapshot));
     }
 
     public static boolean isNameInvalid(@NotNull String name, CommandSender p) {
@@ -710,10 +658,7 @@ public class Faction {
     }
 
     public boolean hasClaim() {
-        for (Claim claim : Main.getInstance().getClaims()) {
-            if (claim.faction().equals(uuid)) return true;
-        }
-        return false;
+        return Main.getInstance().hasClaim(uuid);
     }
 
     public static boolean isInWilderness(Location location) {
@@ -757,7 +702,9 @@ public class Faction {
     }
 
     public void setDeathban(boolean deathban) {
+        if (this.deathban == deathban) return;
         this.deathban = deathban;
+        revision++;
     }
 
     public String getFormattedName(User receiver) {
@@ -785,9 +732,9 @@ public class Faction {
             return faction.getFormattedName(user);
         }
         if (isInWilderness(location)) {
-            return localeConfig.getString("faction.wilderness");
+            return Main.getInstance().getLocaleConfig().getString("faction.wilderness");
         }
-        return localeConfig.getString("faction.warzone");
+        return Main.getInstance().getLocaleConfig().getString("faction.warzone");
     }
 
     public boolean isClaiming() {

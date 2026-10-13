@@ -1,97 +1,42 @@
 package me.Thomas.HCF.IO.Claims;
 
-import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 
-import java.util.List;
 import java.util.UUID;
 
-public record Claim(
-        UUID faction,
-        Location one,
-        Location two
-) {
+public record Claim(UUID faction, UUID world, int minX, int maxX, int minZ, int maxZ) {
     public static final int MIN_SIDE_LENGTH = 5;
     public static final int MAX_CHUNKS = 16;
     public static final int BLOCKS_PER_CHUNK = 16 * 16;
     public static final long MAX_AREA = (long) MAX_CHUNKS * BLOCKS_PER_CHUNK;
 
-    public Claim(
-            UUID faction,
-            UUID worldId,
-            int minX,
-            int maxX,
-            int minZ,
-            int maxZ
-    ) {
-        this(
-                faction,
-                createLocation(worldId, minX, minZ),
-                createLocation(worldId, maxX, maxZ)
-        );
+    public Claim {
+        java.util.Objects.requireNonNull(faction);
+        java.util.Objects.requireNonNull(world);
+        if (minX > maxX || minZ > maxZ) throw new IllegalArgumentException("Invalid claim bounds");
     }
 
-    private static Location createLocation(
-            UUID worldId,
-            int x,
-            int z
-    ) {
-        World world = Bukkit.getWorld(worldId);
+    public Claim(UUID faction, Location one, Location two) {
+        this(faction, commonWorld(one, two),
+                Math.min(one.getBlockX(), two.getBlockX()), Math.max(one.getBlockX(), two.getBlockX()),
+                Math.min(one.getBlockZ(), two.getBlockZ()), Math.max(one.getBlockZ(), two.getBlockZ()));
+    }
 
-        if (world == null) {
-            throw new IllegalArgumentException(
-                    "World is not loaded: " + worldId
-            );
+    private static UUID commonWorld(Location one, Location two) {
+        if (one.getWorld() == null || !one.getWorld().equals(two.getWorld())) {
+            throw new IllegalArgumentException("Claim corners must be in the same world");
         }
-
-        return new Location(world, x, 0, z);
-    }
-
-    public UUID world() {
         return one.getWorld().getUID();
     }
 
-    public int minX() {
-        return Math.min(
-                one.getBlockX(),
-                two.getBlockX()
-        );
-    }
-
-    public int maxX() {
-        return Math.max(
-                one.getBlockX(),
-                two.getBlockX()
-        );
-    }
-
-    public int minZ() {
-        return Math.min(
-                one.getBlockZ(),
-                two.getBlockZ()
-        );
-    }
-
-    public int maxZ() {
-        return Math.max(
-                one.getBlockZ(),
-                two.getBlockZ()
-        );
-    }
-
-    public int width() {
-        return maxX() - minX() + 1;
-    }
-
-    public int length() {
-        return maxZ() - minZ() + 1;
-    }
-
+    public Location one() { return new Location(Bukkit.getWorld(world), minX, 0, minZ); }
+    public Location two() { return new Location(Bukkit.getWorld(world), maxX, 0, maxZ); }
+    public long width() { return (long) maxX - minX + 1; }
+    public long length() { return (long) maxZ - minZ + 1; }
     public long area() {
-        return (long) width() * length();
+        return width() > Long.MAX_VALUE / length() ? Long.MAX_VALUE : width() * length();
     }
 
     public boolean isTooSmall() {
@@ -147,34 +92,6 @@ public record Claim(
     }
 
     public boolean intersects() {
-        int minChunkX = Math.floorDiv(minX(), 16);
-        int maxChunkX = Math.floorDiv(maxX(), 16);
-        int minChunkZ = Math.floorDiv(minZ(), 16);
-        int maxChunkZ = Math.floorDiv(maxZ(), 16);
-
-        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
-                ChunkKey key = new ChunkKey(
-                        world(),
-                        chunkX,
-                        chunkZ
-                );
-
-                List<Claim> claimsInChunk =
-                        Main.getInstance().getClaimsByChunk(key);
-
-                if (claimsInChunk == null) {
-                    continue;
-                }
-
-                for (Claim existing : claimsInChunk) {
-                    if (existing.intersects(this)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return Main.getInstance().intersectsClaim(this);
     }
 }

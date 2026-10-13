@@ -7,6 +7,23 @@ help:
     - "&e/%alias% give <target> <balance> - Give a player money"
     - "&e/%alias% take <target> <balance> - Take money from a player"
     - "&7&m----------------------------------------------------"
+  sotw:
+    - "&7&m----------------------------------------------------"
+    - "%primary%&lSOTW %secondary%Help"
+    - "&7&m----------------------------------------------------"
+    - "&e/sotw pause - Pause/Unpause SOTW"
+    - "&e/sotw cancel - Cancel SOTW"
+    - "&e/sotw start <time> - Start SOTW"
+    - "&e/sotw add <time> - Add SOTW time"
+    - "&e/sotw enable - Enable your SOTW combat status"
+    - "&7&m----------------------------------------------------"
+
+timers:
+  sotw:
+    start:
+      - "&7&m---------------------------"
+      - "&9SOTW has begun!"
+      - "&7&m---------------------------"
 
 factions:
   help:

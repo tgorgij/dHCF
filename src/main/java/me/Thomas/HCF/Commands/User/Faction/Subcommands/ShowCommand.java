@@ -219,12 +219,12 @@ public class ShowCommand implements Subcommand {
             }
 
             if (s.contains("%lives%")) {
-                if (!user.getFaction().equals(faction.getUUID()) && !Permission.has(p, "staff")) continue;
+                if (!Objects.equals(user.getFaction(), faction.getUUID()) && !Permission.has(p, "staff")) continue;
                 s = s.replace("%lives%", faction.getLives() + "");
             }
 
             if (s.contains("%announcement%")) {
-                if (!user.getFaction().equals(faction.getUUID()) && !Permission.has(p, "staff")) continue;
+                if (!Objects.equals(user.getFaction(), faction.getUUID()) && !Permission.has(p, "staff")) continue;
                 s = s.replace("%announcement%", faction.getAnnouncement() == null ? Objects.requireNonNull(localeConfig.getString("primary.none")) : faction.getAnnouncement());
             }
             p.sendMessage(C.chat(s));

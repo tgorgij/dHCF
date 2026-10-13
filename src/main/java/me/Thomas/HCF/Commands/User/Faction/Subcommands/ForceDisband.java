@@ -50,12 +50,15 @@ public class ForceDisband implements Subcommand {
             sender.sendMessage(C.chat(localeConfig.getString("commands.faction.forcedisband.raidable")));
             return true;
         }
+        if (!faction.disband()) {
+            sender.sendMessage(C.chat(localeConfig.getString("primary.save-failed", "&cCould not save changes. Please try again.")));
+            return true;
+        }
         sender.sendMessage(C.chat(Objects.requireNonNull(Objects.requireNonNull(localeConfig.getString("commands.faction.forcedisband.success")).replace("%faction%", faction.getName()))));
         for (UUID uuid : faction.getOnlineMembers().keySet()) {
             Player player = Bukkit.getPlayer(uuid);
             Objects.requireNonNull(player).sendMessage(C.chat(Objects.requireNonNull(Objects.requireNonNull(localeConfig.getString("commands.faction.forcedisband.broadcast")).replace("%player%", sender.getName()))));
         }
-        faction.disband();
         return true;
     }
 

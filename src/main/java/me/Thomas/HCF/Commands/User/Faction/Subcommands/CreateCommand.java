@@ -49,8 +49,7 @@ public class CreateCommand implements Subcommand {
         Faction faction = new Faction(uuid, p.getUniqueId(), name);
         Main.getInstance().addFaction(faction);
         user.setFaction(uuid);
-        faction.saveAsync();
-        user.saveAsync();
+        Main.getInstance().saveTogether(user, faction);
         p.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("commands.faction.create.success")).replace("%faction%", name)));
         Bukkit.broadcast(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("commands.faction.create.broadcast")).replace("%player%", p.getName()).replace("%faction%", name)));
         return true;

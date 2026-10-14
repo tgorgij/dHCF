@@ -23,7 +23,17 @@ primary:
 events:
   player:
     first-join: "&eSince this is your first time joining, you have been given &b$500&e."
+    combat:
+      faction: "&cYou cannot attack %victim%, as they are in your faction."
+      attacker-safezone: "&cYou cannot attack %victim%, as you are in a safe zone."
+      safezone: "&cYou cannot attack %victim%, as they are in a safe zone."
+      pvp-timer: "&cYou cannot attack %victim%, as they have a PvP timer."
+      attacker-pvp-timer: "&cYou cannot attack %victim%, as you have a PvP timer."
+      sotw: "&cYou cannot attack %victim%, as they have not enabled PvP during SOTW."
+      attacker-sotw: "&cYou cannot attack %victim%, as you have not enabled PvP during SOTW. Use /sotw enable to enable PvP."
     timer:
+      start:
+        default: "&eYou now have a &b%timer% timer &efor &b%time%&e."
       ongoing:
         default: "&cYou cannot do %timer% for %time%"
       end:
@@ -214,7 +224,9 @@ commands:
       paused: "&eYou have paused the SOTW"
       resumed: "&eYou have resumed the SOTW"
     enable:
+      usage: "&cUsage: /sotw enable"
       already: "&cYou are already enabled."
+      success: "&eYou have enabled PvP during SOTW. &cThis cannot be undone."
     start:
       usage: "&cUsage: /sotw start <time>"
       success: "&eYou have started the SOTW"

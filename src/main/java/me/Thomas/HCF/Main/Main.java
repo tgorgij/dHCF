@@ -1,9 +1,11 @@
 package me.Thomas.HCF.Main;
 
 import me.Thomas.HCF.Commands.User.Economy.BalanceCommand;
+import me.Thomas.HCF.Commands.Admin.SOTW.SOTWCommand;
 import me.Thomas.HCF.Commands.User.Faction.EconomyCommand;
 import me.Thomas.HCF.Commands.User.Faction.FactionCommand;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
+import me.Thomas.HCF.Events.Player.Combat.UserDamageEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserQuitEvent;
 import me.Thomas.HCF.Events.Player.Item.UserClaimEvent;
 import me.Thomas.HCF.Events.Player.Item.UserPearlEvent;
@@ -61,6 +63,7 @@ public class Main extends JavaPlugin {
 
     // Server Timers
     private final Map<ServerTimer.Type, ServerTimer> serverTimers = new HashMap<>();
+    private final Set<UUID> sotwEnabled = new HashSet<>();
 
     public Main() {
         instance = this;
@@ -121,6 +124,9 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("balance")).setTabCompleter(balanceCommand);
 
         // Admin
+        SOTWCommand sotwCommand = new SOTWCommand();
+        Objects.requireNonNull(getCommand("sotw")).setExecutor(sotwCommand);
+        Objects.requireNonNull(getCommand("sotw")).setTabCompleter(sotwCommand);
         EconomyCommand economyCommand = new EconomyCommand();
         Objects.requireNonNull(getCommand("economy")).setExecutor(economyCommand);
         Objects.requireNonNull(getCommand("economy")).setTabCompleter(economyCommand);
@@ -131,6 +137,7 @@ public class Main extends JavaPlugin {
 
         // User
         pm.registerEvents(new UserJoinEvent(), this);
+        pm.registerEvents(new UserDamageEvent(), this);
         pm.registerEvents(new UserPearlEvent(), this);
         pm.registerEvents(new UserQuitEvent(), this);
         pm.registerEvents(new UserClaimEvent(), this);
@@ -613,11 +620,26 @@ public class Main extends JavaPlugin {
     }
 
     public void addServerTimer(ServerTimer timer) {
+        if (timer.getType() == ServerTimer.Type.SOTW) sotwEnabled.clear();
         serverTimers.put(timer.getType(), timer);
     }
 
     public void removeServerTimer(ServerTimer.Type type) {
         serverTimers.remove(type);
+        if (type == ServerTimer.Type.SOTW) sotwEnabled.clear();
+    }
+
+    public boolean isSOTWOngoing() {
+        ServerTimer timer = getServerTimer(ServerTimer.Type.SOTW);
+        return timer != null && timer.getRemainingTimeMillis() > 0L;
+    }
+
+    public boolean isSOTWEnabled(UUID uuid) {
+        return sotwEnabled.contains(uuid);
+    }
+
+    public boolean enableSOTW(UUID uuid) {
+        return isSOTWOngoing() && sotwEnabled.add(uuid);
     }
 
     public void pauseServerTimer(ServerTimer.Type type) {

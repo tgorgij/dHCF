@@ -5,6 +5,7 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  sotw:
   faction:
     aliases:
       - f

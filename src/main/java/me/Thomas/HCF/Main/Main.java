@@ -359,6 +359,12 @@ public class Main extends JavaPlugin {
     private void loadLocale() {
         java.io.File localeFile = new java.io.File(getDataFolder(), "locale.yml");
         localeConfig = YamlConfiguration.loadConfiguration(localeFile);
+        try (java.io.InputStream resource = Objects.requireNonNull(getResource("locale.yml"));
+             java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
+            localeConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not load locale defaults", exception);
+        }
     }
 
     private void loadScoreboard() {
@@ -612,11 +618,16 @@ public class Main extends JavaPlugin {
     }
 
     public boolean hasServerTimer(ServerTimer.Type type) {
-        return serverTimers.containsKey(type);
+        return getServerTimer(type) != null;
     }
 
     public ServerTimer getServerTimer(ServerTimer.Type type) {
-        return serverTimers.get(type);
+        ServerTimer timer = serverTimers.get(type);
+        if (type == ServerTimer.Type.SOTW && timer != null && timer.getRemainingTimeMillis() == 0L) {
+            removeServerTimer(type);
+            return null;
+        }
+        return timer;
     }
 
     public void addServerTimer(ServerTimer timer) {

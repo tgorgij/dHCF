@@ -21,6 +21,7 @@ timers: # seconds
   pvp: 1800
   combat: 30
   home: 10
+  stuck: 60
   archertag: 5
   apple: 5
   gapple: 3600

@@ -42,8 +42,10 @@ public class UserMoveFactionEvent implements Listener {
         Player p = e.getPlayer();
         User user = User.get(p);
 
-        if (hasChangedPosition(from, to) && user.hasTimer(Timer.Type.HOME)) {
+        if (hasChangedPosition(from, to) && (user.getTimer(Timer.Type.HOME) != null
+                || user.getTimer(Timer.Type.STUCK) != null)) {
             user.removeTimer(Timer.Type.HOME);
+            user.removeTimer(Timer.Type.STUCK);
             p.sendMessage(C.chat(localeConfig.getString("primary.teleport.cancel")));
         }
 

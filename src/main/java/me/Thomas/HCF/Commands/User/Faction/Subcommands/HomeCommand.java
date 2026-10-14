@@ -42,6 +42,10 @@ public class HomeCommand implements Subcommand {
             return true;
         }
         User user = User.get(p);
+        if (user.hasTimer(Timer.Type.COMBAT)) {
+            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.combat-tagged"))));
+            return true;
+        }
         if (!user.hasFaction()) {
             p.sendMessage(C.chat(localeConfig.getString("commands.faction.not-in")));
             return true;
@@ -57,15 +61,15 @@ public class HomeCommand implements Subcommand {
         }
 
         Faction factionAtLocation = Faction.getAtLocation(p.getLocation());
+        if (user.getTimer(Timer.Type.HOME) != null || user.getTimer(Timer.Type.STUCK) != null) {
+            p.sendMessage(C.chat(localeConfig.getString("primary.teleport.already")));
+            return true;
+        }
         if (factionAtLocation != null && factionAtLocation.getType() == Faction.Type.SAFEZONE) {
             p.teleportAsync(faction.getHome());
             return true;
         }
 
-        if (user.hasTimer(Timer.Type.HOME)) {
-            p.sendMessage(C.chat(localeConfig.getString("primary.teleport.already")));
-            return true;
-        }
         Timer timer = new Timer(Timer.Type.HOME);
         user.addTimer(Timer.Type.HOME, timer);
         p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.home.success"))));

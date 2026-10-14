@@ -6,6 +6,8 @@ import me.Thomas.HCF.Commands.User.Faction.EconomyCommand;
 import me.Thomas.HCF.Commands.User.Faction.FactionCommand;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserDamageEvent;
+import me.Thomas.HCF.Events.Player.Combat.UserCombatLogoutEvent;
+import me.Thomas.HCF.Events.Player.Combat.UserDeathEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserQuitEvent;
 import me.Thomas.HCF.Events.Player.Item.UserClaimEvent;
 import me.Thomas.HCF.Events.Player.Item.UserPearlEvent;
@@ -138,6 +140,8 @@ public class Main extends JavaPlugin {
         // User
         pm.registerEvents(new UserJoinEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
+        pm.registerEvents(new UserCombatLogoutEvent(), this);
+        pm.registerEvents(new UserDeathEvent(), this);
         pm.registerEvents(new UserPearlEvent(), this);
         pm.registerEvents(new UserQuitEvent(), this);
         pm.registerEvents(new UserClaimEvent(), this);

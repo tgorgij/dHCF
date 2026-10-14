@@ -13,6 +13,7 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -31,7 +32,7 @@ public class UserDamageEvent implements Listener {
     private final FileConfiguration messagesConfig = Main.getInstance().getMessagesConfig();
     private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDamageUser(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player victim)) return;
         if (!(e.getDamager() instanceof Player attacker)) return;
@@ -39,7 +40,7 @@ public class UserDamageEvent implements Listener {
         handleCombat(e, victim, attacker);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDamageUserProjectile(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player victim)) return;
         if (!(e.getDamager() instanceof Projectile projectile)) return;
@@ -49,7 +50,7 @@ public class UserDamageEvent implements Listener {
         handleCombat(e, victim, attacker);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDamage(EntityDamageEvent e) {
         if (!(e.getEntity() instanceof Player victim)) return;
 
@@ -158,7 +159,7 @@ public class UserDamageEvent implements Listener {
         return null;
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserSplash(PotionSplashEvent e) {
         if (!hasHarmfulEffects(e.getPotion().getEffects())) return;
         Player attacker = resolveAttacker(e.getPotion());
@@ -168,7 +169,7 @@ public class UserDamageEvent implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserLingeringSplash(AreaEffectCloudApplyEvent e) {
         AreaEffectCloud cloud = e.getEntity();
         Collection<PotionEffect> effects = new ArrayList<>(cloud.getCustomEffects());
@@ -193,6 +194,11 @@ public class UserDamageEvent implements Listener {
     }
 
     private void applyCombatTimer(Player player, User user) {
+        if (user.getTimer(Timer.Type.HOME) != null || user.getTimer(Timer.Type.STUCK) != null) {
+            user.removeTimer(Timer.Type.HOME);
+            user.removeTimer(Timer.Type.STUCK);
+            player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.teleport.cancel"))));
+        }
         boolean hadCombatTimer = user.hasTimer(Timer.Type.COMBAT);
         user.addTimer(Timer.Type.COMBAT, new Timer(Timer.Type.COMBAT));
 

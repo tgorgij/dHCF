@@ -1,4 +1,5 @@
 primary:
+  combat-tagged: "&cYou cannot do this as you are combat tagged."
   no-permission: "&cNo permission."
   not-player: "&cOnly players can use this command."
   not-console: "&cOnly console can use this command."
@@ -190,6 +191,9 @@ commands:
       none: "&cYour faction does not have a home."
       end: "&cYou cannot teleport to your faction's home while you're in the end"
       success: "&eTeleporting to your faction's HQ. Please wait &d10 seconds&e..."
+    stuck:
+      usage: "&cUsage: /%alias% stuck"
+      success: "&eStuck timer started. Please wait &d%time%&e..."
     sethome:
       usage: "&cUsage: /%alias% sethome"
       cannot: "&cYou must set your factions home in your claim."

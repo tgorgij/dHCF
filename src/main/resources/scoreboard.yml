@@ -3,5 +3,7 @@ boards:
   primary:
     - "&7&m---------------------"
     - "&5&lEnderpearl&7: &c%player-enderpearl-timer% <display=%has-player-enderpearl-timer%>"
+    - "&6&lSOTW&7: &c%server-sotw-timer% <display=%has-server-sotw-timer%>"
+    - "&9&lStuck&7: &c%player-stuck-timer% <display=%has-player-stuck-timer%>"
     - "&9&lHome&7: &c%player-home-timer% <display=%has-player-home-timer%>"
     - "&7&m---------------------"

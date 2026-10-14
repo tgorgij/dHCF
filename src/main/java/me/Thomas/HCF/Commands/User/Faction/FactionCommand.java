@@ -50,6 +50,7 @@ public class FactionCommand implements TabExecutor {
         register(new ClaimCommand());
         register(new SetHomeCommand());
         register(new HomeCommand());
+        register(new StuckCommand());
         register(new MapCommand());
     }
 

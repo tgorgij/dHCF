@@ -184,7 +184,7 @@ public class User {
         StringBuilder result = new StringBuilder();
 
         for (Map.Entry<Timer.Type, Timer> entry : timers.entrySet()) {
-            if (entry.getKey() == Timer.Type.HOME) {
+            if (entry.getKey() == Timer.Type.HOME || entry.getKey() == Timer.Type.STUCK) {
                 continue;
             }
 
@@ -227,7 +227,7 @@ public class User {
 
             try {
                 Timer.Type type = Timer.Type.valueOf(values[0]);
-                if (type == Timer.Type.HOME) {
+                if (type == Timer.Type.HOME || type == Timer.Type.STUCK) {
                     continue;
                 }
 
@@ -396,7 +396,8 @@ public class User {
         Iterator<Map.Entry<Timer.Type, Timer>> iterator = timers.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<Timer.Type, Timer> entry = iterator.next();
-            if (entry.getKey() == Timer.Type.HOME || entry.getValue().getRemainingTimeMillis() > 0) continue;
+            if (entry.getKey() == Timer.Type.HOME || entry.getKey() == Timer.Type.STUCK
+                    || entry.getValue().getRemainingTimeMillis() > 0) continue;
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
                 player.sendMessage(me.Thomas.HCF.Utils.Chat.C.chat(

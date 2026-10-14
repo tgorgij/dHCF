@@ -4,6 +4,7 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
+import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Criteria;
@@ -20,8 +21,8 @@ import java.util.regex.Pattern;
 
 public class Board {
     private static final int MAX_LINES = 15;
-    private static final Pattern TIMER_DISPLAY = Pattern.compile("<display=%has-player-([a-zA-Z]+)-timer%>");
-    private record Line(String text, Timer.Type timer, String placeholder) {}
+    private static final Pattern TIMER_DISPLAY = Pattern.compile("<display=%has-(player|server)-([a-zA-Z]+)-timer%>");
+    private record Line(String text, Timer.Type timer, ServerTimer.Type serverTimer, String placeholder) {}
 
     private final Player player;
     private final Scoreboard scoreboard;
@@ -47,16 +48,18 @@ public class Board {
         for (String text : lines) {
             Matcher matcher = TIMER_DISPLAY.matcher(text);
             if (matcher.find()) {
-                String timerName = matcher.group(1).toLowerCase(Locale.ROOT);
+                String scope = matcher.group(1);
+                String timerName = matcher.group(2).toLowerCase(Locale.ROOT);
                 try {
                     configuredLines.add(new Line(text.replace(matcher.group(), ""),
-                            Timer.Type.valueOf(timerName.toUpperCase(Locale.ROOT)),
-                            "%player-" + timerName + "-timer%"));
+                            scope.equals("player") ? Timer.Type.valueOf(timerName.toUpperCase(Locale.ROOT)) : null,
+                            scope.equals("server") ? ServerTimer.Type.valueOf(timerName.toUpperCase(Locale.ROOT)) : null,
+                            "%" + scope + "-" + timerName + "-timer%"));
                 } catch (IllegalArgumentException ignored) {
                     Main.getInstance().getLogger().warning("Unknown scoreboard timer: " + timerName);
                 }
             } else {
-                configuredLines.add(new Line(text, null, null));
+                configuredLines.add(new Line(text, null, null, null));
             }
         }
         player.setScoreboard(scoreboard);
@@ -73,6 +76,11 @@ public class Board {
             String text = configured.text();
             if (configured.timer() != null) {
                 Timer timer = user.getTimer(configured.timer());
+                if (timer == null || timer.getRemainingTimeMillis() <= 0) continue;
+                text = text.replace(configured.placeholder(), C.formatTime(timer.getRemainingTimeMillis()));
+            }
+            if (configured.serverTimer() != null) {
+                ServerTimer timer = Main.getInstance().getServerTimer(configured.serverTimer());
                 if (timer == null || timer.getRemainingTimeMillis() <= 0) continue;
                 text = text.replace(configured.placeholder(), C.formatTime(timer.getRemainingTimeMillis()));
             }

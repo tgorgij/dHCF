@@ -8,6 +8,7 @@ public class Timer {
         PVP("timers.pvp"),
         COMBAT("timers.combat"),
         HOME("timers.home"),
+        STUCK("timers.stuck"),
         ARCHERTAG("timers.archertag"),
         APPLE("timers.apple"),
         GAPPLE("timers.gapple"),
@@ -20,7 +21,7 @@ public class Timer {
         }
 
         public int getLength() {
-            return Main.getInstance().getConfig().getInt(this.configPath, 0);
+            return Main.getInstance().getConfig().getInt(this.configPath, this == STUCK ? 60 : 0);
         }
     }
 

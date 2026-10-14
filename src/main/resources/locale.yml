@@ -202,6 +202,17 @@ commands:
     alt-usage: "&cUsage: /sotw enable"
     not-running: "&cSOTW is not currently running."
     running: "&cSOTW is already running."
+    add:
+      usage: "&cUsage: /sotw add <seconds> (positive to add, negative to remove)"
+      extended: "&eYou have extended the SOTW time by &b%time% &eseconds."
+      shortened: "&eYou have shortened the SOTW time by &b%time% &eseconds."
+    cancel:
+      usage: "&cUsage: /sotw cancel"
+      success: "&eYou have cancelled the SOTW"
+    pause:
+      usage: "&cUsage: /sotw pause"
+      paused: "&eYou have paused the SOTW"
+      resumed: "&eYou have resumed the SOTW"
     enable:
       already: "&cYou are already enabled."
     start:

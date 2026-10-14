@@ -17,10 +17,12 @@ import me.Thomas.HCF.IO.Database.DatabaseManager;
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
+import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Scoreboard.BoardHandler;
 import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -606,6 +608,10 @@ public class Main extends JavaPlugin {
         return serverTimers.containsKey(type);
     }
 
+    public ServerTimer getServerTimer(ServerTimer.Type type) {
+        return serverTimers.get(type);
+    }
+
     public void addServerTimer(ServerTimer timer) {
         serverTimers.put(timer.getType(), timer);
     }
@@ -617,5 +623,11 @@ public class Main extends JavaPlugin {
     public void pauseServerTimer(ServerTimer.Type type) {
         ServerTimer timer = serverTimers.get(type);
         if (timer != null) timer.pause();
+    }
+
+    public void sendMessage(CommandSender sender, String message) {
+        for (String s : messagesConfig.getStringList(message)) {
+            sender.sendMessage(C.chat(s));
+        }
     }
 }

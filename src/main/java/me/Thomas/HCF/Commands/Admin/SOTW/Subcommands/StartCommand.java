@@ -55,7 +55,7 @@ public class StartCommand implements Subcommand {
         Main.getInstance().addServerTimer(timer);
         sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.sotw.start.success"))));
         for (CommandSender player : Bukkit.getOnlinePlayers()) {
-            sendMessage(player, "timers.sotw.start");
+            Main.getInstance().sendMessage(player, "timers.sotw.start");
         }
         return true;
     }
@@ -63,11 +63,5 @@ public class StartCommand implements Subcommand {
     @Override
     public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String @NonNull [] args) {
         return Subcommand.super.tabComplete(sender, args);
-    }
-
-    private void sendMessage(CommandSender sender, String message) {
-        for (String s : messagesConfig.getStringList(message)) {
-            sender.sendMessage(C.chat(s));
-        }
     }
 }

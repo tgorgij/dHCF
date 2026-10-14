@@ -51,6 +51,12 @@ public class ServerTimer {
         return expires;
     }
 
+    public void addTime(long seconds) {
+        long adjustedExpires = Math.addExact(expires, Math.multiplyExact(seconds, 1000L));
+        long now = isPaused() ? pausedTime : System.currentTimeMillis();
+        expires = Math.max(now, adjustedExpires);
+    }
+
     public long getRemainingTime() {
         return getRemainingTimeMillis() / 1000L;
     }

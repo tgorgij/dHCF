@@ -14,12 +14,32 @@ help:
     - "&e/sotw pause - Pause/Unpause SOTW"
     - "&e/sotw cancel - Cancel SOTW"
     - "&e/sotw start <time> - Start SOTW"
-    - "&e/sotw add <time> - Add SOTW time"
+    - "&e/sotw add <seconds> - Add or remove SOTW time"
     - "&e/sotw enable - Enable your SOTW combat status"
     - "&7&m----------------------------------------------------"
 
 timers:
   sotw:
+    extended:
+      - "&7&m---------------------------"
+      - "&9SOTW has been extended!"
+      - "&7&m---------------------------"
+    shortened:
+      - "&7&m---------------------------"
+      - "&9SOTW has been shortened!"
+      - "&7&m---------------------------"
+    paused:
+      - "&7&m---------------------------"
+      - "&9SOTW has been paused!"
+      - "&7&m---------------------------"
+    resumed:
+      - "&7&m---------------------------"
+      - "&9SOTW has been resumed!"
+      - "&7&m---------------------------"
+    cancel:
+      - "&7&m---------------------------"
+      - "&9SOTW has been cancelled!"
+      - "&7&m---------------------------"
     start:
       - "&7&m---------------------------"
       - "&9SOTW has begun!"

@@ -22,6 +22,7 @@ import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Utils.Chat.C;
+import me.Thomas.HCF.Utils.Combat.DTR;
 import me.Thomas.HCF.Utils.Scoreboard.BoardHandler;
 import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import org.bukkit.Bukkit;
@@ -45,6 +46,7 @@ public class Main extends JavaPlugin {
     private FileConfiguration scoreboardConfig;
     private FileConfiguration messagesConfig;
     private BoardHandler boardHandler;
+    private UserCombatLogoutEvent combatLogoutEvent;
     private boolean dataLoaded;
 
     // Users
@@ -96,11 +98,13 @@ public class Main extends JavaPlugin {
         commands();
 
         Bukkit.getScheduler().runTaskTimer(this, this::saveAll, 20 * 60 * 5, 20 * 60 * 5);
+        Bukkit.getScheduler().runTaskTimer(this, this::updateDTR, 20L, 20L);
     }
 
     @Override
     public void onDisable() {
         if (boardHandler != null) boardHandler.close();
+        if (combatLogoutEvent != null) combatLogoutEvent.shutdown();
         if (databaseManager != null) {
             if (dataLoaded) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
@@ -140,7 +144,9 @@ public class Main extends JavaPlugin {
         // User
         pm.registerEvents(new UserJoinEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
-        pm.registerEvents(new UserCombatLogoutEvent(), this);
+        combatLogoutEvent = new UserCombatLogoutEvent();
+        pm.registerEvents(combatLogoutEvent, this);
+        combatLogoutEvent.removeSavedCombatLoggers();
         pm.registerEvents(new UserDeathEvent(), this);
         pm.registerEvents(new UserPearlEvent(), this);
         pm.registerEvents(new UserQuitEvent(), this);
@@ -379,6 +385,22 @@ public class Main extends JavaPlugin {
     private void loadMessages() {
         java.io.File messagesFile = new java.io.File(getDataFolder(), "messages.yml");
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+    }
+
+    private void updateDTR() {
+        long now = System.currentTimeMillis();
+        List<SaveSnapshot> snapshots = new ArrayList<>();
+        for (Faction faction : factions.values()) {
+            double previousDTR = faction.getDTR();
+            long previousFreeze = faction.getDTRFreezeExpiry();
+            long previousRegen = faction.getDTRNextRegen();
+            DTR.tick(faction, getConfig(), now);
+            if (previousDTR == faction.getDTR() && previousFreeze == faction.getDTRFreezeExpiry()
+                    && previousRegen == faction.getDTRNextRegen()) continue;
+            SaveSnapshot snapshot = faction.snapshot();
+            if (snapshot != null) snapshots.add(snapshot);
+        }
+        if (!snapshots.isEmpty()) databaseManager.save(snapshots);
     }
 
     private void saveAll() {

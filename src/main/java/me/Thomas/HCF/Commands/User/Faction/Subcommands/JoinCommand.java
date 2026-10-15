@@ -53,6 +53,12 @@ public class JoinCommand implements Subcommand {
             p.sendMessage(C.chat(localeConfig.getString("commands.faction.join.already-in")));
             return true;
         }
+        long freezeRemaining = faction.getDTRFreezeExpiry() - System.currentTimeMillis();
+        if (freezeRemaining > 0) {
+            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.join.dtr-freeze"))
+                    .replace("%time%", C.formatChatTime((freezeRemaining + 999L) / 1000L))));
+            return true;
+        }
         if (faction.isRaidable()) {
             p.sendMessage(C.chat(localeConfig.getString("commands.faction.join.raidable")));
             return true;

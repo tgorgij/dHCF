@@ -392,6 +392,11 @@ public class User {
         }
     }
 
+    public void clearCooldowns() {
+        // PvP protection is not a cooldown; retain it while clearing combat, item timers, and teleport warmups.
+        if (timers.keySet().removeIf(type -> type != Timer.Type.PVP)) revision++;
+    }
+
     public void expireTimers() {
         Iterator<Map.Entry<Timer.Type, Timer>> iterator = timers.entrySet().iterator();
         while (iterator.hasNext()) {

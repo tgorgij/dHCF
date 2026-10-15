@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 /** Versioned, transactional upgrades shared by fresh installs and existing databases. */
 public final class DatabaseSchema {
-    private static final int VERSION = 1;
+    private static final int VERSION = 5;
 
     private DatabaseSchema() {}
 
@@ -37,6 +37,43 @@ public final class DatabaseSchema {
             if (version < 1) {
                 migrateInvites(statement);
                 statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (1)");
+            }
+            if (version < 2) {
+                statement.executeUpdate("""
+                        CREATE TABLE combatLoggerStates (
+                            player TEXT PRIMARY KEY REFERENCES players(uuid) ON DELETE CASCADE,
+                            inventory BLOB NOT NULL,
+                            heldSlot INTEGER NOT NULL CHECK (heldSlot BETWEEN 0 AND 8),
+                            health REAL NOT NULL CHECK (health > 0)
+                        ) WITHOUT ROWID
+                        """);
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (2)");
+            }
+            if (version < 3) {
+                statement.executeUpdate("""
+                        CREATE TABLE combatLoggerStates_v3 (
+                            player TEXT PRIMARY KEY REFERENCES players(uuid) ON DELETE CASCADE,
+                            inventory BLOB NOT NULL,
+                            heldSlot INTEGER NOT NULL CHECK (heldSlot BETWEEN 0 AND 8),
+                            health REAL NOT NULL,
+                            died INTEGER NOT NULL DEFAULT 0 CHECK (died IN (0, 1)),
+                            CHECK ((died = 0 AND health > 0) OR (died = 1 AND health = 0))
+                        ) WITHOUT ROWID
+                        """);
+                statement.executeUpdate("INSERT INTO combatLoggerStates_v3 (player, inventory, heldSlot, health) SELECT player, inventory, heldSlot, health FROM combatLoggerStates");
+                statement.executeUpdate("DROP TABLE combatLoggerStates");
+                statement.executeUpdate("ALTER TABLE combatLoggerStates_v3 RENAME TO combatLoggerStates");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (3)");
+            }
+            if (version < 4) {
+                statement.executeUpdate("ALTER TABLE factions ADD COLUMN dtrFreezeExpiry INTEGER NOT NULL DEFAULT 0");
+                statement.executeUpdate("ALTER TABLE factions ADD COLUMN dtrNextRegen INTEGER NOT NULL DEFAULT 0");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (4)");
+            }
+            if (version < 5) {
+                statement.executeUpdate("ALTER TABLE combatLoggerStates ADD COLUMN absorption REAL NOT NULL DEFAULT 0");
+                statement.executeUpdate("ALTER TABLE combatLoggerStates ADD COLUMN effects TEXT NOT NULL DEFAULT ''");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (5)");
             }
             connection.commit();
         } catch (SQLException exception) {

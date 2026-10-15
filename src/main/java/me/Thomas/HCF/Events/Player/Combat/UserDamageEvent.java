@@ -6,12 +6,15 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -21,11 +24,13 @@ import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Collection;
 import java.util.ArrayList;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class UserDamageEvent implements Listener {
 
@@ -34,7 +39,7 @@ public class UserDamageEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDamageUser(EntityDamageByEntityEvent e) {
-        if (!(e.getEntity() instanceof Player victim)) return;
+        if (!(e.getEntity() instanceof LivingEntity victim) || getVictimUser(victim) == null) return;
         if (!(e.getDamager() instanceof Player attacker)) return;
 
         handleCombat(e, victim, attacker);
@@ -42,17 +47,17 @@ public class UserDamageEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDamageUserProjectile(EntityDamageByEntityEvent e) {
-        if (!(e.getEntity() instanceof Player victim)) return;
+        if (!(e.getEntity() instanceof LivingEntity victim) || getVictimUser(victim) == null) return;
         if (!(e.getDamager() instanceof Projectile projectile)) return;
         if (!(projectile.getShooter() instanceof Player attacker)) return;
-        if (attacker.getUniqueId().equals(victim.getUniqueId())) return;
+        if (attacker.getUniqueId().equals(getVictimUser(victim).getUUID())) return;
 
         handleCombat(e, victim, attacker);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDamage(EntityDamageEvent e) {
-        if (!(e.getEntity() instanceof Player victim)) return;
+        if (!(e.getEntity() instanceof LivingEntity victim) || getVictimUser(victim) == null) return;
 
         if (e.getCause() == EntityDamageEvent.DamageCause.FIRE
                 || e.getCause() == EntityDamageEvent.DamageCause.FIRE_TICK) {
@@ -64,7 +69,7 @@ public class UserDamageEvent implements Listener {
         if (attacker == null && e instanceof EntityDamageByEntityEvent entityDamage) {
             attacker = resolveAttacker(entityDamage.getDamager());
         }
-        if (attacker != null && !attacker.getUniqueId().equals(victim.getUniqueId())) {
+        if (attacker != null && !attacker.getUniqueId().equals(getVictimUser(victim).getUUID())) {
             // Direct player and projectile hits have their own handlers.
             if (e instanceof EntityDamageByEntityEvent entityDamage
                     && (entityDamage.getDamager() instanceof Player
@@ -76,8 +81,21 @@ public class UserDamageEvent implements Listener {
         if (isDamageProtected(victim)) e.setCancelled(true);
     }
 
-    private boolean isDamageProtected(Player victim) {
-        User victimUser = Main.getInstance().getUser(victim.getUniqueId());
+    private User getVictimUser(LivingEntity victim) {
+        if (victim instanceof Player player) return User.get(player);
+        if (!(victim instanceof Villager villager)) return null;
+        String playerId = villager.getPersistentDataContainer().get(
+                new NamespacedKey(Main.getInstance(), "player"), PersistentDataType.STRING);
+        if (playerId == null) return null;
+        try {
+            return User.get(UUID.fromString(playerId));
+        } catch (IllegalArgumentException exception) {
+            return null;
+        }
+    }
+
+    private boolean isDamageProtected(LivingEntity victim) {
+        User victimUser = Objects.requireNonNull(getVictimUser(victim));
         Faction victimTerritory = Faction.getAtLocation(victim.getLocation());
         if (victimTerritory != null && victimTerritory.getType() == Faction.Type.SAFEZONE) {
             return true;
@@ -85,64 +103,64 @@ public class UserDamageEvent implements Listener {
         if (victimUser.hasTimer(Timer.Type.PVP)) {
             return true;
         }
-        return Main.getInstance().isSOTWOngoing() && !Main.getInstance().isSOTWEnabled(victim.getUniqueId());
+        return Main.getInstance().isSOTWOngoing() && !Main.getInstance().isSOTWEnabled(victimUser.getUUID());
     }
 
-    private void handleCombat(EntityDamageEvent e, Player victim, Player attacker) {
+    private void handleCombat(EntityDamageEvent e, LivingEntity victim, Player attacker) {
         if (!canCombat(victim, attacker)) {
             e.setCancelled(true);
             return;
         }
-        applyCombatTimer(victim, Main.getInstance().getUser(victim.getUniqueId()));
+        applyVictimCombatTimer(victim);
         applyCombatTimer(attacker, Main.getInstance().getUser(attacker.getUniqueId()));
     }
 
-    private boolean canCombat(Player victim, Player attacker) {
-        User victimUser = Main.getInstance().getUser(victim.getUniqueId());
+    private boolean canCombat(LivingEntity victim, Player attacker) {
+        User victimUser = Objects.requireNonNull(getVictimUser(victim));
         User attackerUser = Main.getInstance().getUser(attacker.getUniqueId());
 
         if (attackerUser.hasFaction() && attackerUser.getFaction().equals(victimUser.getFaction())) {
             attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.faction"))
-                    .replace("%victim%", victim.getName())));
+                    .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         Faction attackerTerritory = Faction.getAtLocation(attacker.getLocation());
         if (attackerTerritory != null && attackerTerritory.getType() == Faction.Type.SAFEZONE) {
             attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.attacker-safezone"))
-                    .replace("%victim%", victim.getName())));
+                    .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         Faction victimTerritory = Faction.getAtLocation(victim.getLocation());
         if (victimTerritory != null && victimTerritory.getType() == Faction.Type.SAFEZONE) {
             attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.safezone"))
-                    .replace("%victim%", victim.getName())));
+                    .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         if (victimUser.hasTimer(Timer.Type.PVP)) {
             attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.pvp-timer"))
-                    .replace("%victim%", victim.getName())));
+                    .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         if (attackerUser.hasTimer(Timer.Type.PVP)) {
             attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.attacker-pvp-timer"))
-                    .replace("%victim%", victim.getName())));
+                    .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         if (Main.getInstance().isSOTWOngoing()) {
-            if (!Main.getInstance().isSOTWEnabled(victim.getUniqueId())) {
+            if (!Main.getInstance().isSOTWEnabled(victimUser.getUUID())) {
                 attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.sotw"))
-                        .replace("%victim%", victim.getName())));
+                        .replace("%victim%", victimUser.getName())));
                 return false;
             }
 
             if (!Main.getInstance().isSOTWEnabled(attacker.getUniqueId())) {
                 attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.attacker-sotw"))
-                        .replace("%victim%", victim.getName())));
+                        .replace("%victim%", victimUser.getName())));
                 return false;
             }
         }
@@ -164,8 +182,8 @@ public class UserDamageEvent implements Listener {
         if (!hasHarmfulEffects(e.getPotion().getEffects())) return;
         Player attacker = resolveAttacker(e.getPotion());
         for (var entity : e.getAffectedEntities()) {
-            if (!(entity instanceof Player victim) || e.getIntensity(victim) <= 0) continue;
-            if (!applyPotionCombat(victim, attacker)) e.setIntensity(victim, 0);
+            if (getVictimUser(entity) == null || e.getIntensity(entity) <= 0) continue;
+            if (!applyPotionCombat(entity, attacker)) e.setIntensity(entity, 0);
         }
     }
 
@@ -176,21 +194,31 @@ public class UserDamageEvent implements Listener {
         if (cloud.getBasePotionType() != null) effects.addAll(cloud.getBasePotionType().getPotionEffects());
         if (!hasHarmfulEffects(effects)) return;
         Player attacker = resolveAttacker(cloud);
-        e.getAffectedEntities().removeIf(entity -> entity instanceof Player victim && !applyPotionCombat(victim, attacker));
+        e.getAffectedEntities().removeIf(entity -> getVictimUser(entity) != null && !applyPotionCombat(entity, attacker));
     }
 
     private boolean hasHarmfulEffects(Collection<PotionEffect> effects) {
         return effects.stream().anyMatch(effect -> effect.getType().getEffectCategory() == PotionEffectType.Category.HARMFUL);
     }
 
-    private boolean applyPotionCombat(Player victim, Player attacker) {
-        if (attacker == null || attacker.getUniqueId().equals(victim.getUniqueId())) {
+    private boolean applyPotionCombat(LivingEntity victim, Player attacker) {
+        if (attacker == null || attacker.getUniqueId().equals(Objects.requireNonNull(getVictimUser(victim)).getUUID())) {
             return !isDamageProtected(victim);
         }
         if (!canCombat(victim, attacker)) return false;
-        applyCombatTimer(victim, Main.getInstance().getUser(victim.getUniqueId()));
+        applyVictimCombatTimer(victim);
         applyCombatTimer(attacker, Main.getInstance().getUser(attacker.getUniqueId()));
         return true;
+    }
+
+    private void applyVictimCombatTimer(LivingEntity victim) {
+        User user = Objects.requireNonNull(getVictimUser(victim));
+        if (victim instanceof Player player) {
+            applyCombatTimer(player, user);
+        } else {
+            user.addTimer(Timer.Type.COMBAT, new Timer(Timer.Type.COMBAT));
+            user.saveAsync();
+        }
     }
 
     private void applyCombatTimer(Player player, User user) {

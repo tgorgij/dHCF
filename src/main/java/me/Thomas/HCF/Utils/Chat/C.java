@@ -116,6 +116,12 @@ public class C {
         return formatter.format(amount);
     }
 
+    public static String getFormattedDTR(me.Thomas.HCF.IO.Faction.Faction faction) {
+        String status = faction.getDTRFreezeExpiry() > System.currentTimeMillis() ? "■"
+                : faction.getDTR() < faction.getMaxDTR() && faction.getDTRNextRegen() != 0 ? "^" : "";
+        return getFormattedDTR(faction.getDTR()) + status;
+    }
+
     public static String getFormattedDTR(double dtr) {
         if (dtr <= 0) {
             return C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.dtr.colors.raidable"))) + dtr;

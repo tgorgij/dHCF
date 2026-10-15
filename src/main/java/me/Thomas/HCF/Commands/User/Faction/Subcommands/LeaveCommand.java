@@ -46,6 +46,12 @@ public class LeaveCommand implements Subcommand {
             return true;
         }
         Faction faction = Faction.get(user.getFaction());
+        long freezeRemaining = faction.getDTRFreezeExpiry() - System.currentTimeMillis();
+        if (freezeRemaining > 0) {
+            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.leave.dtr-freeze"))
+                    .replace("%time%", C.formatChatTime((freezeRemaining + 999L) / 1000L))));
+            return true;
+        }
         if (faction.getLeader().equals(p.getUniqueId())) {
             p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.leave.leader")).replace("%alias%", alias)));
             return true;

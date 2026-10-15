@@ -17,6 +17,17 @@ economy:
   currency-symbol: "$"
   minimum-transfer: 1
 
+combat-logger:
+  despawn-after: 30 # seconds after spawning or the last uncancelled hit
+
+deathbans: # durations in seconds; shortest matching permission wins
+  default-duration: 3600
+  permissions:
+    - permission: "dhcf.deathban.30minutes"
+      duration: 1800
+    - permission: "dhcf.deathban.15minutes"
+      duration: 900
+
 timers: # seconds
   pvp: 1800
   combat: 30
@@ -30,6 +41,10 @@ timers: # seconds
 factions:
   player-format: "&9%player%&7[&c%kills%&7]"
   dtr:
+    maximum: 6.06
+    minimum: -0.99
+    freeze-minutes: 30
+    regeneration-per-minute: 0.03
     colors:
       raidable: RED
       close-to-raidable: YELLOW
@@ -70,4 +85,3 @@ factions:
       per-block: 0.25
   home:
     disable-in-end: false
-

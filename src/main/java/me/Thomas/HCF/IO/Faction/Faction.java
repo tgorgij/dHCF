@@ -71,6 +71,8 @@ public class Faction {
     private Location home;
     private boolean open;
     private double dtr;
+    private long dtrFreezeExpiry;
+    private long dtrNextRegen;
     private int points;
     private int kothCaptures;
     private String announcement;
@@ -200,6 +202,8 @@ public class Faction {
         this.open = resultSet.getBoolean("open");
 
         this.dtr = resultSet.getDouble("dtr");
+        this.dtrFreezeExpiry = resultSet.getLong("dtrFreezeExpiry");
+        this.dtrNextRegen = resultSet.getLong("dtrNextRegen");
 
         this.points = resultSet.getInt("points");
 
@@ -225,8 +229,8 @@ public class Faction {
         String sql =
                 "INSERT INTO factions "
                         + "(uuid, type, name, leader, balance, lives, "
-                        + "members, color, home, open, dtr, points, kothCaptures, announcement, deathban) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "members, color, home, open, dtr, points, kothCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET "
                         + "type = excluded.type, "
                         + "name = excluded.name, "
@@ -241,12 +245,14 @@ public class Faction {
                         + "points = excluded.points, "
                         + "kothCaptures = excluded.kothCaptures, "
                         + "announcement = excluded.announcement, "
-                        + "deathban = excluded.deathban";
+                        + "deathban = excluded.deathban, "
+                        + "dtrFreezeExpiry = excluded.dtrFreezeExpiry, "
+                        + "dtrNextRegen = excluded.dtrNextRegen";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), type.name(), name, leader == null ? null : leader.toString(),
                 balance, lives, serializeMembers(), color, serializeLocation(home), open, dtr,
-                points, kothCaptures, announcement, deathban);
+                points, kothCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen);
     }
 
     private String serializeMembers() {
@@ -518,6 +524,34 @@ public class Faction {
 
     public double getDTR() {
         return dtr;
+    }
+
+    public double getMaxDTR() {
+        double memberMaximum = java.math.BigDecimal.valueOf(members.size())
+                .multiply(new java.math.BigDecimal("1.01")).doubleValue();
+        double configuredMaximum = Main.getInstance().getConfig().getDouble("factions.dtr.maximum", 6.06);
+        if (!Double.isFinite(configuredMaximum) || configuredMaximum < 0) configuredMaximum = 6.06;
+        return Math.min(memberMaximum, configuredMaximum);
+    }
+
+    public long getDTRFreezeExpiry() {
+        return dtrFreezeExpiry;
+    }
+
+    public void setDTRFreezeExpiry(long expiry) {
+        if (dtrFreezeExpiry == expiry) return;
+        dtrFreezeExpiry = expiry;
+        revision++;
+    }
+
+    public long getDTRNextRegen() {
+        return dtrNextRegen;
+    }
+
+    public void setDTRNextRegen(long nextRegen) {
+        if (dtrNextRegen == nextRegen) return;
+        dtrNextRegen = nextRegen;
+        revision++;
     }
 
     public void setDTR(double dtr) {

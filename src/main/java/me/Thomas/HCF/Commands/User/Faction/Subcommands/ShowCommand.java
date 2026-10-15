@@ -210,7 +210,7 @@ public class ShowCommand implements Subcommand {
             }
 
             if (s.contains("%dtr%")) {
-                s = s.replace("%dtr%", C.getFormattedDTR(faction.getDTR()));
+                s = s.replace("%dtr%", C.getFormattedDTR(faction));
             }
 
             if (s.contains("%open%")) {
@@ -323,7 +323,7 @@ public class ShowCommand implements Subcommand {
             }
 
             if (s.contains("%dtr%")) {
-                s = s.replace("%dtr%", C.getFormattedDTR(faction.getDTR()));
+                s = s.replace("%dtr%", C.getFormattedDTR(faction));
             }
 
             if (s.contains("%open%")) {

@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Main;
 
+import me.Thomas.HCF.Commands.Staff.ReviveCommand;
 import me.Thomas.HCF.Commands.User.Economy.BalanceCommand;
 import me.Thomas.HCF.Commands.Admin.SOTW.SOTWCommand;
 import me.Thomas.HCF.Commands.User.Faction.EconomyCommand;
@@ -36,7 +37,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.*;
 import java.util.*;
-import java.util.logging.Level;
 
 public class Main extends JavaPlugin {
 
@@ -130,6 +130,9 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("balance")).setTabCompleter(balanceCommand);
 
         // Admin
+        ReviveCommand reviveCommand = new ReviveCommand();
+        Objects.requireNonNull(getCommand("revive")).setExecutor(reviveCommand);
+        Objects.requireNonNull(getCommand("revive")).setTabCompleter(reviveCommand);
         SOTWCommand sotwCommand = new SOTWCommand();
         Objects.requireNonNull(getCommand("sotw")).setExecutor(sotwCommand);
         Objects.requireNonNull(getCommand("sotw")).setTabCompleter(sotwCommand);

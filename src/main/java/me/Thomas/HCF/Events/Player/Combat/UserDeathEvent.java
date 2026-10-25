@@ -132,6 +132,15 @@ public class UserDeathEvent implements Listener {
         Deathban.apply(user, Deathban.getDuration(e.getEntity()), e.getEntity().getLocation());
         recordDeathStatistics(e, user);
         e.deathMessage(formatDeathMessage(e, getPlayerName(user)));
+        // Let the death finish processing drops and statistics before disconnecting the player.
+        Main.getInstance().getServer().getScheduler().runTask(Main.getInstance(), () -> {
+            Player player = e.getEntity();
+            long remaining = Deathban.getRemainingSeconds(user.getDeathbanExpiry(), System.currentTimeMillis());
+            if (!player.isOnline() || remaining == 0L) return;
+            String message = localeConfig.getString("events.player.deathban",
+                    "&cYou are deathbanned. &eYou can log back in in &c%time%&e.");
+            player.kick(C.chat(message.replace("%time%", C.formatChatTime(remaining))));
+        });
     }
 
     private Component formatDeathMessage(EntityDeathEvent e, String victim) {

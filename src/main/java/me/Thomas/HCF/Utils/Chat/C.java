@@ -117,7 +117,7 @@ public class C {
     }
 
     public static String getFormattedDTR(me.Thomas.HCF.IO.Faction.Faction faction) {
-        String status = faction.getDTRFreezeExpiry() > System.currentTimeMillis() ? "■"
+        String status = faction.getDTRFreezeExpiry() > System.currentTimeMillis() ? " ■"
                 : faction.getDTR() < faction.getMaxDTR() && faction.getDTRNextRegen() != 0 ? "^" : "";
         return getFormattedDTR(faction.getDTR()) + status;
     }

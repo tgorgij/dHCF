@@ -12,6 +12,15 @@ public final class DTR {
     private DTR() {
     }
 
+    /** Starts regeneration or resets the freeze to its full configured duration. */
+    public static void setRegenerating(Faction faction, boolean regenerating, ConfigurationSection config, long now) {
+        long freezeMinutes = regenerating ? 0L
+                : Math.clamp(config.getLong("factions.dtr.freeze-minutes", 30L), 0L, Long.MAX_VALUE / MINUTE);
+        long expiry = addTime(now, freezeMinutes * MINUTE);
+        faction.setDTRFreezeExpiry(freezeMinutes == 0L ? 0L : expiry);
+        faction.setDTRNextRegen(faction.getDTR() >= faction.getMaxDTR() ? 0L : addTime(expiry, MINUTE));
+    }
+
     public static void onDeath(Faction faction, long now) {
         onDeath(faction, Main.getInstance().getConfig(), now);
     }

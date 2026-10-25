@@ -215,6 +215,7 @@ public class UserInteractInFactionEvent implements Listener {
         boolean disallowed = faction == null
                 ? Faction.isInWarzoneBuildLimit(location)
                 : !user.hasFaction() || !user.getFaction().equals(faction.getUUID());
+        if (Objects.requireNonNull(faction).getType().equals(Faction.Type.PLAYER) && faction.getDTR() <= 0) return false;
         if (disallowed && (!throttleMessage || canSendPressurePlateMessage(p))) {
             String messageFormat = "faction.modify.";
             p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString(messageFormat + message))

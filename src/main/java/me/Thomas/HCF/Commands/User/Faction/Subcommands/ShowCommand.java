@@ -223,6 +223,13 @@ public class ShowCommand implements Subcommand {
                 s = s.replace("%lives%", faction.getLives() + "");
             }
 
+            if (s.contains("%regeneration-time%")) {
+                if (!Objects.equals(user.getFaction(), faction.getUUID()) && !Permission.has(p, "staff")) continue;
+                String time = getRegenerationTime(faction);
+                if (time == null) continue;
+                s = s.replace("%regeneration-time%", time);
+            }
+
             if (s.contains("%announcement%")) {
                 if (!Objects.equals(user.getFaction(), faction.getUUID()) && !Permission.has(p, "staff")) continue;
                 s = s.replace("%announcement%", faction.getAnnouncement() == null ? Objects.requireNonNull(localeConfig.getString("primary.none")) : faction.getAnnouncement());
@@ -336,11 +343,31 @@ public class ShowCommand implements Subcommand {
                 s = s.replace("%lives%", faction.getLives() + "");
             }
 
+            if (s.contains("%regeneration-time%")) {
+                if (!Permission.has(sender, "staff")) continue;
+                String time = getRegenerationTime(faction);
+                if (time == null) continue;
+                s = s.replace("%regeneration-time%", time);
+            }
+
             if (s.contains("%announcement%")) {
                 if (!Permission.has(sender, "staff")) continue;
                 s = s.replace("%announcement%", faction.getAnnouncement() == null ? Objects.requireNonNull(localeConfig.getString("primary.none")) : faction.getAnnouncement());
             }
             sender.sendMessage(C.chat(s));
         }
+    }
+
+    private String getRegenerationTime(Faction faction) {
+        long now = System.currentTimeMillis();
+        if (faction.getDTRFreezeExpiry() <= now) return null;
+        if (faction.getDTR() >= faction.getMaxDTR()) return null;
+        double rate = Main.getInstance().getConfig().getDouble("factions.dtr.regeneration-per-minute", 0.03);
+        if (!Double.isFinite(rate) || rate <= 0) return null;
+        long nextRegen = faction.getDTRNextRegen();
+        // A faction awaiting its first regeneration tick has a one-minute interval.
+        long remaining = nextRegen == 0L ? 60_000L : Math.max(0L, nextRegen - now);
+        long seconds = remaining / 1000L + (remaining % 1000L == 0L ? 0L : 1L);
+        return C.formatChatTime(seconds);
     }
 }

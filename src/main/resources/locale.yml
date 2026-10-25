@@ -1,4 +1,5 @@
 primary:
+  only-player-faction: "&cYou can only do this to player factions."
   combat-tagged: "&cYou cannot do this as you are combat tagged."
   no-permission: "&cNo permission."
   not-player: "&cOnly players can use this command."
@@ -115,6 +116,10 @@ faction:
     interact: "&eYou cannot do this in %faction%&e's territory!"
 
 commands:
+  revive:
+    usage: "&cUsage: /%alias% <player>"
+    not-deathbanned: "&c%player% is not deathbanned."
+    success: "&aYou revived %player%."
   faction:
     already-in: "&cYou already have a faction."
     not-in: "&cYou do not have a faction."
@@ -148,6 +153,15 @@ commands:
       usage: "&cUsage: /%alias% setcolor <faction> <color>"
       only-system: "&cYou can only set the color of non-player factions."
       success: "&eYou have set the color of &b%faction%&e to %color%this&e."
+    setdtr:
+      usage: "&cUsage: /%alias% setdtr <faction> <amount>"
+      invalid-amount: "&cDTR must be a finite number between %minimum% and %maximum%."
+      success: "&eSet &b%faction%&e's DTR to &b%dtr%&e and cleared its regeneration freeze."
+    setregen:
+      usage: "&cUsage: /%alias% setregen <faction> <true|false>"
+      invalid-state: "&cSpecify true to start regeneration or false to reset the full freeze."
+      started: "&eCleared &b%faction%&e's freeze and started DTR regeneration."
+      reset: "&eReset &b%faction%&e's regeneration freeze to the full configured duration."
     settype:
       usage: "&cUsage: /%alias% settype <faction> <type>"
       invalid-type: "&cThe specified type is invalid. Valid types: SYSTEM, SAFEZONE, ROAD, KOTH"

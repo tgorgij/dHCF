@@ -85,6 +85,10 @@ factions:
       - "&e/%alias% revive <player> &7- Revive a teammate using faction lives"
       - "&e/%alias% rename <name> &7- Rename your faction"
       - "&e/%alias% disband &7- Disband your faction"
+      - " "
+      - "&9Staff Commands:"
+      - "&e/%alias% setdtr <faction> <amount> &7- Set DTR and start regeneration"
+      - "&e/%alias% setregen <faction> <true|false> &7- Start regeneration or reset the full freeze"
       - "&7&m----------------------------------------------------"
   show:
     player:
@@ -98,6 +102,7 @@ factions:
       - "&ePoints: &9%points%"
       - "&eKOTH Captures: &9%koth-captures%"
       - "&eDeaths until Raidable: &a%dtr%"
+      - "&eTime until Regeneration: &b%regeneration-time%" # Member + Staff Only
       - "&eStatus: &9%open%"
       - "&eLives: &c%lives%" # Member + Staff Only
       - "&eAnnouncement: &d%announcement%" # Member + Staff Only

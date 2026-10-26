@@ -1,8 +1,9 @@
-package me.Thomas.HCF.Commands.User.Faction;
+package me.Thomas.HCF.Commands.Admin.Economy;
 
 import me.Thomas.HCF.Commands.Admin.Economy.Subcommands.SetCommand;
+import me.Thomas.HCF.Commands.Admin.Economy.Subcommands.GiveCommand;
+import me.Thomas.HCF.Commands.Admin.Economy.Subcommands.TakeCommand;
 import me.Thomas.HCF.Commands.Subcommand;
-import me.Thomas.HCF.Commands.User.Faction.Subcommands.*;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
@@ -31,6 +32,8 @@ public class EconomyCommand implements TabExecutor {
 
     public EconomyCommand() {
         register(new SetCommand());
+        register(new GiveCommand());
+        register(new TakeCommand());
     }
 
     private void register(Subcommand subcommand) {
@@ -51,7 +54,7 @@ public class EconomyCommand implements TabExecutor {
             @NotNull String label,
             @NotNull String @NonNull [] args
     ) {
-        if (!Permission.has(sender, "command.economy")) {
+        if (!Permission.has(sender, "command.economy", "admin")) {
             sender.sendMessage(C.chat(localeConfig.getString("primary.no-permission")));
             return true;
         }
@@ -88,11 +91,12 @@ public class EconomyCommand implements TabExecutor {
             List<String> suggestions = new ArrayList<>();
 
             for (String name : subcommands.keySet()) {
-                if (name.startsWith(input)) {
+                if (name.startsWith(input) && Permission.has(sender, "command.economy." + name, "admin")) {
                     suggestions.add(name);
                 }
             }
 
+            suggestions.sort(String.CASE_INSENSITIVE_ORDER);
             return suggestions;
         }
 

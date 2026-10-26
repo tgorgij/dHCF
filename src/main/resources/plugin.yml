@@ -5,9 +5,18 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  pay:
+    description: Send money to another player.
+    usage: /pay <player> <amount>
+  logout:
+    description: Safely disconnect after a countdown.
+    usage: /logout
+  pvp:
+    description: Manage PvP protection.
+    usage: /pvp <enable|give> [player]
   lives:
-    description: Manage player lives.
-    usage: /lives <set|add|take> <target> <amount>
+    description: Check or manage player lives.
+    usage: /lives <check|set|add|take> [target] [amount]
   revive:
     description: Revive a deathbanned player.
     usage: /revive <player>
@@ -24,3 +33,10 @@ commands:
   economy:
     aliases:
       - eco
+permissions:
+  hcf.mapkit.bypass:
+    description: Allows enchanting and combining items above the map kit limits.
+    default: false
+  hcf.command.pvp:
+    description: Allows giving players PvP protection.
+    default: op

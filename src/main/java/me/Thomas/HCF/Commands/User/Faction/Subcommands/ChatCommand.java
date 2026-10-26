@@ -7,6 +7,7 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -20,7 +21,7 @@ public final class ChatCommand implements Subcommand {
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String @NonNull [] args, @NotNull String alias) {
-        var locale = Main.getInstance().getLocaleConfig();
+        FileConfiguration locale = Main.getInstance().getLocaleConfig();
         if (!(sender instanceof Player player)) {
             sender.sendMessage(C.chat(locale.getString("primary.not-player")));
             return true;

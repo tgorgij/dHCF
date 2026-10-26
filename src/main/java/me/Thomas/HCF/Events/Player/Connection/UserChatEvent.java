@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class UserChatEvent implements Listener {
+public class UserChatEvent implements Listener {
     private static final Map<UUID, UUID> factionChat = new ConcurrentHashMap<>();
 
     public static void setFactionChat(UUID player, boolean enabled) {
@@ -45,12 +45,12 @@ public final class UserChatEvent implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onChat(AsyncChatEvent event) {
-        UUID session = factionChat.get(event.getPlayer().getUniqueId());
+    public void onChat(AsyncChatEvent e) {
+        UUID session = factionChat.get(e.getPlayer().getUniqueId());
         if (session == null) return;
-        event.setCancelled(true);
-        Player player = event.getPlayer();
-        String message = PlainTextComponentSerializer.plainText().serialize(event.message());
+        e.setCancelled(true);
+        Player player = e.getPlayer();
+        String message = PlainTextComponentSerializer.plainText().serialize(e.message());
         // Faction membership and Bukkit state are only accessed on the server thread.
         Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
             if (player.isOnline() && session.equals(factionChat.get(player.getUniqueId()))) {
@@ -60,7 +60,7 @@ public final class UserChatEvent implements Listener {
     }
 
     @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        setFactionChat(event.getPlayer().getUniqueId(), false);
+    public void onQuit(PlayerQuitEvent e) {
+        setFactionChat(e.getPlayer().getUniqueId(), false);
     }
 }

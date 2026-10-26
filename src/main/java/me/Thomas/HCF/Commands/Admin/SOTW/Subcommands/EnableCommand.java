@@ -36,12 +36,11 @@ public class EnableCommand implements Subcommand {
             player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.sotw.enable.usage"))));
             return true;
         }
-        Main main = Main.getInstance();
-        if (!main.isSOTWOngoing()) {
+        if (!Main.getInstance().isSOTWOngoing()) {
             player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.sotw.not-running"))));
             return true;
         }
-        if (!main.enableSOTW(player.getUniqueId())) {
+        if (!Main.getInstance().enableSOTW(player.getUniqueId())) {
             player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.sotw.enable.already"))));
             return true;
         }

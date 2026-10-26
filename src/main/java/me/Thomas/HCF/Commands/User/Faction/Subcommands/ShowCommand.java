@@ -53,7 +53,7 @@ public class ShowCommand implements Subcommand {
             return true;
         }
         String name = args[0];
-        Faction faction = Main.getInstance().getFaction(name);
+        Faction faction = Faction.get(name);
         if (faction != null) {
             if (!faction.getType().equals(Faction.Type.PLAYER)) {
                 showSystemFaction(sender, faction);

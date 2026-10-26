@@ -72,7 +72,8 @@ public class HomeCommand implements Subcommand {
 
         Timer timer = new Timer(Timer.Type.HOME);
         user.addTimer(Timer.Type.HOME, timer);
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.home.success"))));
+        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.home.success"))
+                .replace("%time%", C.formatChatTime(Timer.Type.HOME.getLength()))));
 
         new BukkitRunnable() {
             @Override
@@ -87,7 +88,7 @@ public class HomeCommand implements Subcommand {
                     return;
                 }
 
-                Faction currentFaction = Main.getInstance().getAllFactions().get(user.getFaction());
+                Faction currentFaction = Faction.get(user.getFaction());
                 if (currentFaction == null || currentFaction.getHome() == null) {
                     return;
                 }

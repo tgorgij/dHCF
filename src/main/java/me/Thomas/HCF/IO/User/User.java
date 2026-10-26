@@ -2,8 +2,10 @@ package me.Thomas.HCF.IO.User;
 
 import me.Thomas.HCF.IO.Claims.Claim;
 import me.Thomas.HCF.IO.Claims.Claiming;
+import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Timer.Timer;
+import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -26,6 +28,7 @@ public class User {
     private int deaths;
     private int lives;
     private long deathbanExpiry;
+    private boolean pvpProtectionPending;
 
     private long revision;
     private volatile long savedRevision;
@@ -119,6 +122,7 @@ public class User {
         );
 
         this.deathbanExpiry = resultSet.getLong("deathbanExpiry");
+        this.pvpProtectionPending = resultSet.getBoolean("pvpProtectionPending");
 
 
         this.savedRevision = revision;
@@ -137,6 +141,7 @@ public class User {
         this.lives = 0;
         this.timers = new EnumMap<>(Timer.Type.class);
         this.deathbanExpiry = 0;
+        this.pvpProtectionPending = false;
         this.revision++;
         this.claiming = null;
         this.lastEnteredFaction = null;
@@ -156,19 +161,79 @@ public class User {
         String sql =
                 "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
-                        + "timers, deathbanExpiry) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "timers, deathbanExpiry, pvpProtectionPending) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
                         + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
-                        + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry";
+                        + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry, "
+                        + "pvpProtectionPending=excluded.pvpProtectionPending";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), name, faction == null ? null : faction.toString(),
-                balance, kills, deaths, lives, serializeTimers(), deathbanExpiry);
+                balance, kills, deaths, lives, serializeTimers(), deathbanExpiry, pvpProtectionPending ? 1 : 0);
     }
 
     public long getDeathbanExpiry() {
         return deathbanExpiry;
+    }
+
+    public boolean reviveWithLife() {
+        if (lives <= 0 || deathbanExpiry <= System.currentTimeMillis()) return false;
+        int previousLives = lives;
+        long previousExpiry = deathbanExpiry;
+        boolean previousPending = pvpProtectionPending;
+        setLives(previousLives - 1);
+        setDeathbanExpiry(0L);
+        setPvpProtectionPending(true);
+        try {
+            // Commit the life deduction and revival together before allowing login.
+            save();
+        } catch (RuntimeException exception) {
+            setLives(previousLives);
+            setDeathbanExpiry(previousExpiry);
+            setPvpProtectionPending(previousPending);
+            throw exception;
+        }
+        return true;
+    }
+
+    public void setPvpProtectionPending(boolean pending) {
+        if (pvpProtectionPending == pending) return;
+        pvpProtectionPending = pending;
+        revision++;
+    }
+
+    /** Consume eligibility once, so ordinary reconnects cannot refill protection. */
+    public void applyPendingPvpTimer() {
+        if (!pvpProtectionPending) return;
+        setPvpProtectionPending(false);
+        if (!Main.getInstance().isSOTWOngoing()) givePvpTimer();
+    }
+
+    public boolean givePvpTimer() {
+        return giveProtectionTimer(Timer.Type.PVP);
+    }
+
+    public boolean giveStartingTimer() {
+        return giveProtectionTimer(Timer.Type.STARTING);
+    }
+
+    public boolean hasPvpProtection() {
+        return hasTimer(Timer.Type.PVP) || hasTimer(Timer.Type.STARTING);
+    }
+
+    private boolean giveProtectionTimer(Timer.Type type) {
+        if (type.getLength() <= 0) return false;
+        Timer timer = new Timer(type, true);
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null) timer.pause();
+        addTimer(type, timer);
+        if (player != null) {
+            player.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig()
+                            .getString("events.player.timer.start." + type.name().toLowerCase(Locale.ROOT)))
+                    .replace("%time%", C.formatChatTime(type.getLength()))));
+        }
+        return true;
     }
 
     public void setDeathbanExpiry(long deathbanExpiry) {
@@ -184,7 +249,8 @@ public class User {
         StringBuilder result = new StringBuilder();
 
         for (Map.Entry<Timer.Type, Timer> entry : timers.entrySet()) {
-            if (entry.getKey() == Timer.Type.HOME || entry.getKey() == Timer.Type.STUCK) {
+            if (entry.getKey() == Timer.Type.HOME || entry.getKey() == Timer.Type.STUCK
+                    || entry.getKey() == Timer.Type.LOGOUT) {
                 continue;
             }
 
@@ -227,7 +293,7 @@ public class User {
 
             try {
                 Timer.Type type = Timer.Type.valueOf(values[0]);
-                if (type == Timer.Type.HOME || type == Timer.Type.STUCK) {
+                if (type == Timer.Type.HOME || type == Timer.Type.STUCK || type == Timer.Type.LOGOUT) {
                     continue;
                 }
 
@@ -374,6 +440,12 @@ public class User {
     }
 
     public void addTimer(Timer.Type type, Timer timer) {
+        if (type == Timer.Type.COMBAT && timers.containsKey(Timer.Type.LOGOUT)) {
+            removeTimer(Timer.Type.LOGOUT);
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.sendMessage(C.chat(Main.getInstance().getLocaleConfig()
+                    .getString("commands.logout.cancel-combat")));
+        }
         timers.put(type, timer);
         revision++;
     }
@@ -395,7 +467,7 @@ public class User {
 
     public void clearCooldowns() {
         // PvP protection is not a cooldown; retain it while clearing combat, item timers, and teleport warmups.
-        if (timers.keySet().removeIf(type -> type != Timer.Type.PVP)) revision++;
+        if (timers.keySet().removeIf(type -> type != Timer.Type.PVP && type != Timer.Type.STARTING)) revision++;
     }
 
     public void expireTimers() {
@@ -403,6 +475,7 @@ public class User {
         while (iterator.hasNext()) {
             Map.Entry<Timer.Type, Timer> entry = iterator.next();
             if (entry.getKey() == Timer.Type.HOME || entry.getKey() == Timer.Type.STUCK
+                    || entry.getKey() == Timer.Type.LOGOUT
                     || entry.getValue().getRemainingTimeMillis() > 0) continue;
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
@@ -448,12 +521,12 @@ public class User {
 
     public void setClaiming(Claiming claiming) {
         if (this.claiming != null && !this.claiming.isClaimingFor()) {
-            me.Thomas.HCF.IO.Faction.Faction oldFaction = Main.getInstance().getFaction(this.claiming.getFaction());
+            Faction oldFaction = Faction.get(this.claiming.getFaction());
             if (oldFaction != null) oldFaction.setClaiming(false);
         }
         this.claiming = claiming;
         if (claiming != null && !claiming.isClaimingFor()) {
-            me.Thomas.HCF.IO.Faction.Faction newFaction = Main.getInstance().getFaction(claiming.getFaction());
+            Faction newFaction = Faction.get(claiming.getFaction());
             if (newFaction != null) newFaction.setClaiming(true);
         }
     }

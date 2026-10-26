@@ -21,6 +21,7 @@ public class BoardHandler implements Listener {
     private final Map<UUID, Board> boards = new HashMap<>();
 
     private final BukkitTask updateTask;
+    private int focusTicks;
 
     public BoardHandler() {
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
@@ -33,10 +34,12 @@ public class BoardHandler implements Listener {
         updateTask = new BukkitRunnable() {
             @Override
             public void run() {
+                boolean refreshNames = focusTicks++ % 10 == 0;
                 for (Board board : boards.values()) {
                     if (board.getPlayer().isOnline()) {
                         User.get(board.getPlayer()).expireTimers();
                         board.update();
+                        if (refreshNames) board.updateFocus();
                     }
                 }
             }
@@ -51,6 +54,7 @@ public class BoardHandler implements Listener {
         boards.put(player.getUniqueId(), board);
 
         board.update();
+        refreshFocus();
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -61,6 +65,12 @@ public class BoardHandler implements Listener {
 
         if (board != null) {
             board.remove();
+        }
+    }
+
+    public void refreshFocus() {
+        for (Board board : boards.values()) {
+            if (board.getPlayer().isOnline()) board.updateFocus();
         }
     }
 

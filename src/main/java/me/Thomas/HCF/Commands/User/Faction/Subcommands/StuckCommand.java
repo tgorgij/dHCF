@@ -5,10 +5,10 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
+import me.Thomas.HCF.Utils.Timer.StuckTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
@@ -49,21 +49,13 @@ public class StuckCommand implements Subcommand {
             player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.teleport.already"))));
             return true;
         }
-        Timer timer = new Timer(Timer.Type.STUCK);
+        StuckTimer timer = new StuckTimer(player.getLocation(),
+                Main.getInstance().getClaimAt(player.getLocation()));
         user.addTimer(Timer.Type.STUCK, timer);
         player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.stuck.success"))
                 .replace("%time%", C.formatChatTime(Timer.Type.STUCK.getLength()))));
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (user.getTimer(Timer.Type.STUCK) != timer) return;
-                user.removeTimer(Timer.Type.STUCK);
-                if (!player.isOnline() || user.hasTimer(Timer.Type.COMBAT)) return;
-
-                // Stuck teleportation will be implemented here.
-            }
-        }.runTaskLater(Main.getInstance(), Timer.Type.STUCK.getLength() * 20L);
+        timer.start(player);
         return true;
     }
 }

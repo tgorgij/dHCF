@@ -3,6 +3,8 @@ package me.Thomas.HCF.Utils.Chat;
 import me.Thomas.HCF.Main.Main;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.text.DecimalFormat;
 import java.util.Locale;
@@ -114,6 +116,22 @@ public class C {
     public static String getFormattedMoney(double amount) {
         DecimalFormat formatter = new DecimalFormat(Main.getInstance().getConfig().getString("economy.currency-symbol") + "#,##0.00");
         return formatter.format(amount);
+    }
+
+    public static String getFormattedLocation(Location location) {
+        return Main.getInstance().getConfig().getString("settings.location-format", "X: %x%, Z: %z%")
+                .replace("%x%", Integer.toString(location.getBlockX()))
+                .replace("%y%", Integer.toString(location.getBlockY()))
+                .replace("%z%", Integer.toString(location.getBlockZ()));
+    }
+
+    public static String getFormattedDimension(World world) {
+        return switch (world.getEnvironment()) {
+            case NORMAL -> "Overworld";
+            case NETHER -> "Nether";
+            case THE_END -> "End";
+            case CUSTOM -> world.getName();
+        };
     }
 
     public static String getFormattedDTR(me.Thomas.HCF.IO.Faction.Faction faction) {

@@ -41,7 +41,7 @@ public class ForceDisband implements Subcommand {
             sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.forcedisband.usage")).replace("%alias%", alias)));
             return true;
         }
-        Faction faction = Main.getInstance().getFaction(args[0]);
+        Faction faction = Faction.get(args[0]);
         if (faction == null) {
             sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.no-faction"))));
             return true;

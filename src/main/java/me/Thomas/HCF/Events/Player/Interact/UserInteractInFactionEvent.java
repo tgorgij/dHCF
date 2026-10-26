@@ -34,6 +34,7 @@ import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.event.player.PlayerUnleashEntityEvent;
@@ -225,8 +226,8 @@ public class UserInteractInFactionEvent implements Listener {
     }
 
     @EventHandler
-    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
-        pressurePlateMessageCooldowns.remove(event.getPlayer().getUniqueId());
+    public void onQuit(PlayerQuitEvent e) {
+        pressurePlateMessageCooldowns.remove(e.getPlayer().getUniqueId());
     }
 
     private boolean canSendPressurePlateMessage(Player p) {

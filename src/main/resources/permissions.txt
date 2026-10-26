@@ -1,10 +1,47 @@
-
-Commands:
-
 1. General
 - *
 - hcf.*
+- hcf.admin
 - hcf.staff
 
-2. Faction
+2. Faction commands
 - hcf.command.faction.createsystem
+- hcf.command.faction.debug
+- hcf.command.faction.forcedisband
+- hcf.command.faction.setcolor
+- hcf.command.faction.setlocation
+- hcf.command.faction.settype
+- hcf.faction.bypass
+- hcf.faction.claimfor
+- hcf.command.faction.claimfor
+- hcf.command.faction.forceunclaim
+- hcf.command.faction.setdeathban
+- hcf.command.faction.setdtr
+- hcf.command.faction.setregen
+
+3. Economy
+- hcf.command.economy
+- hcf.command.economy.set
+- hcf.command.economy.give
+- hcf.command.economy.take
+
+4. Lives and revival
+- hcf.command.lives
+- hcf.command.revive
+
+5. PvP protection
+- hcf.command.pvp
+
+6. SOTW
+- hcf.command.sotw
+- hcf.command.sotw.add
+- hcf.command.sotw.cancel
+- hcf.command.sotw.pause
+- hcf.command.sotw.start
+
+7. Map kit
+- hcf.mapkit.bypass
+
+8. Deathban duration (configurable)
+- dhcf.deathban.30minutes
+- dhcf.deathban.15minutes

@@ -46,7 +46,7 @@ public class InvitesCommand implements Subcommand {
         }
         StringBuilder invitesString = new StringBuilder();
         for (UUID uuid : invites) {
-            Faction faction = Main.getInstance().getFaction(uuid);
+            Faction faction = Faction.get(uuid);
             if (faction == null) {
                 Main.getInstance().removeInvite(uuid, p.getUniqueId());
                 continue;

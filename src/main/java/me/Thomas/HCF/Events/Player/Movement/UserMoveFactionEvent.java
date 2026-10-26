@@ -5,6 +5,7 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
+import me.Thomas.HCF.Utils.Timer.StuckTimer;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -42,11 +43,19 @@ public class UserMoveFactionEvent implements Listener {
         Player p = e.getPlayer();
         User user = User.get(p);
 
-        if (hasChangedPosition(from, to) && (user.getTimer(Timer.Type.HOME) != null
-                || user.getTimer(Timer.Type.STUCK) != null)) {
+        if (user.getTimer(Timer.Type.LOGOUT) != null && (!from.getWorld().equals(to.getWorld())
+                || from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ())) {
+            user.removeTimer(Timer.Type.LOGOUT);
+            p.sendMessage(C.chat(localeConfig.getString("commands.logout.cancel-moved")));
+        }
+
+        if (hasChangedPosition(from, to) && user.getTimer(Timer.Type.HOME) != null) {
             user.removeTimer(Timer.Type.HOME);
-            user.removeTimer(Timer.Type.STUCK);
             p.sendMessage(C.chat(localeConfig.getString("primary.teleport.cancel")));
+        }
+        if (user.getTimer(Timer.Type.STUCK) instanceof StuckTimer stuck && stuck.isOutsideRadius(to)) {
+            user.removeTimer(Timer.Type.STUCK);
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.stuck.cancel-moved")));
         }
 
         if (from.getWorld().equals(to.getWorld())

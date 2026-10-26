@@ -40,7 +40,7 @@ public class JoinCommand implements Subcommand {
         }
         User user = User.get(p);
         String name = args[0];
-        Faction faction = Main.getInstance().getFaction(name);
+        Faction faction = Faction.get(name);
         if (faction == null) {
             p.sendMessage(C.chat(localeConfig.getString("primary.no-faction")));
             return true;
@@ -94,7 +94,7 @@ public class JoinCommand implements Subcommand {
         if (args.length != 1) return List.of();
         ArrayList<String> list = new ArrayList<>();
         for (UUID uuid : Main.getInstance().getInvitesForUser(p.getUniqueId())) {
-            Faction faction = Main.getInstance().getFaction(uuid);
+            Faction faction = Faction.get(uuid);
             if (faction == null) {
                 Main.getInstance().removeInvite(uuid, p.getUniqueId());
                 continue;

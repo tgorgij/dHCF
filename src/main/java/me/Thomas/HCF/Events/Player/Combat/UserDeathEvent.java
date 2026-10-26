@@ -2,6 +2,7 @@ package me.Thomas.HCF.Events.Player.Combat;
 
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.IO.Database.CombatLoggerStateStore;
+import me.Thomas.HCF.IO.Database.CombatLoggerStateStore.State;
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
@@ -13,6 +14,7 @@ import net.kyori.adventure.text.Component;
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import io.papermc.paper.event.player.PlayerItemGroupCooldownEvent;
 import org.bukkit.Material;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
@@ -67,7 +69,9 @@ public class UserDeathEvent implements Listener {
         if (e.getRespawnReason() == PlayerRespawnEvent.RespawnReason.END_PORTAL) return;
         Player player = e.getPlayer();
         User user = User.get(player);
+        if (e.getRespawnReason() == PlayerRespawnEvent.RespawnReason.DEATH) user.setPvpProtectionPending(true);
         user.clearCooldowns();
+        user.applyPendingPvpTimer();
         user.saveAsync();
         Set<NamespacedKey> groups = itemCooldownGroups.remove(player.getUniqueId());
         if (groups != null) {
@@ -116,7 +120,7 @@ public class UserDeathEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDeath(PlayerDeathEvent e) {
-        var state = new CombatLoggerStateStore(Main.getInstance().getDatabaseManager()).get(e.getEntity().getUniqueId());
+        State state = new CombatLoggerStateStore(Main.getInstance().getDatabaseManager()).get(e.getEntity().getUniqueId());
         if (state != null && state.died()) {
             // The logger's death was already counted; this death only opens its owner's respawn screen.
             e.getDrops().clear();
@@ -168,6 +172,7 @@ public class UserDeathEvent implements Listener {
     }
 
     private void recordDeathStatistics(EntityDeathEvent e, User victim) {
+        victim.setPvpProtectionPending(true);
         victim.setDeaths(victim.getDeaths() + 1);
         Player killer = resolvePlayerAttacker(getAttackingEntity(e));
         // Preserve vanilla kill attribution for deaths following earlier player damage (such as a fall).
@@ -183,10 +188,18 @@ public class UserDeathEvent implements Listener {
         }
         if (victim.hasFaction()) {
             Faction faction = Faction.get(victim.getFaction());
-            if (faction != null && faction.getType() == Faction.Type.PLAYER) {
+            if (faction != null && faction.getType() == Faction.Type.PLAYER && faction.hasMember(victim.getUUID())) {
                 DTR.onDeath(faction, System.currentTimeMillis());
                 SaveSnapshot factionSnapshot = faction.snapshot();
                 if (factionSnapshot != null) snapshots.add(factionSnapshot);
+                String dtr = C.getFormattedDTR(faction);
+                for (String line : Main.getInstance().getMessagesConfig().getStringList("factions.member.death")) {
+                    Component message = C.chat(line.replace("%player%", victim.getName()).replace("%dtr%", dtr));
+                    for (UUID uuid : faction.getMembers().keySet()) {
+                        Player member = Bukkit.getPlayer(uuid);
+                        if (member != null) member.sendMessage(message);
+                    }
+                }
             }
         }
         // Keep deaths, kills, and the faction's DTR/freeze update in the same database transaction.

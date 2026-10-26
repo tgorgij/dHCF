@@ -34,12 +34,13 @@ public class SetCommand implements Subcommand {
             return true;
         }
         if (args.length != 2) {
-            sender.sendMessage(C.chat(localeConfig.getString("commands.economy.set.usage")));
+            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.economy.set.usage"))
+                    .replace("%alias%", alias)));
             return true;
         }
         User user = User.get(args[0]);
         if (user == null) {
-            sender.sendMessage(C.chat(localeConfig.getString("primary.not-player")));
+            sender.sendMessage(C.chat(localeConfig.getString("primary.no-player")));
             return true;
         }
         double amount;

@@ -3,8 +3,11 @@ package me.Thomas.HCF.Main;
 import me.Thomas.HCF.Commands.Staff.ReviveCommand;
 import me.Thomas.HCF.Commands.Admin.Lives.LivesCommand;
 import me.Thomas.HCF.Commands.User.Economy.BalanceCommand;
+import me.Thomas.HCF.Commands.User.Economy.PayCommand;
+import me.Thomas.HCF.Commands.User.LogoutCommand;
 import me.Thomas.HCF.Commands.Admin.SOTW.SOTWCommand;
-import me.Thomas.HCF.Commands.User.Faction.EconomyCommand;
+import me.Thomas.HCF.Commands.Admin.PvP.PvPCommand;
+import me.Thomas.HCF.Commands.Admin.Economy.EconomyCommand;
 import me.Thomas.HCF.Commands.User.Faction.FactionCommand;
 import me.Thomas.HCF.Events.Player.Connection.UserChatEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
@@ -14,7 +17,11 @@ import me.Thomas.HCF.Events.Player.Combat.UserDeathEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserQuitEvent;
 import me.Thomas.HCF.Events.Player.Item.UserClaimEvent;
 import me.Thomas.HCF.Events.Player.Item.UserPearlEvent;
+import me.Thomas.HCF.Events.Player.Item.UserAppleEvent;
+import me.Thomas.HCF.Events.Player.Item.UserEnchantEvent;
+import me.Thomas.HCF.Events.Player.Item.UserBrewEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserInteractInFactionEvent;
+import me.Thomas.HCF.Events.Player.Interact.UserSubclaimEvent;
 import me.Thomas.HCF.Events.Player.Movement.UserMoveFactionEvent;
 import me.Thomas.HCF.IO.Claims.ChunkKey;
 import me.Thomas.HCF.IO.Claims.Claim;
@@ -28,6 +35,7 @@ import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Combat.DTR;
 import me.Thomas.HCF.Utils.Scoreboard.BoardHandler;
 import me.Thomas.HCF.Utils.Timer.ServerTimer;
+import me.Thomas.HCF.Utils.Timer.StuckTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -48,7 +56,6 @@ public class Main extends JavaPlugin {
     private FileConfiguration scoreboardConfig;
     private FileConfiguration messagesConfig;
     private BoardHandler boardHandler;
-    private UserCombatLogoutEvent combatLogoutEvent;
     private boolean dataLoaded;
 
     // Users
@@ -70,6 +77,9 @@ public class Main extends JavaPlugin {
     // Server Timers
     private final Map<ServerTimer.Type, ServerTimer> serverTimers = new HashMap<>();
     private final Set<UUID> sotwEnabled = new HashSet<>();
+    private final Set<UUID> friendlyFire = new HashSet<>();
+    public record Focus(UUID target, boolean faction) {}
+    private final Map<UUID, Focus> factionFocus = new HashMap<>();
 
     public Main() {
         instance = this;
@@ -105,8 +115,10 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        StuckTimer.shutdownSearches();
+        friendlyFire.clear();
+        factionFocus.clear();
         if (boardHandler != null) boardHandler.close();
-        if (combatLogoutEvent != null) combatLogoutEvent.shutdown();
         if (databaseManager != null) {
             if (dataLoaded) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
@@ -122,28 +134,18 @@ public class Main extends JavaPlugin {
     }
 
     private void commands() {
-
         // User
-        FactionCommand factionCommand = new FactionCommand();
-        Objects.requireNonNull(getCommand("faction")).setExecutor(factionCommand);
-        Objects.requireNonNull(getCommand("faction")).setTabCompleter(factionCommand);
-        BalanceCommand balanceCommand = new BalanceCommand();
-        Objects.requireNonNull(getCommand("balance")).setExecutor(balanceCommand);
-        Objects.requireNonNull(getCommand("balance")).setTabCompleter(balanceCommand);
+        Objects.requireNonNull(getCommand("logout")).setExecutor(new LogoutCommand());
+        Objects.requireNonNull(getCommand("faction")).setExecutor(new FactionCommand());
+        Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand());
+        Objects.requireNonNull(getCommand("pay")).setExecutor(new PayCommand());
 
         // Admin
-        LivesCommand livesCommand = new LivesCommand();
-        Objects.requireNonNull(getCommand("lives")).setExecutor(livesCommand);
-        Objects.requireNonNull(getCommand("lives")).setTabCompleter(livesCommand);
-        ReviveCommand reviveCommand = new ReviveCommand();
-        Objects.requireNonNull(getCommand("revive")).setExecutor(reviveCommand);
-        Objects.requireNonNull(getCommand("revive")).setTabCompleter(reviveCommand);
-        SOTWCommand sotwCommand = new SOTWCommand();
-        Objects.requireNonNull(getCommand("sotw")).setExecutor(sotwCommand);
-        Objects.requireNonNull(getCommand("sotw")).setTabCompleter(sotwCommand);
-        EconomyCommand economyCommand = new EconomyCommand();
-        Objects.requireNonNull(getCommand("economy")).setExecutor(economyCommand);
-        Objects.requireNonNull(getCommand("economy")).setTabCompleter(economyCommand);
+        Objects.requireNonNull(getCommand("pvp")).setExecutor(new PvPCommand());
+        Objects.requireNonNull(getCommand("lives")).setExecutor(new LivesCommand());
+        Objects.requireNonNull(getCommand("revive")).setExecutor(new ReviveCommand());
+        Objects.requireNonNull(getCommand("sotw")).setExecutor(new SOTWCommand());
+        Objects.requireNonNull(getCommand("economy")).setExecutor(new EconomyCommand());
     }
 
     private void events() {
@@ -153,16 +155,17 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserJoinEvent(), this);
         pm.registerEvents(new UserChatEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
-        combatLogoutEvent = new UserCombatLogoutEvent();
-        pm.registerEvents(combatLogoutEvent, this);
-        combatLogoutEvent.removeSavedCombatLoggers();
+        pm.registerEvents(new UserCombatLogoutEvent(), this);
         pm.registerEvents(new UserDeathEvent(), this);
         pm.registerEvents(new UserPearlEvent(), this);
+        pm.registerEvents(new UserAppleEvent(), this);
+        pm.registerEvents(new UserEnchantEvent(), this);
+        pm.registerEvents(new UserBrewEvent(), this);
         pm.registerEvents(new UserQuitEvent(), this);
         pm.registerEvents(new UserClaimEvent(), this);
         pm.registerEvents(new UserMoveFactionEvent(), this);
         pm.registerEvents(new UserInteractInFactionEvent(), this);
-        pm.registerEvents(new me.Thomas.HCF.Events.Player.Interact.UserSubclaimEvent(), this);
+        pm.registerEvents(new UserSubclaimEvent(), this);
     }
 
     private void loadInvites() {
@@ -475,6 +478,8 @@ public class Main extends JavaPlugin {
             user.setLastEnteredFaction(null);
             user.getMap().clear();
             user.removeTimer(me.Thomas.HCF.Utils.Timer.Timer.Type.HOME);
+            user.removeTimer(me.Thomas.HCF.Utils.Timer.Timer.Type.STUCK);
+            user.removeTimer(me.Thomas.HCF.Utils.Timer.Timer.Type.LOGOUT);
             user.saveAsync();
         }
     }
@@ -498,7 +503,30 @@ public class Main extends JavaPlugin {
         return factionNames.get(name.toUpperCase(Locale.ROOT));
     }
 
+    public boolean isFriendlyFireEnabled(UUID faction) {
+        return friendlyFire.contains(faction);
+    }
+
+    public Focus getFocus(UUID faction) {
+        return factionFocus.get(faction);
+    }
+
+    public void setFocus(UUID faction, Focus focus) {
+        if (focus == null) factionFocus.remove(faction);
+        else factionFocus.put(faction, focus);
+        if (boardHandler != null) boardHandler.refreshFocus();
+    }
+
+    public boolean toggleFriendlyFire(UUID faction) {
+        if (friendlyFire.remove(faction)) return false;
+        friendlyFire.add(faction);
+        return true;
+    }
+
     public void removeFaction(UUID uuid) {
+        friendlyFire.remove(uuid);
+        factionFocus.remove(uuid);
+        factionFocus.values().removeIf(focus -> focus.faction() && focus.target().equals(uuid));
         Set<UUID> invitedUsers = factionInvites.remove(uuid);
         if (invitedUsers != null) {
             for (UUID userUuid : invitedUsers) {

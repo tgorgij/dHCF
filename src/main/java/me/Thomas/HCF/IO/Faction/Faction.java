@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
@@ -76,6 +77,7 @@ public class Faction {
     private int lives;
     private String color;
     private Location home;
+    private Location rally;
     private boolean open;
     private double dtr;
     private long dtrFreezeExpiry;
@@ -443,6 +445,14 @@ public class Faction {
         return home == null ? null : home.clone();
     }
 
+    public Location getRally() {
+        return rally == null ? null : rally.clone();
+    }
+
+    public void setRally(Location rally) {
+        this.rally = rally == null ? null : rally.clone();
+    }
+
     public void setHome(Location home) {
         this.home = home == null ? null : home.clone();
         this.revision++;
@@ -534,6 +544,18 @@ public class Faction {
             }
         }
         return result;
+    }
+
+    public void broadcastMemberConnection(Player player, boolean online) {
+        if (type != Type.PLAYER || !hasMember(player.getUniqueId())) return;
+        String key = online ? "faction.member.online" : "faction.member.offline";
+        Component message = C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString(key))
+                .replace("%player%", player.getName()));
+        for (UUID uuid : members.keySet()) {
+            if (uuid.equals(player.getUniqueId())) continue;
+            Player member = Bukkit.getPlayer(uuid);
+            if (member != null) member.sendMessage(message);
+        }
     }
 
     public boolean isOpen() {
@@ -656,7 +678,7 @@ public class Faction {
     }
 
     public static boolean isNameInvalid(@NotNull String name, CommandSender p) {
-        if (Main.getInstance().getFaction(name) != null) {
+        if (Faction.get(name) != null) {
             p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.already-exists")));
             return true;
         }

@@ -1,4 +1,7 @@
 help:
+  pvp:
+    - "&e/%alias% enable &7- Remove your PvP protection"
+    - "&e/%alias% give <player> &7- Give a player PvP protection"
   economy:
     - "&7&m----------------------------------------------------"
     - "%primary%&lEconomy %secondary%Help"
@@ -21,6 +24,7 @@ help:
     - "&7&m----------------------------------------------------"
     - "%primary%&lLives %secondary%Help"
     - "&7&m----------------------------------------------------"
+    - "&e/%alias% check - Check your remaining lives"
     - "&e/lives set <target> <amount> - Set a player's lives"
     - "&e/lives add  <target> <amount> - Give a player lives"
     - "&e/lives take <target> <amount> - Take lives from a player"
@@ -54,6 +58,10 @@ timers:
       - "&7&m---------------------------"
 
 factions:
+  member:
+    death:
+      - "&c%player% &edied"
+      - "&2DTR: &f%dtr%"
   list:
     header:
       - "&7&m---------------------------"
@@ -72,6 +80,9 @@ factions:
       - "&e/%alias% lives &7- Show lives usage"
       - "&e/%alias% home &7- Teleport to your faction home"
       - "&e/%alias% stuck &7- Teleport out of enemy territory"
+      - "&e/%alias% ff &7- Toggle faction friendly fire"
+      - "&e/%alias% focus <player|faction> &7- Focus a target; repeat to clear"
+      - "&e/%alias% rally [clear] &7- Set or clear your faction's rally"
       - "&e/%alias% deposit <amount;all> &7- Deposit money into your faction"
       - "&e/%alias% leave &7- Leave your current team"
       - "&e/%alias% subclaim &7- Show the subclaim help page"

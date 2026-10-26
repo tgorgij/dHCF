@@ -26,6 +26,7 @@ events:
   player:
     first-join: "&eSince this is your first time joining, you have been given &b$500&e."
     deathban: "&cYou are deathbanned. &eYou can log back in in &c%time%&e."
+    self-revive-failed: "&cYour life could not be used to revive you. Please try again."
     death:
       combat-logger: "&7[Combat-Logger]"
       default: "&c%player% &edied."
@@ -66,15 +67,20 @@ events:
       faction: "&cYou cannot attack %victim%, as they are in your faction."
       attacker-safezone: "&cYou cannot attack %victim%, as you are in a safe zone."
       safezone: "&cYou cannot attack %victim%, as they are in a safe zone."
-      pvp-timer: "&cYou cannot attack %victim%, as they have a PvP timer."
-      attacker-pvp-timer: "&cYou cannot attack %victim%, as you have a PvP timer."
+      pvp-timer: "&cYou cannot attack %victim%, as they have PvP protection."
+      attacker-pvp-timer: "&cYou cannot attack %victim%, as you have PvP protection."
       sotw: "&cYou cannot attack %victim%, as they have not enabled PvP during SOTW."
       attacker-sotw: "&cYou cannot attack %victim%, as you have not enabled PvP during SOTW. Use /sotw enable to enable PvP."
     timer:
       start:
         default: "&eYou now have a &b%timer% timer &efor &b%time%&e."
+        pvp: "&eYou have PvP protection for &b%time%&e. Use &b/pvp enable &eto remove it."
+        starting: "&eYou have starting protection for &b%time%&e. Use &b/pvp enable &eto remove it."
       ongoing:
         default: "&cYou cannot do %timer% for %time%"
+        enderpearl: "&cYou cannot throw another ender pearl for &b%time%&c."
+        apple: "&cYou cannot eat another golden apple for &b%time%&c."
+        gapple: "&cYou cannot eat another enchanted golden apple for &b%time%&c."
       end:
         default: "&eYour &b%timer% timer &ehas expired."
 
@@ -114,10 +120,39 @@ faction:
   modify:
     build: "&eYou cannot build in %faction%&e's territory!"
     interact: "&eYou cannot do this in %faction%&e's territory!"
+  member:
+    online: "&a%player% &2is online"
+    offline: "&4%player% &cis offline"
 
 commands:
+  pay:
+    usage: "&cUsage: /%alias% <player> <amount>"
+    self: "&cYou cannot pay yourself."
+    invalid-amount: "&cEnter a positive amount with at most two decimal places."
+    minimum: "&cThe minimum payment is &b%minimum%&c."
+    success: "&eYou paid &b%player% %amount%&e."
+    received: "&b%player% &epaid you &b%amount%&e."
+  logout:
+    usage: "&cUsage: /%alias%"
+    already: "&cYou are already logging out."
+    started: "&eLogging out in &b%time%&e. Do not move or enter combat."
+    cancel-moved: "&cLogout cancelled: you moved."
+    cancel-combat: "&cLogout cancelled: you are combat tagged."
+    completed: "&eYou have safely logged out."
+  pvp:
+    enable:
+      usage: "&cUsage: /%alias% enable"
+      none: "&cYou do not have PvP or starting protection."
+      success: "&eYour PvP protection has been removed."
+    give:
+      usage: "&cUsage: /%alias% give <player>"
+      disabled: "&cPvP protection is disabled. Set timers.pvp to a positive duration."
+      success: "&eGave &b%player% &ePvP protection for &b%time%&e."
   lives:
     insufficient-lives: "&cThat player does not have enough lives."
+    check:
+      usage: "&cUsage: /%alias% check"
+      success: "&eLives: &b%lives%"
     set:
       usage: "&cUsage: /%alias% set <target> <amount>"
       success: "&eSet &b%player%&e's lives to &b%lives%&e."
@@ -304,6 +339,19 @@ commands:
     open:
       usage: "&cUsage: /%alias% open"
       success: "&eYour faction is now &b%status%&e."
+    ff:
+      usage: "&cUsage: /%alias% ff"
+      success: "&b%player% &ehas set faction friendly fire to %status%&e."
+    focus:
+      usage: "&cUsage: /%alias% focus <player|faction>"
+      not-found: "&cThere is no player or faction by this name."
+      own: "&cYou cannot focus your own faction or one of its members."
+      success: "&b%player% &ehas focused &b%target%&e for your faction."
+      cleared: "&b%player% &ehas cleared your faction's focus."
+    rally:
+      usage: "&cUsage: /%alias% rally [clear]"
+      set: "&b%player% &eset your faction's rally to &b%location% &7(%dimension%)&e."
+      cleared: "&b%player% &ecleared your faction's rally."
     invites:
       usage: "&cUsage: /%alias% invites"
       none: "&cYou have no pending invites."
@@ -339,10 +387,14 @@ commands:
       usage: "&cUsage: /%alias% home"
       none: "&cYour faction does not have a home."
       end: "&cYou cannot teleport to your faction's home while you're in the end"
-      success: "&eTeleporting to your faction's HQ. Please wait &d10 seconds&e..."
+      success: "&eTeleporting to your faction's HQ. Please wait &d%time%&e..."
     stuck:
       usage: "&cUsage: /%alias% stuck"
-      success: "&eStuck timer started. Please wait &d%time%&e..."
+      success: "&eStuck timer started. Please wait &d%time%&e. Stay within &b5 blocks &eof this position."
+      cancel-moved: "&cStuck teleport cancelled: you moved more than 5 blocks from your starting position."
+      cancel-hit: "&cStuck teleport cancelled: you were hit by another player."
+      completed: "&eYou have been teleported to safety."
+      no-safe-location: "&cUnable to teleport you to a safe unclaimed location. Please try again."
     sethome:
       usage: "&cUsage: /%alias% sethome"
       cannot: "&cYou must set your factions home in your claim."
@@ -358,9 +410,16 @@ commands:
     self: "&eBalance: &b%balance%"
     other: "&b%player%&e's Balance: &b%balance%"
   economy:
+    insufficient-funds: "&cThis player does not have enough money."
     set:
       usage: "&cUsage: /%alias% set <player> <amount>"
       success: "&eYou have set &b%player%&e's balance to &b%amount%&e."
+    give:
+      usage: "&cUsage: /%alias% give <player> <amount>"
+      success: "&eYou have given &b%player% &b%amount%&e."
+    take:
+      usage: "&cUsage: /%alias% take <player> <amount>"
+      success: "&eYou have taken &b%amount% &efrom &b%player%&e."
   sotw:
     alt-usage: "&cUsage: /sotw enable"
     not-running: "&cSOTW is not currently running."

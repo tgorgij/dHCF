@@ -12,6 +12,16 @@ settings:
     start-date: "2026-08-16"
   location-format: "X: %x%, Z: %z%"
 
+enchantments: # Map kit limits. Use Minecraft enchantment names; omitted or negative values are unrestricted.
+  protection: 2
+  sharpness: 2
+
+potions: # Brewing limits. Unlisted potions are unrestricted; applies to drinkable, splash, and lingering potions.
+  strength:
+    enabled: false
+  poison:
+    extended: false # Disallow redstone's duration extension; regular poison and Poison II are allowed.
+
 economy:
   default-balance: 500
   currency-symbol: "$"
@@ -30,8 +40,10 @@ deathbans: # durations in seconds; shortest matching permission wins
 
 timers: # seconds
   pvp: 1800
+  starting: 3600
   combat: 30
   home: 10
+  logout: 30
   stuck: 60
   archertag: 5
   apple: 5
@@ -85,3 +97,6 @@ factions:
       per-block: 0.25
   home:
     disable-in-end: false
+  stuck:
+    max-border-distance: 32 # Maximum blocks beyond the original claim to search (1-1024).
+    max-search-columns: 8192 # Bound the search when no safe unclaimed destination exists.

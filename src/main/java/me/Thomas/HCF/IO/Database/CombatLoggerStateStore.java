@@ -1,22 +1,14 @@
 package me.Thomas.HCF.IO.Database;
 
-import org.bukkit.configuration.file.YamlConfiguration;
-
-import java.io.File;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Pending reconnect snapshots, stored separately from normal user saves. */
+/** Persists unapplied combat-logger deaths; living reconnect snapshots stay in memory. */
 public final class CombatLoggerStateStore {
     public record State(byte[] inventory, int heldSlot, double health, boolean died, double absorption, String effects) {
         public State(byte[] inventory, int heldSlot, double health) {
@@ -48,24 +40,13 @@ public final class CombatLoggerStateStore {
         this.database = database;
     }
 
-    public Map<UUID, State> load() {
-        Map<UUID, State> states = new HashMap<>();
-        try (Connection connection = database.getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT player, inventory, heldSlot, health, died, absorption, effects FROM combatLoggerStates");
-             ResultSet rows = statement.executeQuery()) {
-            while (rows.next()) {
-                states.put(UUID.fromString(rows.getString("player")),
-                        readState(rows));
-            }
-        } catch (SQLException exception) {
-            throw new IllegalStateException("Could not load combat-logger states", exception);
-        }
-        return states;
+    public void discardSnapshots() {
+        database.save(List.of(new SaveSnapshot("DELETE FROM combatLoggerStates WHERE died = 0", () -> {}))).join();
     }
 
     public State get(UUID player) {
         try (Connection connection = database.getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT inventory, heldSlot, health, died, absorption, effects FROM combatLoggerStates WHERE player = ?")) {
+             PreparedStatement statement = connection.prepareStatement("SELECT inventory, heldSlot, health, died, absorption, effects FROM combatLoggerStates WHERE player = ? AND died = 1")) {
             statement.setString(1, player.toString());
             try (ResultSet rows = statement.executeQuery()) {
                 return rows.next() ? readState(rows) : null;
@@ -84,7 +65,7 @@ public final class CombatLoggerStateStore {
         save(player, new State(new byte[0], 0, 0, true));
     }
 
-    public void save(UUID player, State state) {
+    private void save(UUID player, State state) {
         database.save(List.of(new SaveSnapshot("""
                 INSERT INTO combatLoggerStates (player, inventory, heldSlot, health, died, absorption, effects) VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(player) DO UPDATE SET inventory = excluded.inventory,
@@ -97,29 +78,5 @@ public final class CombatLoggerStateStore {
     public void delete(UUID player) {
         database.save(List.of(new SaveSnapshot("DELETE FROM combatLoggerStates WHERE player = ?",
                 () -> {}, player.toString()))).join();
-    }
-
-    public void importLegacy(File file) {
-        if (!file.isFile()) return;
-        try {
-            YamlConfiguration legacy = new YamlConfiguration();
-            legacy.load(file);
-            List<SaveSnapshot> snapshots = new ArrayList<>();
-            for (String key : legacy.getKeys(false)) {
-                UUID player = UUID.fromString(key);
-                State state = new State(Base64.getDecoder().decode(Objects.requireNonNull(legacy.getString(key + ".inventory"))),
-                        legacy.getInt(key + ".held-slot"), legacy.getDouble(key + ".health"));
-                // Retrying an import must not replace a newer snapshot already in SQLite.
-                snapshots.add(new SaveSnapshot("""
-                        INSERT INTO combatLoggerStates (player, inventory, heldSlot, health) VALUES (?, ?, ?, ?)
-                        ON CONFLICT(player) DO NOTHING
-                        """, () -> {}, player.toString(), state.inventory(), state.heldSlot(), state.health()));
-            }
-            database.save(snapshots).join();
-            Files.move(file.toPath(), file.toPath().resolveSibling(file.getName() + ".migrated"));
-        } catch (Exception exception) {
-            // Fail startup so an unfinished import is retried before snapshots can be consumed.
-            throw new IllegalStateException("Could not migrate combat-logger YAML snapshots", exception);
-        }
     }
 }

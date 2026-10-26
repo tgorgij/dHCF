@@ -12,6 +12,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -32,7 +33,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.Objects;
 
-public final class UserSubclaimEvent implements Listener {
+public class UserSubclaimEvent implements Listener {
     private final Subclaim subclaims = new Subclaim();
 
     private void message(Player player, String key) {
@@ -47,47 +48,47 @@ public final class UserSubclaimEvent implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onSignChange(SignChangeEvent event) {
-        if (!(event.getBlock().getState() instanceof Sign sign)) return;
-        Player player = event.getPlayer();
-        if (denied(player, event.getBlock())) {
-            event.setCancelled(true);
+    public void onSignChange(SignChangeEvent e) {
+        if (!(e.getBlock().getState() instanceof Sign sign)) return;
+        Player player = e.getPlayer();
+        if (denied(player, e.getBlock())) {
+            e.setCancelled(true);
             return;
         }
         Side previousSide = subclaims.getSide(sign);
-        if (!Subclaim.isMarker(event.line(0))) {
-            if (previousSide == event.getSide()) {
+        if (!Subclaim.isMarker(e.line(0))) {
+            if (previousSide == e.getSide()) {
                 subclaims.clear(sign);
                 sign.update();
             }
             return;
         }
-        if (previousSide != null && previousSide != event.getSide()
+        if (previousSide != null && previousSide != e.getSide()
                 && Subclaim.isMarker(sign.getSide(previousSide).line(0))) {
             message(player, "one-owner");
-            event.setCancelled(true);
+            e.setCancelled(true);
             return;
         }
-        Block storage = subclaims.getAttachedStorage(event.getBlock());
+        Block storage = subclaims.getAttachedStorage(e.getBlock());
         if (storage == null) {
             message(player, "invalid-container");
-            event.setCancelled(true);
+            e.setCancelled(true);
             return;
         }
         User creator = User.get(player);
         Faction faction = Faction.getAtLocation(storage.getLocation());
-        Faction signFaction = Faction.getAtLocation(event.getBlock().getLocation());
+        Faction signFaction = Faction.getAtLocation(e.getBlock().getLocation());
         if (faction == null || faction.getType() != Faction.Type.PLAYER || signFaction == null
                 || !faction.getUUID().equals(signFaction.getUUID())
                 || !Objects.equals(creator.getFaction(), faction.getUUID()) || !faction.hasMember(creator.getUUID())) {
             message(player, "own-claim");
-            event.setCancelled(true);
+            e.setCancelled(true);
             return;
         }
-        String name = PlainTextComponentSerializer.plainText().serialize(Objects.requireNonNull(event.line(1))).trim();
+        String name = PlainTextComponentSerializer.plainText().serialize(Objects.requireNonNull(e.line(1))).trim();
         if (!name.matches("[A-Za-z0-9_]{1,16}")) {
             message(player, "one-owner");
-            event.setCancelled(true);
+            e.setCancelled(true);
             return;
         }
         User owner = User.get(name);
@@ -101,20 +102,20 @@ public final class UserSubclaimEvent implements Listener {
                 .anyMatch(existing -> owner == null || !existing.getUUID().equals(owner.getUUID()));
         if (conflict) {
             message(player, "conflict");
-            event.setCancelled(true);
+            e.setCancelled(true);
             return;
         }
-        subclaims.assign(sign, event.getSide(), faction, owner == null ? name : owner.getName(), owner);
+        subclaims.assign(sign, e.getSide(), faction, owner == null ? name : owner.getName(), owner);
         if (!sign.update()) {
-            event.setCancelled(true);
+            e.setCancelled(true);
             message(player, "save-failed");
             return;
         }
-        event.line(0, Component.text(Subclaim.MARKER, NamedTextColor.YELLOW));
-        event.line(1, Component.text(owner == null ? name : owner.getName()));
+        e.line(0, Component.text(Subclaim.MARKER, NamedTextColor.YELLOW));
+        e.line(1, Component.text(owner == null ? name : owner.getName()));
         if (owner != null && faction.hasMember(owner.getUUID()) && faction.getUUID().equals(owner.getFaction()) && !faction.isRaidable()
                 && storage.getState() instanceof org.bukkit.inventory.InventoryHolder holder) {
-            for (var viewer : java.util.List.copyOf(holder.getInventory().getViewers())) {
+            for (HumanEntity viewer : java.util.List.copyOf(holder.getInventory().getViewers())) {
                 if (viewer instanceof Player other && !other.getUniqueId().equals(owner.getUUID()) && !User.get(other).isBypass()) {
                     other.closeInventory();
                 }
@@ -124,74 +125,74 @@ public final class UserSubclaimEvent implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBreak(BlockBreakEvent event) {
-        if (denied(event.getPlayer(), event.getBlock())) event.setCancelled(true);
+    public void onBreak(BlockBreakEvent e) {
+        if (denied(e.getPlayer(), e.getBlock())) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPlace(BlockPlaceEvent event) {
-        Block block = event.getBlockPlaced();
+    public void onPlace(BlockPlaceEvent e) {
+        Block block = e.getBlockPlaced();
         Block attached = subclaims.getAttachedStorage(block);
-        if (denied(event.getPlayer(), block) || (attached != null && denied(event.getPlayer(), attached))) event.setCancelled(true);
+        if (denied(e.getPlayer(), block) || (attached != null && denied(e.getPlayer(), attached))) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onInteract(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null) return;
+    public void onInteract(PlayerInteractEvent e) {
+        if (e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getClickedBlock() == null) return;
         // Also blocks dye, glow ink, wax, and the sign editor on either side.
-        if (denied(event.getPlayer(), event.getClickedBlock())) {
-            event.setUseInteractedBlock(Event.Result.DENY);
-            event.setUseItemInHand(Event.Result.DENY);
+        if (denied(e.getPlayer(), e.getClickedBlock())) {
+            e.setUseInteractedBlock(Event.Result.DENY);
+            e.setUseItemInHand(Event.Result.DENY);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onSignOpen(PlayerOpenSignEvent event) {
-        if (denied(event.getPlayer(), event.getSign().getBlock())) event.setCancelled(true);
+    public void onSignOpen(PlayerOpenSignEvent e) {
+        if (denied(e.getPlayer(), e.getSign().getBlock())) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onOpen(InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) return;
-        for (Block block : subclaims.getInventoryBlocks(event.getInventory().getHolder())) {
+    public void onOpen(InventoryOpenEvent e) {
+        if (!(e.getPlayer() instanceof Player player)) return;
+        for (Block block : subclaims.getInventoryBlocks(e.getInventory().getHolder())) {
             if (denied(player, block)) {
-                event.setCancelled(true);
+                e.setCancelled(true);
                 return;
             }
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onMoveItem(InventoryMoveItemEvent event) {
-        boolean protectedStorage = subclaims.getInventoryBlocks(event.getSource().getHolder()).stream()
+    public void onMoveItem(InventoryMoveItemEvent e) {
+        boolean protectedStorage = subclaims.getInventoryBlocks(e.getSource().getHolder()).stream()
                 .anyMatch(block -> !subclaims.getOwners(block).isEmpty())
-                || subclaims.getInventoryBlocks(event.getDestination().getHolder()).stream()
+                || subclaims.getInventoryBlocks(e.getDestination().getHolder()).stream()
                 .anyMatch(block -> !subclaims.getOwners(block).isEmpty());
-        if (protectedStorage) event.setCancelled(true);
+        if (protectedStorage) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onExplode(EntityExplodeEvent event) {
-        event.blockList().removeIf(block -> !subclaims.getOwners(block).isEmpty());
+    public void onExplode(EntityExplodeEvent e) {
+        e.blockList().removeIf(block -> !subclaims.getOwners(block).isEmpty());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockExplode(BlockExplodeEvent event) {
-        event.blockList().removeIf(block -> !subclaims.getOwners(block).isEmpty());
+    public void onBlockExplode(BlockExplodeEvent e) {
+        e.blockList().removeIf(block -> !subclaims.getOwners(block).isEmpty());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBurn(BlockBurnEvent event) {
-        if (!subclaims.getOwners(event.getBlock()).isEmpty()) event.setCancelled(true);
+    public void onBurn(BlockBurnEvent e) {
+        if (!subclaims.getOwners(e.getBlock()).isEmpty()) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPistonExtend(BlockPistonExtendEvent event) {
-        if (event.getBlocks().stream().anyMatch(block -> !subclaims.getOwners(block).isEmpty())) event.setCancelled(true);
+    public void onPistonExtend(BlockPistonExtendEvent e) {
+        if (e.getBlocks().stream().anyMatch(block -> !subclaims.getOwners(block).isEmpty())) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPistonRetract(BlockPistonRetractEvent event) {
-        if (event.getBlocks().stream().anyMatch(block -> !subclaims.getOwners(block).isEmpty())) event.setCancelled(true);
+    public void onPistonRetract(BlockPistonRetractEvent e) {
+        if (e.getBlocks().stream().anyMatch(block -> !subclaims.getOwners(block).isEmpty())) e.setCancelled(true);
     }
 }

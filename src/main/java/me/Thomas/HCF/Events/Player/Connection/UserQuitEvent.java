@@ -1,6 +1,7 @@
 package me.Thomas.HCF.Events.Player.Connection;
 
 import me.Thomas.HCF.IO.User.User;
+import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,6 +16,8 @@ public class UserQuitEvent implements Listener {
         Player p = e.getPlayer();
         User user = User.get(p);
         user.setName(p.getName());
+        Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
+        if (faction != null) faction.broadcastMemberConnection(p, false);
         user.pauseTimers();
         Main.getInstance().removeUser(p.getUniqueId());
     }

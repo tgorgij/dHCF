@@ -14,6 +14,7 @@ import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public final class Subclaim {
     }
 
     public void assign(Sign sign, Side side, Faction faction, String name, User owner) {
-        var data = sign.getPersistentDataContainer();
+        PersistentDataContainer data = sign.getPersistentDataContainer();
         data.set(factionKey, PersistentDataType.STRING, faction.getUUID().toString());
         data.set(nameKey, PersistentDataType.STRING, name);
         data.set(sideKey, PersistentDataType.STRING, side.name());
@@ -56,7 +57,7 @@ public final class Subclaim {
     }
 
     public void clear(Sign sign) {
-        var data = sign.getPersistentDataContainer();
+        PersistentDataContainer data = sign.getPersistentDataContainer();
         data.remove(factionKey);
         data.remove(ownerKey);
         data.remove(nameKey);

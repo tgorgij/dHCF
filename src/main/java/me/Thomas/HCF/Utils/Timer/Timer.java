@@ -6,8 +6,10 @@ public class Timer {
 
     public enum Type {
         PVP("timers.pvp"),
+        STARTING("timers.starting"),
         COMBAT("timers.combat"),
         HOME("timers.home"),
+        LOGOUT("timers.logout"),
         STUCK("timers.stuck"),
         ARCHERTAG("timers.archertag"),
         APPLE("timers.apple"),
@@ -21,7 +23,13 @@ public class Timer {
         }
 
         public int getLength() {
-            return Main.getInstance().getConfig().getInt(this.configPath, this == STUCK ? 60 : 0);
+            int defaultLength = switch (this) {
+                case STUCK -> 60;
+                case LOGOUT -> 30;
+                case STARTING -> 3600;
+                default -> 0;
+            };
+            return Main.getInstance().getConfig().getInt(this.configPath, defaultLength);
         }
     }
 

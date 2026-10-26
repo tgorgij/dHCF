@@ -116,11 +116,38 @@ faction:
     interact: "&eYou cannot do this in %faction%&e's territory!"
 
 commands:
+  lives:
+    insufficient-lives: "&cThat player does not have enough lives."
+    set:
+      usage: "&cUsage: /%alias% set <target> <amount>"
+      success: "&eSet &b%player%&e's lives to &b%lives%&e."
+    add:
+      usage: "&cUsage: /%alias% add <target> <amount>"
+      success: "&eAdded &b%amount% &elives to &b%player%&e. They now have &b%lives%&e."
+    take:
+      usage: "&cUsage: /%alias% take <target> <amount>"
+      success: "&eTook &b%amount% &elives from &b%player%&e. They now have &b%lives%&e."
   revive:
     usage: "&cUsage: /%alias% <player>"
     not-deathbanned: "&c%player% is not deathbanned."
     success: "&aYou revived %player%."
   faction:
+    subclaim:
+      protected: "&cOnly the subclaim owner can access or modify this container and sign."
+      invalid-container: "&cAttach the subclaim sign to a chest, trapped chest, or barrel."
+      own-claim: "&cYou can only create subclaims inside your faction's claims."
+      one-owner: "&cUse one player name on the second line and only one subclaim per sign."
+      conflict: "&cBoth halves of a double chest must have the same subclaim owner."
+      save-failed: "&cThe subclaim could not be saved. Please try again."
+      created: "&eSubclaim saved."
+    lives:
+      usage: "&cUsage: /%alias% lives add <amount>"
+      insufficient-lives: "&cYou do not have enough personal lives."
+      success: "&eYou deposited &b%amount% &elives into your faction."
+    revive:
+      usage: "&cUsage: /%alias% revive <player>"
+      insufficient-lives: "&cYour faction does not have enough lives."
+      success: "&eYou spent one faction life to revive &b%player%&e."
     not-member: "&cThat player is not in your faction."
     already-in: "&cYou already have a faction."
     not-in: "&cYou do not have a faction."

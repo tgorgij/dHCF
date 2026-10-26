@@ -1,6 +1,7 @@
 package me.Thomas.HCF.Main;
 
 import me.Thomas.HCF.Commands.Staff.ReviveCommand;
+import me.Thomas.HCF.Commands.Admin.Lives.LivesCommand;
 import me.Thomas.HCF.Commands.User.Economy.BalanceCommand;
 import me.Thomas.HCF.Commands.Admin.SOTW.SOTWCommand;
 import me.Thomas.HCF.Commands.User.Faction.EconomyCommand;
@@ -131,6 +132,9 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("balance")).setTabCompleter(balanceCommand);
 
         // Admin
+        LivesCommand livesCommand = new LivesCommand();
+        Objects.requireNonNull(getCommand("lives")).setExecutor(livesCommand);
+        Objects.requireNonNull(getCommand("lives")).setTabCompleter(livesCommand);
         ReviveCommand reviveCommand = new ReviveCommand();
         Objects.requireNonNull(getCommand("revive")).setExecutor(reviveCommand);
         Objects.requireNonNull(getCommand("revive")).setTabCompleter(reviveCommand);
@@ -158,6 +162,7 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserClaimEvent(), this);
         pm.registerEvents(new UserMoveFactionEvent(), this);
         pm.registerEvents(new UserInteractInFactionEvent(), this);
+        pm.registerEvents(new me.Thomas.HCF.Events.Player.Interact.UserSubclaimEvent(), this);
     }
 
     private void loadInvites() {

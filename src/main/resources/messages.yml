@@ -17,6 +17,14 @@ help:
     - "&e/sotw add <seconds> - Add or remove SOTW time"
     - "&e/sotw enable - Enable your SOTW combat status"
     - "&7&m----------------------------------------------------"
+  lives:
+    - "&7&m----------------------------------------------------"
+    - "%primary%&lLives %secondary%Help"
+    - "&7&m----------------------------------------------------"
+    - "&e/lives set <target> <amount> - Set a player's lives"
+    - "&e/lives add  <target> <amount> - Give a player lives"
+    - "&e/lives take <target> <amount> - Take lives from a player"
+    - "&7&m----------------------------------------------------"
 
 timers:
   sotw:
@@ -110,6 +118,18 @@ factions:
       - "&e/f coleader add <player> &7- Add a coleader to the Faction"
       - "&e/f coleader remove <player> &7- Remove a coleader to the Faction"
       - "&e/f coleader list &7- List all of the coleaders in the Faction"
+      - "&7&m----------------------------------------------------"
+    subclaiming:
+      - "&7&m----------------------------------------------------"
+      - "%primary%&lSubclaiming %secondary%Help"
+      - "&7&m----------------------------------------------------"
+      - "&7Place a sign on top or on the side of a chest,"
+      - "&7trapped chest, or barrel. First line: [Subclaim]."
+      - "&7On line two, enter the name of the member"
+      - "&7who owns the container. One member per sign."
+      - "&7Example:"
+      - "&e[Subclaim]"
+      - "itsjhalt"
       - "&7&m----------------------------------------------------"
   show:
     player:

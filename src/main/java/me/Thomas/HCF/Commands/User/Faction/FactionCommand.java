@@ -48,6 +48,8 @@ public class FactionCommand implements TabExecutor {
         register(new InvitesCommand());
         register(new LeaveCommand());
         register(new DepositCommand());
+        register(new LivesCommand());
+        register(new ReviveCommand());
         register(new KickCommand());
         register(new UnclaimCommand());
         register(new ForceUnclaimCommand());
@@ -55,6 +57,7 @@ public class FactionCommand implements TabExecutor {
         register(new AnnouncementCommand());
         register(new ListCommand());
         register(new ChatCommand());
+        register(new SubclaimCommand());
         register(new RenameCommand());
         register(new ClaimforCommand());
         register(new SetDeathbanCommand());

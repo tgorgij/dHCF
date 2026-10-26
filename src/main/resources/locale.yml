@@ -121,6 +121,7 @@ commands:
     not-deathbanned: "&c%player% is not deathbanned."
     success: "&aYou revived %player%."
   faction:
+    not-member: "&cThat player is not in your faction."
     already-in: "&cYou already have a faction."
     not-in: "&cYou do not have a faction."
     already-exists: "&cA faction by this name already exists."
@@ -129,8 +130,26 @@ commands:
     claim-full: "&cYou cannot claim while your inventory is full."
     captain:
       not: "&cOnly a captain and above can perform this command."
+      list: "&eCaptains: &b%players%"
+      add:
+        cannot: "&cOnly members of your faction can be added as captains."
+        success: "&eYou added &b%player% &eas a captain."
+        target: "&b%player% &epromoted you to captain."
+      remove:
+        cannot: "&cOnly captains of your faction can be removed from this rank."
+        success: "&eYou demoted &b%player% &eto member."
+        target: "&b%player% &edemoted you to member."
     coleader:
       not: "&cOnly a co-leader and above can perform this command."
+      list: "&eColeaders: &b%players%"
+      add:
+        cannot: "&cOnly captains of your faction can be added as coleaders."
+        success: "&eYou added &b%player% &eas a coleader."
+        target: "&b%player% &epromoted you to coleader."
+      remove:
+        cannot: "&cOnly coleaders of your faction can be removed from this rank."
+        success: "&eYou demoted &b%player% &eto captain."
+        target: "&b%player% &edemoted you to captain."
     leader:
       not: "&cOnly the leader can perform this command."
     create:
@@ -182,6 +201,27 @@ commands:
       raidable: "&cYou cannot disband a faction while it is raidable."
       success: "&c&lYou have disbanded %faction%."
       broadcast: "&c&l%player% has disbanded the faction."
+    transfer:
+      usage: "&cUsage: /%alias% transfer <player>"
+      self: "&cYou already own this faction."
+      success: "&eYou transferred ownership to &b%player% &eand are now a coleader."
+      target: "&b%player% &etransferred faction ownership to you. You are now the leader."
+    promote:
+      names:
+        captain: "Captain"
+        coleader: "Coleader"
+      usage: "&cUsage: /%alias% promote <player>"
+      cannot: "&cYou cannot promote this player. Leaders can promote members and captains; coleaders can only promote members."
+      success: "&eYou promoted &b%player% &eto &b%rank%&e."
+      target: "&b%player% &epromoted you to &b%rank%&e."
+    demote:
+      names:
+        member: "Member"
+        captain: "Captain"
+      usage: "&cUsage: /%alias% demote <player>"
+      cannot: "&cYou cannot demote this player. Leaders can demote captains and coleaders; coleaders can only demote captains."
+      success: "&eYou demoted &b%player% &eto &b%rank%&e."
+      target: "&b%player% &edemoted you to &b%rank%&e."
     invite:
       usage: "&cUsage: /%alias% invite <player>"
       other-faction: "&c%player% already has a faction."

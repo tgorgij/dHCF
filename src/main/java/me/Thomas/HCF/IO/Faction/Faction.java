@@ -50,6 +50,13 @@ public class Faction {
             return value;
         }
 
+        public static MemberType getChangedRank(MemberType actor, MemberType target, boolean promote) {
+            if (actor != LEADER && actor != COLEADER) return null;
+            if (target == null || target.value >= actor.value) return null;
+            MemberType result = getMemberType(target.value + (promote ? 1 : -1));
+            return result != null && result.value < actor.value ? result : null;
+        }
+
         public static MemberType getMemberType(int value) {
             for (MemberType memberType : MemberType.values()) {
                 if (memberType.getValue() == value) {
@@ -393,6 +400,15 @@ public class Faction {
         this.revision++;
     }
 
+    public boolean transferLeadership(UUID actor, UUID target) {
+        if (type != Type.PLAYER || !Objects.equals(leader, actor) || !hasMember(actor)
+                || !hasMember(target) || actor.equals(target)) return false;
+        addMember(actor, MemberType.COLEADER.getValue());
+        addMember(target, MemberType.LEADER.getValue());
+        setLeader(target);
+        return true;
+    }
+
     public double getBalance() {
         return balance;
     }
@@ -460,6 +476,14 @@ public class Faction {
 
     public boolean hasMember(UUID member) {
         return members.containsKey(member);
+    }
+
+    public boolean changeMemberRank(UUID actor, UUID target, boolean promote) {
+        if (!hasMember(actor) || !hasMember(target) || actor.equals(target) || target.equals(leader)) return false;
+        MemberType rank = MemberType.getChangedRank(getMemberType(actor), getMemberType(target), promote);
+        if (rank == null) return false;
+        addMember(target, rank.getValue());
+        return true;
     }
 
     public Integer getMember(UUID member) {

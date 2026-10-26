@@ -201,6 +201,35 @@ commands:
       raidable: "&cYou cannot disband a faction while it is raidable."
       success: "&c&lYou have disbanded %faction%."
       broadcast: "&c&l%player% has disbanded the faction."
+    kick:
+      usage: "&cUsage: /%alias% kick <player>"
+      cannot: "&cYou can only kick players below your rank. You cannot kick yourself or the leader."
+      success: "&eYou kicked &b%player% &efrom the faction."
+      target: "&b%player% &ekicked you from the faction."
+    unclaim:
+      usage: "&cUsage: /%alias% unclaim"
+      not-claim: "&cStand inside a claim owned by your faction to unclaim it."
+      success: "&eYou unclaimed the claim you are standing in."
+    forceunclaim:
+      usage: "&cUsage: /%alias% forceunclaim"
+      not-claim: "&cThere is no claim at your location."
+      success: "&eYou force-unclaimed the claim you are standing in."
+    withdraw:
+      usage: "&cUsage: /%alias% withdraw <amount|all>"
+      insufficient-funds: "&cYour faction does not have enough money."
+      success: "&eYou withdrew &b%amount% &efrom your faction."
+      broadcast: "&b%player% &ewithdrew &b%amount% &efrom the faction."
+    announcement:
+      usage: "&cUsage: /%alias% announcement <message...>"
+      success: "&b%player% &eupdated the announcement: &f%announcement%"
+    list:
+      usage: "&cUsage: /%alias% list [page]"
+      invalid-page: "&cThat page does not exist. There are %pages% pages."
+    chat:
+      usage: "&cUsage: /%alias% c <p|f|message...>"
+      public: "&eYou are now speaking in public chat."
+      faction: "&eYou are now speaking in faction chat."
+      format: "&a[Faction] %player%: &f%message%"
     transfer:
       usage: "&cUsage: /%alias% transfer <player>"
       self: "&cYou already own this faction."

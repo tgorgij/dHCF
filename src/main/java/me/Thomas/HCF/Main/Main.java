@@ -5,6 +5,7 @@ import me.Thomas.HCF.Commands.User.Economy.BalanceCommand;
 import me.Thomas.HCF.Commands.Admin.SOTW.SOTWCommand;
 import me.Thomas.HCF.Commands.User.Faction.EconomyCommand;
 import me.Thomas.HCF.Commands.User.Faction.FactionCommand;
+import me.Thomas.HCF.Events.Player.Connection.UserChatEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserDamageEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserCombatLogoutEvent;
@@ -146,6 +147,7 @@ public class Main extends JavaPlugin {
 
         // User
         pm.registerEvents(new UserJoinEvent(), this);
+        pm.registerEvents(new UserChatEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
         combatLogoutEvent = new UserCombatLogoutEvent();
         pm.registerEvents(combatLogoutEvent, this);
@@ -527,6 +529,43 @@ public class Main extends JavaPlugin {
         claims.removeIf(claim -> claim.faction().equals(factionId));
 
         claimIndex.removeFaction(factionId);
+    }
+
+    public Claim getClaimAt(Location location) {
+        if (location.getWorld() == null) return null;
+        return getClaimsByChunk(new ChunkKey(location.getWorld().getUID(), location.getBlockX() >> 4,
+                location.getBlockZ() >> 4)).stream().filter(claim -> claim.contains(location)).findFirst().orElse(null);
+    }
+
+    public boolean removeClaim(Claim claim) {
+        if (!claims.contains(claim)) return false;
+        Faction faction = factions.get(claim.faction());
+        Location previousHome = faction == null ? null : faction.getHome();
+        boolean clearHome = previousHome != null && claim.contains(previousHome);
+        if (clearHome) faction.setHome(null);
+        List<SaveSnapshot> snapshots = new ArrayList<>();
+        if (clearHome) {
+            SaveSnapshot snapshot = faction.snapshot();
+            if (snapshot != null) snapshots.add(snapshot);
+        }
+        snapshots.add(new SaveSnapshot("DELETE FROM factionClaims WHERE faction = ? AND world = ? "
+                + "AND minX = ? AND maxX = ? AND minZ = ? AND maxZ = ?", () -> {},
+                claim.faction().toString(), claim.world().toString(), claim.minX(), claim.maxX(), claim.minZ(), claim.maxZ()));
+        try {
+            databaseManager.save(snapshots).join();
+        } catch (java.util.concurrent.CompletionException exception) {
+            if (clearHome) faction.setHome(previousHome);
+            return false;
+        }
+        for (User user : users.values()) {
+            if (!user.getMap().contains(claim)) continue;
+            Player player = Bukkit.getPlayer(user.getUUID());
+            if (player != null) Claiming.resetClaimPillars(claim, player);
+            user.getMap().removeIf(claim::equals);
+        }
+        claims.removeIf(claim::equals);
+        claimIndex.remove(claim);
+        return true;
     }
 
     public void renameFaction(UUID uuid, String name) {

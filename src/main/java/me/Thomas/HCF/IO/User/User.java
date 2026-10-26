@@ -313,6 +313,7 @@ public class User {
             setClaiming(null);
         }
         this.faction = faction;
+        me.Thomas.HCF.Events.Player.Connection.UserChatEvent.setFactionChat(uuid, false);
         revision++;
     }
 

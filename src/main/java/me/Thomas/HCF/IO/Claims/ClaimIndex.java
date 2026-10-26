@@ -60,6 +60,14 @@ public final class ClaimIndex {
 
     public boolean hasFaction(UUID faction) { return factions.containsKey(faction); }
 
+    public void remove(Claim claim) {
+        Set<Claim> removed = Set.of(claim);
+        removeFrom(chunks, removed);
+        removeFrom(worlds, removed);
+        removeFrom(largeClaims, removed);
+        removeFrom(factions, removed);
+    }
+
     public void removeFaction(UUID faction) {
         List<Claim> removed = factions.remove(faction);
         if (removed == null) return;

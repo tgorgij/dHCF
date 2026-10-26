@@ -46,6 +46,13 @@ timers:
       - "&7&m---------------------------"
 
 factions:
+  list:
+    header:
+      - "&7&m---------------------------"
+      - "&eFactions &7(Page %page%/%pages%)"
+    entry: "&e%number%. %color%%faction% &7(&a%online%/%max%&7)"
+    footer:
+      - "&7&m---------------------------"
   help:
     main:
       - "&7&m----------------------------------------------------"

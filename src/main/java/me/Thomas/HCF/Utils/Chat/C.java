@@ -53,12 +53,16 @@ public class C {
     }
 
     public static String formatTime(long remainingMillis) {
+        return formatTime(remainingMillis, false);
+    }
+
+    public static String formatTime(long remainingMillis, boolean includeHours) {
         remainingMillis = Math.max(0L, remainingMillis);
 
         long totalSeconds = remainingMillis / 1000L;
         long tenths = (remainingMillis % 1000L) / 100L;
 
-        if (totalSeconds >= 3600) {
+        if (includeHours || totalSeconds >= 3600) {
             long hours = totalSeconds / 3600L;
             long minutes = (totalSeconds % 3600L) / 60L;
             long seconds = totalSeconds % 60L;

@@ -2,6 +2,7 @@ package me.Thomas.HCF.Utils.Scoreboard;
 
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.IO.Faction.Faction;
+import me.Thomas.HCF.IO.KOTH.KOTH;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
@@ -31,13 +32,16 @@ public class Board {
     private static final int MAX_LINES = 15;
     private static final Pattern TIMER_DISPLAY = Pattern.compile("<display=%has-(player|server)-([a-zA-Z]+)-timer%>");
     private static final String RALLY_DISPLAY = "<display=%has-faction-rally%>";
-    private record Line(String text, Timer.Type timer, ServerTimer.Type serverTimer, String placeholder, boolean rallyOnly) {}
+    private static final String KOTH_DISPLAY = "<display=%has-server-koths%>";
+    private record Line(String text, Timer.Type timer, ServerTimer.Type serverTimer, String placeholder,
+                        boolean rallyOnly, boolean kothsOnly) {}
 
     private final Player player;
     private final Scoreboard scoreboard;
     private final Objective objective;
     private final List<Line> configuredLines = new ArrayList<>();
     private final List<String> rallyLines;
+    private final String kothLine;
     private final List<String> previousLines = new ArrayList<>();
     private boolean visible;
     private Team focusTeam;
@@ -57,9 +61,11 @@ public class Board {
         this.scoreboard = scoreboard;
         this.objective = objective;
         this.rallyLines = Main.getInstance().getScoreboardConfig().getStringList("boards.rally");
+        this.kothLine = Main.getInstance().getScoreboardConfig().getString("boards.koth", "%name% KOTH&7: &c%time%");
         for (String configuredText : lines) {
             boolean rallyOnly = configuredText.contains(RALLY_DISPLAY);
-            String text = configuredText.replace(RALLY_DISPLAY, "").stripTrailing();
+            boolean kothsOnly = configuredText.contains(KOTH_DISPLAY);
+            String text = configuredText.replace(RALLY_DISPLAY, "").replace(KOTH_DISPLAY, "").stripTrailing();
             Matcher matcher = TIMER_DISPLAY.matcher(text);
             if (matcher.find()) {
                 String scope = matcher.group(1);
@@ -68,12 +74,12 @@ public class Board {
                     configuredLines.add(new Line(text.replace(matcher.group(), ""),
                             scope.equals("player") ? Timer.Type.valueOf(timerName.toUpperCase(Locale.ROOT)) : null,
                             scope.equals("server") ? ServerTimer.Type.valueOf(timerName.toUpperCase(Locale.ROOT)) : null,
-                            "%" + scope + "-" + timerName + "-timer%", rallyOnly));
+                            "%" + scope + "-" + timerName + "-timer%", rallyOnly, kothsOnly));
                 } catch (IllegalArgumentException ignored) {
                     Main.getInstance().getLogger().warning("Unknown scoreboard timer: " + timerName);
                 }
             } else {
-                configuredLines.add(new Line(text, null, null, null, rallyOnly));
+                configuredLines.add(new Line(text, null, null, null, rallyOnly, kothsOnly));
             }
         }
         player.setScoreboard(scoreboard);
@@ -88,8 +94,11 @@ public class Board {
         List<String> lines = new ArrayList<>(MAX_LINES);
         Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
         Location rally = faction == null || !faction.hasMember(player.getUniqueId()) ? null : faction.getRally();
+        List<KOTH> koths = Main.getInstance().getAllKOTHs().values().stream().filter(KOTH::isRunning)
+                .sorted(java.util.Comparator.comparing(KOTH::getName, String.CASE_INSENSITIVE_ORDER)).toList();
         for (Line configured : configuredLines) {
             if (configured.rallyOnly() && rally == null) continue;
+            if (configured.kothsOnly() && koths.isEmpty()) continue;
             String text = configured.text();
             if (configured.timer() != null) {
                 Timer timer = user.getTimer(configured.timer());
@@ -101,7 +110,14 @@ public class Board {
                 if (timer == null || timer.getRemainingTimeMillis() <= 0) continue;
                 text = text.replace(configured.placeholder(), C.formatTime(timer.getRemainingTimeMillis()));
             }
-            if (text.contains("%rally%")) {
+            if (text.contains("%koths%")) {
+                for (KOTH koth : koths) {
+                    lines.add(text.replace("%koths%", kothLine
+                            .replace("%name%", C.getColorCode(koth.getColor()) + koth.getName())
+                            .replace("%time%", koth.getFormattedTime())));
+                    if (lines.size() == MAX_LINES) break;
+                }
+            } else if (text.contains("%rally%")) {
                 if (rally == null || rally.getWorld() == null) continue;
                 String dimension = C.getFormattedDimension(rally.getWorld());
                 String location = C.getFormattedLocation(rally);

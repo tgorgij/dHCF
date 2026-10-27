@@ -1,6 +1,8 @@
 package me.Thomas.HCF.Events.Player.Item;
 
 import me.Thomas.HCF.IO.User.User;
+import me.Thomas.HCF.IO.Faction.Faction;
+import me.Thomas.HCF.IO.KOTH.KOTH;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
@@ -10,10 +12,25 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Objects;
 
 public class UserPearlEvent implements Listener {
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onLand(PlayerTeleportEvent e) {
+        if (e.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL || e.getTo() == null) return;
+        Faction faction = Faction.getAtLocation(e.getTo());
+        if (faction == null) return;
+        for (KOTH koth : Main.getInstance().getAllKOTHs().values()) {
+            if (koth.isPearlable() || !faction.getUUID().equals(koth.getFaction())) continue;
+            e.setCancelled(true);
+            e.getPlayer().sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("events.koth.pearl-blocked")
+                    .replace("%koth%", koth.getName())));
+            return;
+        }
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPearl(ProjectileLaunchEvent e) {

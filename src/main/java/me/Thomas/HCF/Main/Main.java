@@ -1,6 +1,8 @@
 package me.Thomas.HCF.Main;
 
 import me.Thomas.HCF.Commands.Staff.ReviveCommand;
+import me.Thomas.HCF.Commands.Staff.RestoreCommand;
+import me.Thomas.HCF.Commands.Staff.Chat.ChatCommand;
 import me.Thomas.HCF.Commands.Admin.Lives.LivesCommand;
 import me.Thomas.HCF.Commands.User.Economy.BalanceCommand;
 import me.Thomas.HCF.Commands.User.Economy.PayCommand;
@@ -30,6 +32,9 @@ import me.Thomas.HCF.IO.Claims.Claiming;
 import me.Thomas.HCF.IO.Database.DatabaseManager;
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import me.Thomas.HCF.IO.Faction.Faction;
+import me.Thomas.HCF.IO.KOTH.KOTH;
+import me.Thomas.HCF.Commands.Admin.KOTH.KOTHCommand;
+import me.Thomas.HCF.Events.Player.Movement.UserKOTHEvent;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Combat.DTR;
@@ -65,6 +70,7 @@ public class Main extends JavaPlugin {
     // Factions
     private final HashMap<UUID, Faction> factions = new HashMap<>();
     private final HashMap<String, Faction> factionNames = new HashMap<>();
+    private final Map<UUID, KOTH> koths = new LinkedHashMap<>();
     private boolean factionDebug = false;
 
     private final Map<UUID, Set<UUID>> userInvites = new HashMap<>();
@@ -102,6 +108,7 @@ public class Main extends JavaPlugin {
         loadData();
         loadInvites();
         loadClaims();
+        loadKOTHs();
         dataLoaded = true;
         boardHandler = new BoardHandler();
 
@@ -111,6 +118,9 @@ public class Main extends JavaPlugin {
 
         Bukkit.getScheduler().runTaskTimer(this, this::saveAll, 20 * 60 * 5, 20 * 60 * 5);
         Bukkit.getScheduler().runTaskTimer(this, this::updateDTR, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            for (KOTH koth : List.copyOf(koths.values())) koth.tick();
+        }, 1L, 1L);
     }
 
     @Override
@@ -143,9 +153,14 @@ public class Main extends JavaPlugin {
         // Admin
         Objects.requireNonNull(getCommand("pvp")).setExecutor(new PvPCommand());
         Objects.requireNonNull(getCommand("lives")).setExecutor(new LivesCommand());
-        Objects.requireNonNull(getCommand("revive")).setExecutor(new ReviveCommand());
         Objects.requireNonNull(getCommand("sotw")).setExecutor(new SOTWCommand());
         Objects.requireNonNull(getCommand("economy")).setExecutor(new EconomyCommand());
+        Objects.requireNonNull(getCommand("koth")).setExecutor(new KOTHCommand());
+
+        // Staff
+        Objects.requireNonNull(getCommand("revive")).setExecutor(new ReviveCommand());
+        Objects.requireNonNull(getCommand("restore")).setExecutor(new RestoreCommand());
+        Objects.requireNonNull(getCommand("chat")).setExecutor(new ChatCommand());
     }
 
     private void events() {
@@ -164,9 +179,31 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserQuitEvent(), this);
         pm.registerEvents(new UserClaimEvent(), this);
         pm.registerEvents(new UserMoveFactionEvent(), this);
+        pm.registerEvents(new UserKOTHEvent(), this);
         pm.registerEvents(new UserInteractInFactionEvent(), this);
         pm.registerEvents(new UserSubclaimEvent(), this);
     }
+
+    private void loadKOTHs() {
+        try (Connection connection = databaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM koths ORDER BY name COLLATE NOCASE");
+             ResultSet rows = statement.executeQuery()) {
+            while (rows.next()) {
+                KOTH koth = new KOTH(rows);
+                koths.put(koth.getUUID(), koth);
+            }
+        } catch (SQLException | IllegalArgumentException exception) {
+            throw new IllegalStateException("Could not load KOTHs", exception);
+        }
+    }
+
+    public Map<UUID, KOTH> getAllKOTHs() { return Collections.unmodifiableMap(koths); }
+    public KOTH getKOTH(UUID uuid) { return koths.get(uuid); }
+    public KOTH getKOTH(String name) {
+        return koths.values().stream().filter(koth -> koth.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+    }
+    public void addKOTH(KOTH koth) { koths.put(koth.getUUID(), koth); }
+    public void removeKOTH(UUID uuid) { koths.remove(uuid); }
 
     private void loadInvites() {
         String sql = """
@@ -422,6 +459,10 @@ public class Main extends JavaPlugin {
             SaveSnapshot snapshot = faction.snapshot();
             if (snapshot != null) snapshots.add(snapshot);
         }
+        for (KOTH koth : koths.values()) {
+            SaveSnapshot snapshot = koth.snapshot();
+            if (snapshot != null) snapshots.add(snapshot);
+        }
         for (User user : users.values()) {
             SaveSnapshot snapshot = user.snapshot();
             if (snapshot != null) snapshots.add(snapshot);
@@ -524,6 +565,11 @@ public class Main extends JavaPlugin {
     }
 
     public void removeFaction(UUID uuid) {
+        for (KOTH koth : koths.values()) {
+            if (!uuid.equals(koth.getFaction())) continue;
+            koth.setFaction(null);
+            koth.saveAsync();
+        }
         friendlyFire.remove(uuid);
         factionFocus.remove(uuid);
         factionFocus.values().removeIf(focus -> focus.faction() && focus.target().equals(uuid));

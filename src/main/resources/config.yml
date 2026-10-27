@@ -11,6 +11,13 @@ settings:
     number: 1
     start-date: "2026-08-16"
   location-format: "X: %x%, Z: %z%"
+  names:
+    min: 3
+    max: 16
+    blocked:
+      - VeltPVP
+      - MineHQ
+      - Arcane
 
 enchantments: # Map kit limits. Use Minecraft enchantment names; omitted or negative values are unrestricted.
   protection: 2
@@ -21,6 +28,11 @@ potions: # Brewing limits. Unlisted potions are unrestricted; applies to drinkab
     enabled: false
   poison:
     extended: false # Disallow redstone's duration extension; regular poison and Poison II are allowed.
+
+koth:
+  rewards:
+    commands:
+      - "economy give %player% 1000" # Run as console; supports %player% and %koth%.
 
 economy:
   default-balance: 500
@@ -61,13 +73,6 @@ factions:
       raidable: RED
       close-to-raidable: YELLOW
       not-raidable: GREEN
-  name:
-    min: 3
-    max: 16
-    blocked:
-      - VeltPVP
-      - MineHQ
-      - Arcane
   colors:
     team: GREEN
     ally: BLUE

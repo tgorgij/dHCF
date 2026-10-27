@@ -3,6 +3,7 @@ boards:
   primary:
     - "&7&m---------------------"
     - "%rally% <display=%has-faction-rally%>"
+    - "%koths% <display=%has-server-koths%>"
     - "&a&lPvP Timer&7: &c%player-pvp-timer% <display=%has-player-pvp-timer%>"
     - "&2&lStarting&7: &c%player-starting-timer% <display=%has-player-starting-timer%>"
     - "&5&lEnderpearl&7: &c%player-enderpearl-timer% <display=%has-player-enderpearl-timer%>"
@@ -18,3 +19,4 @@ boards:
     - "&eDimension: &f%dimension%"
     - "&eLocation: &f%location%"
     - "&7&m---------------------"
+  koth: "%name% KOTH&7: &c%time%"

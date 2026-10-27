@@ -28,6 +28,7 @@
 4. Lives and revival
 - hcf.command.lives
 - hcf.command.revive
+- hcf.command.restore
 
 5. PvP protection
 - hcf.command.pvp
@@ -45,3 +46,10 @@
 8. Deathban duration (configurable)
 - dhcf.deathban.30minutes
 - dhcf.deathban.15minutes
+
+9. Chat
+- hcf.command.chat
+- hcf.chat.bypass
+
+10. KOTH
+- hcf.command.koth

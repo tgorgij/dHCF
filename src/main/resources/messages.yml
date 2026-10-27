@@ -1,4 +1,20 @@
 help:
+  koth:
+    - "&6[KOTH] /%alias% %koth% create"
+    - "&6[KOTH] /%alias% %koth% delete"
+    - "&6[KOTH] /%alias% %koth% start <seconds>"
+    - "&6[KOTH] /%alias% %koth% cancel"
+    - "&6[KOTH] /%alias% %koth% extend <seconds>"
+    - "&6[KOTH] /%alias% %koth% setcolor <color>"
+    - "&6[KOTH] /%alias% %koth% setpearlable <true|false>"
+    - "&6[KOTH] /%alias% %koth% setfaction <faction|none>"
+    - "&6[KOTH] /%alias% %koth% setpos1"
+    - "&6[KOTH] /%alias% %koth% setpos2"
+    - "&6[KOTH] /%alias% %koth% rename <name>"
+  chat:
+    - "&e/%alias% pause &7- Pause or unpause public chat"
+    - "&e/%alias% clear &7- Clear public chat"
+    - "&e/%alias% slow <seconds> &7- Slow public chat; 0 to disable"
   pvp:
     - "&e/%alias% enable &7- Remove your PvP protection"
     - "&e/%alias% give <player> &7- Give a player PvP protection"

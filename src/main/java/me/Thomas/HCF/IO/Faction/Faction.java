@@ -5,6 +5,7 @@ import me.Thomas.HCF.IO.Claims.Claim;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
+import me.Thomas.HCF.Utils.Names.Names;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -682,16 +683,7 @@ public class Faction {
             p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.already-exists")));
             return true;
         }
-        if (Main.getInstance().getConfig().getStringList("factions.name.blocked").stream()
-                .anyMatch(name::equalsIgnoreCase)) {
-            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.blocked")));
-            return true;
-        }
-        if (name.length() < Main.getInstance().getConfig().getInt("factions.name.min") || name.length() > Main.getInstance().getConfig().getInt("factions.name.max")) {
-            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.invalid-length")));
-            return true;
-        }
-        return false;
+        return Names.isInvalid(name, p);
     }
 
     public static ItemStack getClaimWand() {

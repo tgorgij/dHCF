@@ -1,10 +1,14 @@
 package me.Thomas.HCF.Events.Player.Connection;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import io.papermc.paper.event.player.ChatEvent;
+import me.Thomas.HCF.Commands.Staff.Chat.ChatCommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
+import me.Thomas.HCF.Utils.Permission.Permission;
+import me.Thomas.HCF.Utils.Timer.Timer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
@@ -62,5 +66,35 @@ public class UserChatEvent implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         setFactionChat(e.getPlayer().getUniqueId(), false);
+    }
+
+    // User timers and permission checks run on the server thread.
+    @SuppressWarnings("deprecation")
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPublicChat(ChatEvent e) {
+        Player p = e.getPlayer();
+        if (factionChat.containsKey(p.getUniqueId()) || Permission.has(p, "chat.bypass")) return;
+        if (ChatCommand.isPaused()) {
+            e.setCancelled(true);
+            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("events.player.chat.paused")));
+            return;
+        }
+        if (ChatCommand.getSlowSeconds() == 0) return;
+        User user = User.get(p);
+        if (!user.hasTimer(Timer.Type.CHAT)) return;
+        e.setCancelled(true);
+        long seconds = (user.getTimer(Timer.Type.CHAT).getRemainingTimeMillis() + 999L) / 1000L;
+        p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("events.player.chat.slow")
+                .replace("%time%", Long.toString(seconds))));
+    }
+
+    @SuppressWarnings("deprecation")
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPublicChatSent(ChatEvent e) {
+        Player p = e.getPlayer();
+        if (ChatCommand.getSlowSeconds() == 0 || factionChat.containsKey(p.getUniqueId())
+                || Permission.has(p, "chat.bypass")) return;
+        User.get(p).addTimer(Timer.Type.CHAT, new Timer(Timer.Type.CHAT,
+                System.currentTimeMillis() + ChatCommand.getSlowSeconds() * 1000L, 0L, false));
     }
 }

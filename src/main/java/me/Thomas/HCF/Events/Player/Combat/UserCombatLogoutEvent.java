@@ -220,6 +220,8 @@ public class UserCombatLogoutEvent implements Listener {
                 PersistentDataType.BYTE_ARRAY, ItemStack.serializeItemsAsBytes(inventory.getContents()));
         villager.getPersistentDataContainer().set(new NamespacedKey(Main.getInstance(), "held-slot"),
                 PersistentDataType.INTEGER, inventory.getHeldItemSlot());
+        villager.getPersistentDataContainer().set(new NamespacedKey(Main.getInstance(), "experience"),
+                PersistentDataType.INTEGER, p.calculateTotalExperiencePoints());
 
         EntityEquipment equipment = Objects.requireNonNull(villager.getEquipment());
         equipment.setArmorContents(copyArmor(inventory.getArmorContents()));

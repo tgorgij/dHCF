@@ -5,6 +5,12 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  koth:
+    description: Create and manage King of the Hill events.
+    usage: /koth <name> <subcommand> [arguments]
+  chat:
+    description: Pause, clear, or slow public chat.
+    usage: /chat <pause|clear|slow> [seconds]
   pay:
     description: Send money to another player.
     usage: /pay <player> <amount>
@@ -20,6 +26,9 @@ commands:
   revive:
     description: Revive a deathbanned player.
     usage: /revive <player>
+  restore:
+    description: Restore an online player's last death inventory and experience.
+    usage: /restore <player>
   sotw:
   faction:
     aliases:
@@ -34,6 +43,15 @@ commands:
     aliases:
       - eco
 permissions:
+  hcf.command.koth:
+    description: Allows managing KOTH events.
+    default: op
+  hcf.command.chat:
+    description: Allows pausing, clearing, and slowing public chat.
+    default: op
+  hcf.chat.bypass:
+    description: Bypasses public chat pauses, slow mode, and clearing.
+    default: false
   hcf.mapkit.bypass:
     description: Allows enchanting and combining items above the map kit limits.
     default: false

@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 /** Versioned, transactional upgrades shared by fresh installs and existing databases. */
 public final class DatabaseSchema {
-    private static final int VERSION = 6;
+    private static final int VERSION = 8;
 
     private DatabaseSchema() {}
 
@@ -79,6 +79,25 @@ public final class DatabaseSchema {
                 statement.executeUpdate("ALTER TABLE players ADD COLUMN pvpProtectionPending INTEGER NOT NULL DEFAULT 0");
                 statement.executeUpdate("UPDATE players SET pvpProtectionPending = 1 WHERE deathbanExpiry <> 0");
                 statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (6)");
+            }
+            if (version < 7) {
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN lastInventory BLOB");
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN lastExperience INTEGER");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (7)");
+            }
+            if (version < 8) {
+                statement.executeUpdate("""
+                        CREATE TABLE koths (
+                            uuid TEXT PRIMARY KEY,
+                            name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                            color TEXT NOT NULL DEFAULT 'BLUE',
+                            pearlable INTEGER NOT NULL DEFAULT 1 CHECK (pearlable IN (0, 1)),
+                            faction TEXT REFERENCES factions(uuid) ON DELETE SET NULL,
+                            pos1 TEXT,
+                            pos2 TEXT
+                        )
+                        """);
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (8)");
             }
             connection.commit();
         } catch (SQLException exception) {

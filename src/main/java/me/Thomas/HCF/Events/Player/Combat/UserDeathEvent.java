@@ -108,6 +108,9 @@ public class UserDeathEvent implements Listener {
         e.getDrops().clear();
         e.getDrops().addAll(CombatLoggerInventory.getDrops(inventory));
         User user = User.get(uuid);
+        user.setLastInventory(ItemStack.serializeItemsAsBytes(inventory));
+        user.setLastExperience(villager.getPersistentDataContainer().getOrDefault(
+                new NamespacedKey(Main.getInstance(), "experience"), PersistentDataType.INTEGER, 0));
         Long duration = villager.getPersistentDataContainer().get(
                 new NamespacedKey(Main.getInstance(), "deathban-duration"), PersistentDataType.LONG);
         Deathban.apply(user, duration == null
@@ -133,6 +136,8 @@ public class UserDeathEvent implements Listener {
             return;
         }
         User user = User.get(e.getEntity());
+        user.setLastInventory(ItemStack.serializeItemsAsBytes(e.getEntity().getInventory().getContents()));
+        user.setLastExperience(e.getEntity().calculateTotalExperiencePoints());
         Deathban.apply(user, Deathban.getDuration(e.getEntity()), e.getEntity().getLocation());
         recordDeathStatistics(e, user);
         e.deathMessage(formatDeathMessage(e, getPlayerName(user)));

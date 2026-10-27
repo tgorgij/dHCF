@@ -29,6 +29,8 @@ public class User {
     private int lives;
     private long deathbanExpiry;
     private boolean pvpProtectionPending;
+    private byte[] lastInventory;
+    private Integer lastExperience;
 
     private long revision;
     private volatile long savedRevision;
@@ -123,6 +125,9 @@ public class User {
 
         this.deathbanExpiry = resultSet.getLong("deathbanExpiry");
         this.pvpProtectionPending = resultSet.getBoolean("pvpProtectionPending");
+        this.lastInventory = resultSet.getBytes("lastInventory");
+        int experience = resultSet.getInt("lastExperience");
+        this.lastExperience = resultSet.wasNull() ? null : experience;
 
 
         this.savedRevision = revision;
@@ -142,6 +147,8 @@ public class User {
         this.timers = new EnumMap<>(Timer.Type.class);
         this.deathbanExpiry = 0;
         this.pvpProtectionPending = false;
+        this.lastInventory = null;
+        this.lastExperience = null;
         this.revision++;
         this.claiming = null;
         this.lastEnteredFaction = null;
@@ -161,16 +168,38 @@ public class User {
         String sql =
                 "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
-                        + "timers, deathbanExpiry, pvpProtectionPending) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
                         + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
                         + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry, "
-                        + "pvpProtectionPending=excluded.pvpProtectionPending";
+                        + "pvpProtectionPending=excluded.pvpProtectionPending, "
+                        + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), name, faction == null ? null : faction.toString(),
-                balance, kills, deaths, lives, serializeTimers(), deathbanExpiry, pvpProtectionPending ? 1 : 0);
+                balance, kills, deaths, lives, serializeTimers(), deathbanExpiry, pvpProtectionPending ? 1 : 0,
+                getLastInventory(), lastExperience);
+    }
+
+    public byte[] getLastInventory() {
+        return lastInventory == null ? null : lastInventory.clone();
+    }
+
+    public void setLastInventory(byte[] inventory) {
+        if (Arrays.equals(lastInventory, inventory)) return;
+        lastInventory = inventory == null ? null : inventory.clone();
+        revision++;
+    }
+
+    public Integer getLastExperience() {
+        return lastExperience;
+    }
+
+    public void setLastExperience(Integer experience) {
+        if (Objects.equals(lastExperience, experience)) return;
+        lastExperience = experience;
+        revision++;
     }
 
     public long getDeathbanExpiry() {
@@ -478,7 +507,7 @@ public class User {
                     || entry.getKey() == Timer.Type.LOGOUT
                     || entry.getValue().getRemainingTimeMillis() > 0) continue;
             Player player = Bukkit.getPlayer(uuid);
-            if (player != null) {
+            if (player != null && entry.getKey() != Timer.Type.CHAT) {
                 player.sendMessage(me.Thomas.HCF.Utils.Chat.C.chat(
                         Main.getInstance().getLocaleConfig().getString("events.player.timer.end.default", "")
                                 .replace("%timer%", entry.getKey().name().toLowerCase(Locale.ROOT))));

@@ -1,4 +1,7 @@
 primary:
+  name:
+    blocked: "&cThis name is blocked."
+    invalid-length: "&cNames must be between %min% and %max% characters."
   only-player-faction: "&cYou can only do this to player factions."
   combat-tagged: "&cYou cannot do this as you are combat tagged."
   no-permission: "&cNo permission."
@@ -23,7 +26,19 @@ primary:
     hq: "&eWarped to &d%faction%&e's HQ."
 
 events:
+  koth:
+    started: "&6[KOTH] %koth% has started with %time% to capture."
+    capturing: "&6[KOTH] &b%player% &6is capturing %koth%."
+    reset: "&6[KOTH] &b%player% &6lost control of %koth%."
+    remaining: "&6[KOTH] %koth% has %time% remaining."
+    captured: "&6[KOTH] &b%player% &6has captured %koth%."
+    cancelled: "&6[KOTH] %koth% has been cancelled."
+    extended: "&6[KOTH] %koth% has been extended and has %time% remaining."
+    pearl-blocked: "&6[KOTH] Enderpearls are disabled in %koth%'s territory."
   player:
+    chat:
+      paused: "&cPublic chat is currently paused."
+      slow: "&cYou must wait %time% seconds before chatting again."
     first-join: "&eSince this is your first time joining, you have been given &b$500&e."
     deathban: "&cYou are deathbanned. &eYou can log back in in &c%time%&e."
     self-revive-failed: "&cYour life could not be used to revive you. Please try again."
@@ -125,6 +140,51 @@ faction:
     offline: "&4%player% &cis offline"
 
 commands:
+  koth:
+    not-found: "&6[KOTH] %koth% does not exist."
+    already-exists: "&6[KOTH] A KOTH with this name already exists."
+    running: "&6[KOTH] This KOTH is already running."
+    not-running: "&6[KOTH] This KOTH is not running."
+    no-area: "&6[KOTH] Set both capture positions in a loaded world first."
+    different-world: "&6[KOTH] Both capture positions must be in the same dimension."
+    cancel-before-edit: "&6[KOTH] Cancel this KOTH before changing its capture area."
+    requires-faction: "&6[KOTH] Set a faction before changing pearlability."
+    invalid-state: "&6[KOTH] Enter true or false."
+    invalid-time: "&6[KOTH] Enter a positive whole number of seconds, at most 2147483647 in total."
+    failed: "&6[KOTH] The command could not be completed."
+    create:
+      usage: "&6[KOTH] Usage: /%alias% %koth% create"
+      success: "&6[KOTH] %koth% created."
+    delete:
+      usage: "&6[KOTH] Usage: /%alias% %koth% delete"
+      success: "&6[KOTH] %koth% deleted."
+    start:
+      usage: "&6[KOTH] Usage: /%alias% %koth% start <seconds>"
+      success: "&6[KOTH] %koth% started."
+    cancel:
+      usage: "&6[KOTH] Usage: /%alias% %koth% cancel"
+      success: "&6[KOTH] %koth% cancelled."
+    extend:
+      usage: "&6[KOTH] Usage: /%alias% %koth% extend <seconds>"
+      success: "&6[KOTH] %koth% extended."
+    setcolor:
+      usage: "&6[KOTH] Usage: /%alias% %koth% setcolor <color>"
+      success: "&6[KOTH] %koth% color updated."
+    setpearlable:
+      usage: "&6[KOTH] Usage: /%alias% %koth% setpearlable <true|false>"
+      success: "&6[KOTH] %koth% pearlability updated."
+    setfaction:
+      usage: "&6[KOTH] Usage: /%alias% %koth% setfaction <faction|none>"
+      success: "&6[KOTH] %koth% faction updated."
+    setpos1:
+      usage: "&6[KOTH] Usage: /%alias% %koth% setpos1"
+      success: "&6[KOTH] %koth% position one updated."
+    setpos2:
+      usage: "&6[KOTH] Usage: /%alias% %koth% setpos2"
+      success: "&6[KOTH] %koth% position two updated."
+    rename:
+      usage: "&6[KOTH] Usage: /%alias% %koth% rename <name>"
+      success: "&6[KOTH] %koth% renamed."
   pay:
     usage: "&cUsage: /%alias% <player> <amount>"
     self: "&cYou cannot pay yourself."
@@ -162,6 +222,26 @@ commands:
     take:
       usage: "&cUsage: /%alias% take <target> <amount>"
       success: "&eTook &b%amount% &elives from &b%player%&e. They now have &b%lives%&e."
+  chat:
+    pause:
+      usage: "&cUsage: /%alias% pause"
+      paused: "&ePublic chat has been &cpaused &eby &b%player%&e."
+      resumed: "&ePublic chat has been &aunpaused &eby &b%player%&e."
+    clear:
+      usage: "&cUsage: /%alias% clear"
+      success: "&eChat has been cleared by &b%player%&e."
+    slow:
+      usage: "&cUsage: /%alias% slow <seconds>"
+      invalid-time: "&cEnter a whole number of seconds, 0 or greater."
+      enabled: "&ePublic chat has been slowed to &b%time% seconds &eby &b%player%&e."
+      disabled: "&eChat slow mode has been disabled by &b%player%&e."
+  restore:
+    usage: "&cUsage: /%alias% <player>"
+    offline: "&c%player% is not online."
+    dead: "&c%player% must respawn before their inventory can be restored."
+    no-inventory: "&c%player% has no last inventory to restore."
+    success: "&eYou restored &b%player%&e's last inventory and experience."
+    failed: "&cThe inventory could not be restored. Please try again."
   revive:
     usage: "&cUsage: /%alias% <player>"
     not-deathbanned: "&c%player% is not deathbanned."

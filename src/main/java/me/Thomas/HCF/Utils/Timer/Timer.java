@@ -8,6 +8,7 @@ public class Timer {
         PVP("timers.pvp"),
         STARTING("timers.starting"),
         COMBAT("timers.combat"),
+        CHAT("timers.chat"),
         HOME("timers.home"),
         LOGOUT("timers.logout"),
         STUCK("timers.stuck"),

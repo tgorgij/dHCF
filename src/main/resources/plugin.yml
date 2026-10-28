@@ -5,6 +5,20 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  staff:
+    aliases: [m]
+    description: Toggle mod mode or its world interaction bypass.
+    usage: /staff [bypass]
+  freeze:
+    description: Freeze or unfreeze a player or the server.
+    usage: /freeze <player|all>
+  invsee:
+    description: Inspect an online player's inventory.
+    usage: /invsee <player>
+  vanish:
+    aliases: [v]
+    description: Toggle vanish.
+    usage: /vanish
   koth:
     description: Create and manage King of the Hill events.
     usage: /koth <name> <subcommand> [arguments]
@@ -43,6 +57,20 @@ commands:
     aliases:
       - eco
 permissions:
+  hcf.command.staff:
+    default: op
+  hcf.command.freeze:
+    default: op
+  hcf.command.invsee:
+    default: op
+  hcf.command.vanish:
+    default: op
+  hcf.command.invsee.modify:
+    default: false
+  hcf.freeze.bypass:
+    default: false
+  hcf.vanish.see:
+    default: false
   hcf.potions.bypass:
     description: Allows drinking potions restricted by the map kit.
     default: false

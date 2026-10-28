@@ -1,6 +1,11 @@
 package me.Thomas.HCF.Main;
 
 import me.Thomas.HCF.Commands.Staff.ReviveCommand;
+import me.Thomas.HCF.Commands.Staff.StaffCommand;
+import me.Thomas.HCF.Commands.Staff.FreezeCommand;
+import me.Thomas.HCF.Commands.Staff.InvseeCommand;
+import me.Thomas.HCF.Commands.Staff.VanishCommand;
+import me.Thomas.HCF.Utils.Staff.StaffMode;
 import me.Thomas.HCF.Commands.Staff.RestoreCommand;
 import me.Thomas.HCF.Commands.Staff.Chat.ChatCommand;
 import me.Thomas.HCF.Commands.Admin.Lives.LivesCommand;
@@ -62,6 +67,7 @@ public class Main extends JavaPlugin {
     private FileConfiguration scoreboardConfig;
     private FileConfiguration messagesConfig;
     private BoardHandler boardHandler;
+    private StaffMode staffMode;
     private boolean dataLoaded;
 
     // Users
@@ -111,6 +117,7 @@ public class Main extends JavaPlugin {
         loadClaims();
         loadKOTHs();
         dataLoaded = true;
+        staffMode = new StaffMode();
         boardHandler = new BoardHandler();
 
         getLogger().info("dHCF has been enabled with SQLite support!");
@@ -126,6 +133,7 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (staffMode != null) staffMode.shutdown();
         StuckTimer.shutdownSearches();
         friendlyFire.clear();
         factionFocus.clear();
@@ -159,6 +167,10 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("koth")).setExecutor(new KOTHCommand());
 
         // Staff
+        Objects.requireNonNull(getCommand("staff")).setExecutor(new StaffCommand());
+        Objects.requireNonNull(getCommand("freeze")).setExecutor(new FreezeCommand());
+        Objects.requireNonNull(getCommand("invsee")).setExecutor(new InvseeCommand());
+        Objects.requireNonNull(getCommand("vanish")).setExecutor(new VanishCommand());
         Objects.requireNonNull(getCommand("revive")).setExecutor(new ReviveCommand());
         Objects.requireNonNull(getCommand("restore")).setExecutor(new RestoreCommand());
         Objects.requireNonNull(getCommand("chat")).setExecutor(new ChatCommand());
@@ -166,6 +178,8 @@ public class Main extends JavaPlugin {
 
     private void events() {
         PluginManager pm = getServer().getPluginManager();
+
+        pm.registerEvents(staffMode, this);
 
         // User
         pm.registerEvents(new UserJoinEvent(), this);
@@ -315,6 +329,8 @@ public class Main extends JavaPlugin {
                 .getOrDefault(userUuid, Collections.emptySet())
                 .contains(factionUuid);
     }
+
+    public StaffMode getStaffMode() { return staffMode; }
 
     public DatabaseManager getDatabaseManager() {
         return databaseManager;

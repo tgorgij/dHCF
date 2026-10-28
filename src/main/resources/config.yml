@@ -128,3 +128,27 @@ factions:
   stuck:
     max-border-distance: 32 # Maximum blocks beyond the original claim to search (1-1024).
     max-search-columns: 8192 # Bound the search when no safe unclaimed destination exists.
+
+staff-mode:
+  items:
+    compass: COMPASS
+    random: CLOCK
+    inspect: BOOK
+    freeze: BLUE_ICE
+    staff: PLAYER_HEAD
+    wand: WOODEN_AXE
+    show: LIME_DYE
+    hide: GRAY_DYE
+
+freeze:
+  blocked-commands:
+    - logout
+    - faction
+    - spawn
+    - home
+    - tp
+    - tpa
+    - tpaccept
+    - warp
+    - suicide
+    - kill

@@ -54,3 +54,13 @@
 
 10. KOTH
 - hcf.command.koth
+
+11. Staff tools
+- hcf.command.staff
+- hcf.command.freeze
+- hcf.command.invsee
+- hcf.command.invsee.modify
+- hcf.command.vanish
+- hcf.freeze.bypass
+- hcf.vanish.see
+- worldedit.wand

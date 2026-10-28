@@ -44,6 +44,7 @@ public class Board {
     private final Objective objective;
     private final List<Line> configuredLines = new ArrayList<>();
     private final List<String> rallyLines;
+    private final List<String> staffLines;
     private final String kothLine;
     private final List<String> previousLines = new ArrayList<>();
     private boolean visible;
@@ -64,6 +65,7 @@ public class Board {
         this.player = player;
         this.scoreboard = scoreboard;
         this.objective = objective;
+        this.staffLines = Main.getInstance().getScoreboardConfig().getStringList("boards.staff");
         this.rallyLines = Main.getInstance().getScoreboardConfig().getStringList("boards.rally");
         this.kothLine = Main.getInstance().getScoreboardConfig().getString("boards.koth", "%name% KOTH&7: &c%time%");
         for (String configuredText : lines) {
@@ -104,6 +106,20 @@ public class Board {
             if (configured.rallyOnly() && rally == null) continue;
             if (configured.kothsOnly() && koths.isEmpty()) continue;
             String text = configured.text();
+            if (text.contains("%mod-mode%")) {
+                if (!user.isInStaffMode()) continue;
+                long online = Bukkit.getOnlinePlayers().stream().filter(player::canSee).count();
+                for (String staffLine : staffLines) {
+                    lines.add(text.replace("%mod-mode%", staffLine
+                            .replace("%gamemode%", player.getGameMode().name())
+                            .replace("%vanished%", user.isVanished() ? "enabled" : "disabled")
+                            .replace("%online%", String.valueOf(online))
+                            .replace("%total%", String.valueOf(Bukkit.getMaxPlayers()))));
+                    if (lines.size() == MAX_LINES) break;
+                }
+                if (lines.size() == MAX_LINES) break;
+                continue;
+            }
             if (configured.timer() != null) {
                 Timer timer = user.getTimer(configured.timer());
                 if (timer == null || timer.getRemainingTimeMillis() <= 0) continue;

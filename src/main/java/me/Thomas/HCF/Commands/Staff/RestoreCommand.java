@@ -40,6 +40,10 @@ public class RestoreCommand implements TabExecutor {
                     .replace("%player%", args[0])));
             return true;
         }
+        if (User.get(p).isInStaffMode()) {
+            Main.getInstance().getStaffMode().message(sender, "target-in-mode");
+            return true;
+        }
         if (p.isDead()) {
             sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.restore.dead"))
                     .replace("%player%", p.getName())));

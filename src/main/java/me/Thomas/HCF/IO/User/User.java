@@ -568,6 +568,16 @@ public class User {
         this.lastEnteredFaction = lastEnteredFaction;
     }
 
+    public boolean isInStaffMode() {
+        Player p = Bukkit.getPlayer(uuid);
+        return p != null && Main.getInstance().getStaffMode() != null && Main.getInstance().getStaffMode().isEnabled(p);
+    }
+
+    public boolean isVanished() {
+        Player p = Bukkit.getPlayer(uuid);
+        return p != null && Main.getInstance().getStaffMode() != null && Main.getInstance().getStaffMode().isVanished(p);
+    }
+
     public boolean isBypass() {
         return bypass;
     }

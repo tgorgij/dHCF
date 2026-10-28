@@ -2,6 +2,7 @@ title: "%primary%&l%server-name% &7| %secondary%&lMap %map-number%"
 boards:
   primary:
     - "&7&m---------------------"
+    - "%mod-mode%"
     - "%rally% <display=%has-faction-rally%>"
     - "%koths% <display=%has-server-koths%>"
     - "&a&lPvP Timer&7: &c%player-pvp-timer% <display=%has-player-pvp-timer%>"
@@ -18,6 +19,12 @@ boards:
     - "&e&lLogout&7: &c%player-logout-timer% <display=%has-player-logout-timer%>"
     - "&c&lSpawn Tag&7: &c%player-combat-timer% <display=%has-player-combat-timer%>"
     - "&7&m---------------------"
+  staff:
+    - "&eMod Mode"
+    - "  &e*Gamemode&7: &c%gamemode%"
+    - " &e*Vanished&7: &c%vanished%"
+    - " &e*Online Players&7: &c%online%/%total%"
+    - "&7&m--------------------- <display=%has-lines-below%>"
   rally:
     - "&eDimension: &f%dimension%"
     - "&eLocation: &f%location%"

@@ -81,7 +81,7 @@ public class UserDamageEvent implements Listener {
         if (isDamageProtected(victim)) e.setCancelled(true);
     }
 
-    private User getVictimUser(LivingEntity victim) {
+    static User getVictimUser(LivingEntity victim) {
         if (victim instanceof Player player) return User.get(player);
         if (!(victim instanceof Villager villager)) return null;
         String playerId = villager.getPersistentDataContainer().get(

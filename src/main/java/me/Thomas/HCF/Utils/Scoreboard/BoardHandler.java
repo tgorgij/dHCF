@@ -15,6 +15,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Set;
 
 public class BoardHandler implements Listener {
 
@@ -22,6 +23,7 @@ public class BoardHandler implements Listener {
 
     private final BukkitTask updateTask;
     private int focusTicks;
+    private Set<String> archerTaggedNames = Set.of();
 
     public BoardHandler() {
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
@@ -34,12 +36,14 @@ public class BoardHandler implements Listener {
         updateTask = new BukkitRunnable() {
             @Override
             public void run() {
-                boolean refreshNames = focusTicks++ % 10 == 0;
+                Set<String> tags = Board.getArcherTaggedNames();
+                boolean refreshNames = focusTicks++ % 10 == 0 || !tags.equals(archerTaggedNames);
+                archerTaggedNames = tags;
                 for (Board board : boards.values()) {
                     if (board.getPlayer().isOnline()) {
                         User.get(board.getPlayer()).expireTimers();
                         board.update();
-                        if (refreshNames) board.updateFocus();
+                        if (refreshNames) board.updateFocus(tags);
                     }
                 }
             }
@@ -47,8 +51,8 @@ public class BoardHandler implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH)
-    public void onJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
+    public void onJoin(PlayerJoinEvent e) {
+        Player player = e.getPlayer();
 
         Board board = new Board(player);
         boards.put(player.getUniqueId(), board);
@@ -58,8 +62,8 @@ public class BoardHandler implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH)
-    public void onQuit(PlayerQuitEvent event) {
-        UUID uuid = event.getPlayer().getUniqueId();
+    public void onQuit(PlayerQuitEvent e) {
+        UUID uuid = e.getPlayer().getUniqueId();
 
         Board board = boards.remove(uuid);
 
@@ -69,8 +73,10 @@ public class BoardHandler implements Listener {
     }
 
     public void refreshFocus() {
+        Set<String> tags = Board.getArcherTaggedNames();
+        archerTaggedNames = tags;
         for (Board board : boards.values()) {
-            if (board.getPlayer().isOnline()) board.updateFocus();
+            if (board.getPlayer().isOnline()) board.updateFocus(tags);
         }
     }
 

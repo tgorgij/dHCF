@@ -45,6 +45,7 @@ public class Board {
     private final List<String> previousLines = new ArrayList<>();
     private boolean visible;
     private Team focusTeam;
+    private Team archerTagTeam;
 
     public Board(Player player) {
         this(player, Bukkit.getScoreboardManager().getNewScoreboard(),
@@ -150,7 +151,19 @@ public class Board {
         previousLines.addAll(lines);
     }
 
+    static Set<String> getArcherTaggedNames() {
+        Set<String> names = new HashSet<>();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (User.get(p).hasTimer(Timer.Type.ARCHERTAG)) names.add(p.getName());
+        }
+        return names;
+    }
+
     void updateFocus() {
+        updateFocus(getArcherTaggedNames());
+    }
+
+    void updateFocus(Set<String> taggedNames) {
         UUID own = User.get(player).getFaction();
         Main.Focus focus = own == null ? null : Main.getInstance().getFocus(own);
         Set<String> names = new HashSet<>();
@@ -165,24 +178,39 @@ public class Board {
                 if (target != null && !own.equals(User.get(target).getFaction())) names.add(target.getName());
             }
         }
-        if (focusTeam == null) {
-            if (names.isEmpty()) return;
-            focusTeam = scoreboard.registerNewTeam("dhcf_focus");
-            String code = C.getColorCode(Main.getInstance().getConfig().getString("factions.colors.focus", "PINK"));
-            TextColor color = C.chat(code + "x").color();
-            focusTeam.color(color == null ? NamedTextColor.LIGHT_PURPLE : NamedTextColor.nearestTo(color));
-            focusTeam.setCanSeeFriendlyInvisibles(false);
+        names.removeAll(taggedNames);
+        if (focusTeam == null && !names.isEmpty()) {
+            focusTeam = createNameTeam("dhcf_focus", "factions.colors.focus", "PINK", NamedTextColor.LIGHT_PURPLE);
         }
-        for (String entry : focusTeam.getEntries()) {
-            if (!names.contains(entry)) focusTeam.removeEntry(entry);
+        if (archerTagTeam == null && !taggedNames.isEmpty()) {
+            archerTagTeam = createNameTeam("dhcf_archer", "factions.colors.archer-tag", "YELLOW", NamedTextColor.YELLOW);
+        }
+        updateNameTeam(focusTeam, names);
+        updateNameTeam(archerTagTeam, taggedNames);
+    }
+
+    private Team createNameTeam(String name, String path, String defaultColor, NamedTextColor fallback) {
+        Team team = scoreboard.registerNewTeam(name);
+        String code = C.getColorCode(Main.getInstance().getConfig().getString(path, defaultColor));
+        TextColor color = C.chat(code + "x").color();
+        team.color(color == null ? fallback : NamedTextColor.nearestTo(color));
+        team.setCanSeeFriendlyInvisibles(false);
+        return team;
+    }
+
+    private void updateNameTeam(Team team, Set<String> names) {
+        if (team == null) return;
+        for (String entry : team.getEntries()) {
+            if (!names.contains(entry)) team.removeEntry(entry);
         }
         for (String name : names) {
-            if (!focusTeam.hasEntry(name)) focusTeam.addEntry(name);
+            if (!team.hasEntry(name)) team.addEntry(name);
         }
     }
 
     public void remove() {
         if (focusTeam != null) focusTeam.unregister();
+        if (archerTagTeam != null) archerTagTeam.unregister();
         for (int i = 0; i < previousLines.size(); i++) scoreboard.resetScores("dhcf_line_" + i);
         previousLines.clear();
         if (player.isOnline() && player.getScoreboard() == scoreboard) {

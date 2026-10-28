@@ -19,6 +19,26 @@ settings:
       - MineHQ
       - Arcane
 
+classes:
+  archer:
+    activation: 0 # Seconds wearing the full leather set before activation.
+    effects: # Strength is the displayed potion level; duration is in seconds and refreshes while equipped.
+      speed:
+        strength: 2
+        duration: 5
+      resistance:
+        strength: 1
+        duration: 5
+    abilities:
+      speed:
+        strength: 3
+        duration: 5
+      jump:
+        strength: 4
+        duration: 5
+    tag:
+      damage-multiplier: 1.25
+
 enchantments: # Map kit limits. Use Minecraft enchantment names; omitted or negative values are unrestricted.
   protection: 2
   sharpness: 2
@@ -58,6 +78,8 @@ timers: # seconds
   logout: 30
   stuck: 60
   archertag: 5
+  archerSpeed: 30
+  archerJump: 30
   apple: 5
   gapple: 3600
   enderpearl: 15
@@ -78,6 +100,7 @@ factions:
     ally: BLUE
     enemy: RED
     focus: PINK
+    archer-tag: YELLOW
   members:
     max: 10
   claim-wand:

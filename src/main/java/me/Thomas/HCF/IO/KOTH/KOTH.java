@@ -92,7 +92,7 @@ public class KOTH {
     public ServerTimer getTimer() { return timer; }
     public UUID getCapturingPlayer() { return capturingPlayer; }
     public long getRemainingTimeMillis() { return timer == null ? 0L : timer.getRemainingTimeMillis(); }
-    public String getFormattedTime() { return C.formatTime(getRemainingTimeMillis() + 999L, true); }
+    public String getFormattedTime() { return C.formatTime(getRemainingTimeMillis()); }
 
     public void setName(String name) { this.name = name; revision++; }
     public void setColor(String color) { this.color = color; revision++; }
@@ -255,7 +255,11 @@ public class KOTH {
     private void broadcast(String message, String player) {
         String text = Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("events.koth." + message))
                 .replace("%koth%", name).replace("%player%", player);
-        if (!message.equals("reset")) text = text.replace("%time%", getFormattedTime());
+        if (!message.equals("reset")) {
+            long seconds = (getRemainingTimeMillis() + 999L) / 1000L;
+            String time = seconds < 60L ? seconds + " seconds" : C.formatTime(seconds * 1000L);
+            text = text.replace("%time%", time);
+        }
         Bukkit.broadcast(C.chat(text));
     }
 }

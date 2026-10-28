@@ -14,6 +14,7 @@ import me.Thomas.HCF.Commands.User.Faction.FactionCommand;
 import me.Thomas.HCF.Events.Player.Connection.UserChatEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserDamageEvent;
+import me.Thomas.HCF.Events.Player.Combat.UserArcherEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserCombatLogoutEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserDeathEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserQuitEvent;
@@ -170,6 +171,7 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserJoinEvent(), this);
         pm.registerEvents(new UserChatEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
+        pm.registerEvents(new UserArcherEvent(), this);
         pm.registerEvents(new UserCombatLogoutEvent(), this);
         pm.registerEvents(new UserDeathEvent(), this);
         pm.registerEvents(new UserPearlEvent(), this);
@@ -550,6 +552,10 @@ public class Main extends JavaPlugin {
 
     public Focus getFocus(UUID faction) {
         return factionFocus.get(faction);
+    }
+
+    public void refreshNameColors() {
+        if (boardHandler != null) boardHandler.refreshFocus();
     }
 
     public void setFocus(UUID faction, Focus focus) {

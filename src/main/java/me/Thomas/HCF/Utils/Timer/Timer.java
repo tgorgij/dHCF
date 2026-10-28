@@ -13,6 +13,8 @@ public class Timer {
         LOGOUT("timers.logout"),
         STUCK("timers.stuck"),
         ARCHERTAG("timers.archertag"),
+        ARCHERSPEED("timers.archerSpeed"),
+        ARCHERJUMP("timers.archerJump"),
         APPLE("timers.apple"),
         GAPPLE("timers.gapple"),
         ENDERPEARL("timers.enderpearl");
@@ -28,6 +30,7 @@ public class Timer {
                 case STUCK -> 60;
                 case LOGOUT -> 30;
                 case STARTING -> 3600;
+                case ARCHERSPEED, ARCHERJUMP -> 30;
                 default -> 0;
             };
             return Main.getInstance().getConfig().getInt(this.configPath, defaultLength);

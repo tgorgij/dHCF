@@ -36,6 +36,10 @@ events:
     extended: "&6[KOTH] %koth% has been extended and has %time% remaining."
     pearl-blocked: "&6[KOTH] Enderpearls are disabled in %koth%'s territory."
   player:
+    archer:
+      activated: "&eArcher class activated."
+      deactivated: "&cArcher class deactivated."
+      cooldown: "&cArcher %ability% is on cooldown for %time%."
     chat:
       paused: "&cPublic chat is currently paused."
       slow: "&cYou must wait %time% seconds before chatting again."

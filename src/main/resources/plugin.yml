@@ -43,6 +43,9 @@ commands:
     aliases:
       - eco
 permissions:
+  hcf.potions.bypass:
+    description: Allows drinking potions restricted by the map kit.
+    default: false
   hcf.command.koth:
     description: Allows managing KOTH events.
     default: op

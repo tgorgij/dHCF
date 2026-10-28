@@ -18,6 +18,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,6 +33,8 @@ public class Board {
     private static final int MAX_LINES = 15;
     private static final Pattern TIMER_DISPLAY = Pattern.compile("<display=%has-(player|server)-([a-zA-Z]+)-timer%>");
     private static final String RALLY_DISPLAY = "<display=%has-faction-rally%>";
+    private static final String LINES_BELOW_DISPLAY = "<display=%has-lines-below%>";
+    private static final Pattern DIVIDER = Pattern.compile("[-_=─━═\\s]*");
     private static final String KOTH_DISPLAY = "<display=%has-server-koths%>";
     private record Line(String text, Timer.Type timer, ServerTimer.Type serverTimer, String placeholder,
                         boolean rallyOnly, boolean kothsOnly) {}
@@ -131,6 +134,20 @@ public class Board {
                 lines.add(text);
             }
             if (lines.size() == MAX_LINES) break;
+        }
+        boolean contentBelow = false;
+        for (int i = lines.size() - 1; i >= 0; i--) {
+            String text = lines.get(i);
+            if (text.contains(LINES_BELOW_DISPLAY)) {
+                if (!contentBelow) {
+                    lines.remove(i);
+                    continue;
+                }
+                text = text.replace(LINES_BELOW_DISPLAY, "").stripTrailing();
+                lines.set(i, text);
+            }
+            String plain = PlainTextComponentSerializer.plainText().serialize(C.chat(text));
+            if (!DIVIDER.matcher(plain).matches()) contentBelow = true;
         }
         boolean show = lines.size() > 2;
         if (visible != show) {

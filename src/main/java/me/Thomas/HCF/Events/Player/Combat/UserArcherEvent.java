@@ -88,7 +88,11 @@ public class UserArcherEvent implements Listener {
             state.active = true;
             p.sendMessage(C.chat(localeConfig.getString("events.player.archer.activated")));
         }
-        if (state.active && now >= state.nextRefresh) refresh(p, state, now);
+        boolean speedEnded = state.speedUntil > 0L && now >= state.speedUntil;
+        boolean jumpEnded = state.jumpUntil > 0L && now >= state.jumpUntil;
+        if (speedEnded) state.speedUntil = 0L;
+        if (jumpEnded) state.jumpUntil = 0L;
+        if (state.active && (now >= state.nextRefresh || speedEnded || jumpEnded)) refresh(p, state, now);
         return state;
     }
 
@@ -139,6 +143,17 @@ public class UserArcherEvent implements Listener {
         changingEffects = true;
         try {
             if (owned && current != null && current.getAmplifier() > level - 1) p.removePotionEffect(type);
+            if (ability && type.equals(PotionEffectType.SPEED)) {
+                int passiveLevel = strength("classes.archer.effects.speed", 2);
+                int passiveTicks = duration("classes.archer.effects.speed", 5);
+                if (passiveLevel > 0 && passiveLevel < level && passiveTicks > 0) {
+                    // A longer, weaker effect becomes the boost's native fallback and resumes on its expiry tick.
+                    int fallbackTicks = (int) Math.min(Integer.MAX_VALUE, (long) ticks + passiveTicks);
+                    if (p.addPotionEffect(new PotionEffect(type, fallbackTicks, passiveLevel - 1, true, false, true))) {
+                        state.effects.put(type, previous);
+                    }
+                }
+            }
             if (!p.addPotionEffect(new PotionEffect(type, ticks, level - 1, true, false, true))) return false;
             state.effects.put(type, previous);
             return true;

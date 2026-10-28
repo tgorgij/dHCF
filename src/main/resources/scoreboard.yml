@@ -21,5 +21,5 @@ boards:
   rally:
     - "&eDimension: &f%dimension%"
     - "&eLocation: &f%location%"
-    - "&7&m---------------------"
+    - "&7&m--------------------- <display=%has-lines-below%>"
   koth: "%name% KOTH&7: &c%time%"

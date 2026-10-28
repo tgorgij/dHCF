@@ -36,6 +36,7 @@ events:
     extended: "&6[KOTH] %koth% has been extended and has %time% remaining."
     pearl-blocked: "&6[KOTH] Enderpearls are disabled in %koth%'s territory."
   player:
+    potion-disabled: "&cThis potion is disabled by the map kit."
     archer:
       activated: "&eArcher class activated."
       deactivated: "&cArcher class deactivated."

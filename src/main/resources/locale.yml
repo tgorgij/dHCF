@@ -150,7 +150,7 @@ commands:
   staff:
     enabled: "&eMod mode enabled."
     disabled: "&eMod mode disabled."
-    unavailable: "&cYou cannot enter mod mode while dead, frozen, or in combat."
+    unavailable: "&cYou cannot enter mod mode while dead or frozen."
     not-enabled: "&cEnable mod mode first."
     bypass: "&eMod mode interaction bypass %state%."
     vanish: "&eVanish %state%."

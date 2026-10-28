@@ -138,7 +138,7 @@ public class StaffMode implements Listener {
             message(p, "disabled");
             return;
         }
-        if (p.isDead() || isFrozen(p) || User.get(p).hasTimer(Timer.Type.COMBAT)) {
+        if (p.isDead() || isFrozen(p)) {
             message(p, "unavailable");
             return;
         }

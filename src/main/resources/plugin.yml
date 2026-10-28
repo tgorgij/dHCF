@@ -6,7 +6,7 @@ main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
   staff:
-    aliases: [m]
+    aliases: [h]
     description: Toggle mod mode or its world interaction bypass.
     usage: /staff [bypass]
   freeze:

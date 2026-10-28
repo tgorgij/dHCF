@@ -21,9 +21,9 @@ boards:
     - "&7&m---------------------"
   staff:
     - "&eMod Mode"
-    - "  &e*Gamemode&7: &c%gamemode%"
-    - " &e*Vanished&7: &c%vanished%"
-    - " &e*Online Players&7: &c%online%/%total%"
+    - "  &e* Gamemode&7: &c%gamemode%"
+    - "  &e* Vanished&7: %vanished%"
+    - "  &e* Online Players&7: &c%online%/%total%"
     - "&7&m--------------------- <display=%has-lines-below%>"
   rally:
     - "&eDimension: &f%dimension%"

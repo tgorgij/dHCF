@@ -133,6 +133,8 @@ faction:
   deathban: "&e(&cDeathban&e)"
   non-deathban: "&e(&aNon-Deathban&e)"
   moving:
+    blocked-combat: "&cYou cannot enter %faction%&c while combat tagged."
+    blocked-protection: "&cYou cannot enter %faction%&c with a PvP or starting timer."
     leaving: "&eNow leaving: %faction% %deathban%"
     entering: "&eNow entering: %faction% %deathban%"
   debug:

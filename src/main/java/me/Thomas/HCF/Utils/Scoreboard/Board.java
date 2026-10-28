@@ -109,10 +109,12 @@ public class Board {
             if (text.contains("%mod-mode%")) {
                 if (!user.isInStaffMode()) continue;
                 long online = Bukkit.getOnlinePlayers().stream().filter(player::canSee).count();
+                String gamemode = player.getGameMode().name().toLowerCase(Locale.ROOT);
+                gamemode = Character.toUpperCase(gamemode.charAt(0)) + gamemode.substring(1);
                 for (String staffLine : staffLines) {
                     lines.add(text.replace("%mod-mode%", staffLine
-                            .replace("%gamemode%", player.getGameMode().name())
-                            .replace("%vanished%", user.isVanished() ? "enabled" : "disabled")
+                            .replace("%gamemode%", gamemode)
+                            .replace("%vanished%", Main.getInstance().getStaffMode().status(user.isVanished()))
                             .replace("%online%", String.valueOf(online))
                             .replace("%total%", String.valueOf(Bukkit.getMaxPlayers()))));
                     if (lines.size() == MAX_LINES) break;

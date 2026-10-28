@@ -31,6 +31,7 @@ import me.Thomas.HCF.Events.Player.Item.UserBrewEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserInteractInFactionEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserSubclaimEvent;
 import me.Thomas.HCF.Events.Player.Movement.UserMoveFactionEvent;
+import me.Thomas.HCF.Events.Player.Movement.UserBorderEvent;
 import me.Thomas.HCF.IO.Claims.ChunkKey;
 import me.Thomas.HCF.IO.Claims.Claim;
 import me.Thomas.HCF.IO.Claims.ClaimIndex;
@@ -194,6 +195,7 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserBrewEvent(), this);
         pm.registerEvents(new UserQuitEvent(), this);
         pm.registerEvents(new UserClaimEvent(), this);
+        pm.registerEvents(new UserBorderEvent(), this);
         pm.registerEvents(new UserMoveFactionEvent(), this);
         pm.registerEvents(new UserKOTHEvent(), this);
         pm.registerEvents(new UserInteractInFactionEvent(), this);

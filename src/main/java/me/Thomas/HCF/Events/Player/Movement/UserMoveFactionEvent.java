@@ -42,6 +42,7 @@ public class UserMoveFactionEvent implements Listener {
         if (to == null || from.getWorld() == null || to.getWorld() == null) return;
         Player p = e.getPlayer();
         User user = User.get(p);
+        user.updateProtectionTimers(to);
 
         if (user.getTimer(Timer.Type.LOGOUT) != null && (!from.getWorld().equals(to.getWorld())
                 || from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ())) {

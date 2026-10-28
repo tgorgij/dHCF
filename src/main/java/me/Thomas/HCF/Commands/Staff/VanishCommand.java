@@ -28,7 +28,7 @@ public class VanishCommand implements TabExecutor {
         }
         if (args.length != 0) { Main.getInstance().getStaffMode().message(sender, "vanish-usage", "%alias%", alias); return true; }
         Main.getInstance().getStaffMode().setVanished(p, !Main.getInstance().getStaffMode().isVanished(p));
-        Main.getInstance().getStaffMode().message(p, "vanish", "%state%", Main.getInstance().getStaffMode().isVanished(p) ? "enabled" : "disabled");
+        Main.getInstance().getStaffMode().message(p, "vanish", "%state%", Main.getInstance().getStaffMode().status(Main.getInstance().getStaffMode().isVanished(p)));
         return true;
     }
 

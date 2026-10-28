@@ -7,6 +7,7 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
@@ -477,6 +478,10 @@ public class User {
         }
         timers.put(type, timer);
         revision++;
+        if (type == Timer.Type.PVP || type == Timer.Type.STARTING) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) updateProtectionTimers(player.getLocation());
+        }
     }
 
     public boolean hasTimer(Timer.Type type) {
@@ -526,13 +531,29 @@ public class User {
         }
     }
 
+    public void updateProtectionTimers(Location location) {
+        Faction faction = Faction.getAtLocation(location);
+        boolean paused = faction != null && faction.getType() == Faction.Type.SAFEZONE;
+        for (Timer.Type type : List.of(Timer.Type.PVP, Timer.Type.STARTING)) {
+            Timer timer = timers.get(type);
+            if (timer == null || timer.getRemainingTimeMillis() <= 0 || timer.isPaused() == paused) continue;
+            timer.pause();
+            revision++;
+        }
+    }
+
     public void unpauseTimers() {
+        Player player = Bukkit.getPlayer(uuid);
+        Faction faction = player == null ? null : Faction.getAtLocation(player.getLocation());
+        boolean safezone = faction != null && faction.getType() == Faction.Type.SAFEZONE;
         for (Timer timer : timers.values()) {
-            if (timer.isPauseOnLogout() && timer.isPaused()) {
+            boolean protection = timer.getType() == Timer.Type.PVP || timer.getType() == Timer.Type.STARTING;
+            if (timer.isPauseOnLogout() && timer.isPaused() && !(protection && safezone)) {
                 timer.pause();
                 revision++;
             }
         }
+        if (player != null) updateProtectionTimers(player.getLocation());
     }
 
     public boolean hasFaction() {

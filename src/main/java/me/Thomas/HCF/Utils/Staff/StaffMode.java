@@ -7,6 +7,7 @@ import me.Thomas.HCF.Utils.Permission.Permission;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -43,6 +44,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerHarvestBlockEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
@@ -66,6 +68,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
+import net.kyori.adventure.text.format.TextDecoration;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -88,6 +91,7 @@ public class StaffMode implements Listener {
     private final NamespacedKey inventoryKey = new NamespacedKey(Main.getInstance(), "staff-inventory");
     private final NamespacedKey cursorKey = new NamespacedKey(Main.getInstance(), "staff-cursor");
     private final NamespacedKey slotKey = new NamespacedKey(Main.getInstance(), "staff-slot");
+    private final NamespacedKey flightKey = new NamespacedKey(Main.getInstance(), "staff-flight");
     private final NamespacedKey toolKey = new NamespacedKey(Main.getInstance(), "staff-tool");
 
     private static class Menu implements InventoryHolder {
@@ -147,8 +151,13 @@ public class StaffMode implements Listener {
         p.getPersistentDataContainer().set(cursorKey, PersistentDataType.BYTE_ARRAY,
                 ItemStack.serializeItemsAsBytes(new ItemStack[]{cursor}));
         p.getPersistentDataContainer().set(slotKey, PersistentDataType.INTEGER, p.getInventory().getHeldItemSlot());
+        p.getPersistentDataContainer().set(flightKey, PersistentDataType.STRING,
+                p.getGameMode().name() + ";" + p.getAllowFlight() + ";" + p.isFlying());
         p.saveData();
         sessions.put(p.getUniqueId(), new Session(isVanished(p)));
+        p.leaveVehicle();
+        p.setAllowFlight(true);
+        p.setFlying(true);
         User.get(p).removeTimer(Timer.Type.HOME);
         User.get(p).removeTimer(Timer.Type.STUCK);
         User.get(p).removeTimer(Timer.Type.LOGOUT);
@@ -172,6 +181,18 @@ public class StaffMode implements Listener {
         p.getInventory().setContents(contents);
         p.setItemOnCursor(cursor.length == 0 ? null : cursor[0]);
         p.getInventory().setHeldItemSlot(Math.clamp(slot, 0, 8));
+        String flight = p.getPersistentDataContainer().get(flightKey, PersistentDataType.STRING);
+        if (flight != null) {
+            String[] values = flight.split(";", -1);
+            boolean inherentFlight = p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR;
+            boolean allowed = inherentFlight || values.length == 3 && values[0].equals(p.getGameMode().name())
+                    && Boolean.parseBoolean(values[1]);
+            if (!allowed) p.setFlying(false);
+            p.setAllowFlight(allowed);
+            if (allowed) p.setFlying(p.getGameMode() == GameMode.SPECTATOR || values.length == 3 && Boolean.parseBoolean(values[2]));
+            p.setFallDistance(0);
+        }
+        p.getPersistentDataContainer().remove(flightKey);
         p.getPersistentDataContainer().remove(inventoryKey);
         p.getPersistentDataContainer().remove(cursorKey);
         p.getPersistentDataContainer().remove(slotKey);
@@ -182,7 +203,11 @@ public class StaffMode implements Listener {
         if (!isEnabled(p)) { message(p, "not-enabled"); return; }
         boolean enabled = bypass.add(p.getUniqueId());
         if (!enabled) bypass.remove(p.getUniqueId());
-        message(p, "bypass", "%state%", enabled ? "enabled" : "disabled");
+        message(p, "bypass", "%state%", status(enabled));
+    }
+
+    public String status(boolean enabled) {
+        return Main.getInstance().getLocaleConfig().getString("primary.status." + (enabled ? "enabled" : "disabled"));
     }
 
     public void setVanished(Player p, boolean enabled) {
@@ -232,7 +257,8 @@ public class StaffMode implements Listener {
         Material configured = Material.matchMaterial(Main.getInstance().getConfig().getString("staff-mode.items." + name, fallback.name()));
         ItemStack item = new ItemStack(configured == null || configured.isAir() || !configured.isItem() ? fallback : configured);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(C.chat(Main.getInstance().getLocaleConfig().getString("commands.staff.items." + name, name)));
+        meta.displayName(C.chat(Main.getInstance().getLocaleConfig().getString("commands.staff.items." + name, name))
+                .decoration(TextDecoration.ITALIC, false));
         meta.getPersistentDataContainer().set(toolKey, PersistentDataType.STRING, name);
         item.setItemMeta(meta);
         return item;
@@ -269,6 +295,7 @@ public class StaffMode implements Listener {
 
     private void refreshInventories() {
         for (Player p : Bukkit.getOnlinePlayers()) {
+            if (isEnabled(p) && !p.getAllowFlight()) p.setAllowFlight(true);
             if (!(p.getOpenInventory().getTopInventory().getHolder() instanceof Menu menu) || menu.target == null) continue;
             Player target = Bukkit.getPlayer(menu.target);
             if (target == null || !target.isOnline() || target.isDead() || isEnabled(target) || !Permission.has(p, "command.invsee", "staff")) p.closeInventory();
@@ -288,7 +315,7 @@ public class StaffMode implements Listener {
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             meta.setOwningPlayer(target);
-            meta.displayName(C.chat("&e" + target.getName()));
+            meta.displayName(C.chat("&e" + target.getName()).decoration(TextDecoration.ITALIC, false));
             head.setItemMeta(meta);
             menu.inventory.setItem(i % 45, head);
             menu.players.put(i % 45, target.getUniqueId());
@@ -610,6 +637,19 @@ public class StaffMode implements Listener {
         if (e.getEntity().getSource() instanceof Player p && isRestricted(p)) e.getAffectedEntities().clear();
         else e.getAffectedEntities().removeIf(entity -> entity instanceof Player p && (isEnabled(p) || isFrozen(p)));
     }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onGameMode(PlayerGameModeChangeEvent e) {
+        Player p = e.getPlayer();
+        if (!isEnabled(p)) return;
+        boolean flying = p.isFlying();
+        Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+            if (p.isOnline() && isEnabled(p)) {
+                p.setAllowFlight(true);
+                if (flying) p.setFlying(true);
+            }
+        });
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onExperience(PlayerExpChangeEvent e) {
         if (isFrozen(e.getPlayer()) || isEnabled(e.getPlayer())) e.setAmount(0);

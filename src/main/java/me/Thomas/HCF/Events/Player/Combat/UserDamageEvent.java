@@ -8,6 +8,7 @@ import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.TNTPrimed;
@@ -50,7 +51,6 @@ public class UserDamageEvent implements Listener {
         if (!(e.getEntity() instanceof LivingEntity victim) || getVictimUser(victim) == null) return;
         if (!(e.getDamager() instanceof Projectile projectile)) return;
         if (!(projectile.getShooter() instanceof Player attacker)) return;
-        if (attacker.getUniqueId().equals(getVictimUser(victim).getUUID())) return;
 
         handleCombat(e, victim, attacker);
     }
@@ -122,9 +122,15 @@ public class UserDamageEvent implements Listener {
         if (attacker == null && e instanceof EntityDamageByEntityEvent hit) {
             attacker = resolveAttacker(hit.getDamager());
         }
-        if (attacker == null || attacker.getUniqueId().equals(getVictimUser(victim).getUUID())) return;
-        applyVictimCombatTimer(victim);
-        applyCombatTimer(attacker, User.get(attacker.getUniqueId()));
+        if (attacker == null || e.getFinalDamage() <= 0) return;
+        boolean self = attacker.getUniqueId().equals(getVictimUser(victim).getUUID());
+        if (self && !(e instanceof EntityDamageByEntityEvent hit && hit.getDamager() instanceof AbstractArrow)) return;
+        if (self) {
+            applyCombatTimer(attacker, User.get(attacker));
+        } else {
+            applyVictimCombatTimer(victim);
+            applyCombatTimer(attacker, User.get(attacker));
+        }
     }
 
     private boolean canCombat(LivingEntity victim, Player attacker) {

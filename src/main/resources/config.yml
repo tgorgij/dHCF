@@ -85,6 +85,8 @@ timers: # seconds
   enderpearl: 15
 
 factions:
+  border:
+    material: RED_STAINED_GLASS
   player-format: "&9%player%&7[&c%kills%&7]"
   dtr:
     maximum: 6.06

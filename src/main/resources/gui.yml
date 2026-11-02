@@ -167,8 +167,6 @@ rewards:
           name: '&e%node% &7- %state%'
           lore:
           - '&7%requirement%&7: &e%progress%/%amount%'
-          - '&7Unlock every earlier node first.'
-          - '&7Click to unlock for your faction.'
         previous:
           material: ARROW
           name: '&eScroll Left'
@@ -231,8 +229,6 @@ rewards:
           name: '&e%node% &7- %state%'
           lore:
           - '&7%requirement%&7: &e%progress%/%amount%'
-          - '&7Unlock every earlier node first.'
-          - '&7Click to unlock for your faction.'
         previous:
           material: ARROW
           name: '&eScroll Left'
@@ -295,8 +291,6 @@ rewards:
           name: '&e%node% &7- %state%'
           lore:
           - '&7%requirement%&7: &e%progress%/%amount%'
-          - '&7Unlock every earlier node first.'
-          - '&7Click to unlock for your faction.'
         previous:
           material: ARROW
           name: '&eScroll Left'

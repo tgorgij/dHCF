@@ -35,9 +35,6 @@ import java.util.UUID;
 
 public class UserDamageEvent implements Listener {
 
-    private final FileConfiguration messagesConfig = Main.getInstance().getMessagesConfig();
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
-
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDamageUser(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof LivingEntity victim) || getVictimUser(victim) == null) return;
@@ -133,7 +130,8 @@ public class UserDamageEvent implements Listener {
         }
     }
 
-    private boolean canCombat(LivingEntity victim, Player attacker) {
+    static boolean canCombat(LivingEntity victim, Player attacker) {
+        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
         User victimUser = Objects.requireNonNull(getVictimUser(victim));
         User attackerUser = User.get(attacker.getUniqueId());
 
@@ -247,14 +245,15 @@ public class UserDamageEvent implements Listener {
         }
     }
 
-    private void applySuccessfulPotionCombat(LivingEntity victim, Player attacker) {
+    static void applySuccessfulPotionCombat(LivingEntity victim, Player attacker) {
         User user = getVictimUser(victim);
         if (user == null || attacker == null || attacker.getUniqueId().equals(user.getUUID())) return;
         applyVictimCombatTimer(victim);
         applyCombatTimer(attacker, User.get(attacker.getUniqueId()));
     }
 
-    private void applyVictimCombatTimer(LivingEntity victim) {
+    private static void applyVictimCombatTimer(LivingEntity victim) {
+        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
         User user = Objects.requireNonNull(getVictimUser(victim));
         if (victim instanceof Player player) {
             if (user.getTimer(Timer.Type.STUCK) != null) {
@@ -268,7 +267,8 @@ public class UserDamageEvent implements Listener {
         }
     }
 
-    private void applyCombatTimer(Player player, User user) {
+    private static void applyCombatTimer(Player player, User user) {
+        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
         if (user.getTimer(Timer.Type.HOME) != null) {
             user.removeTimer(Timer.Type.HOME);
             player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.teleport.cancel"))));

@@ -5,6 +5,31 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  rewards:
+    description: Open your faction tech tree.
+    usage: /rewards
+  schedule:
+    description: Manage daily event schedules.
+    usage: /schedule <add|list|remove>
+  request:
+    aliases: [helpop]
+    description: Request help from online staff.
+    usage: /request <message>
+  report:
+    description: Report an online player to staff.
+    usage: /report <player> <reason>
+  coords:
+    description: Show server coordinates.
+    usage: /coords
+  crowbar:
+    description: Give a player a crowbar for harvesting spawners.
+    usage: /crowbar <player> <uses>
+  spawner:
+    description: Give a player typed spawners.
+    usage: /spawner <player> <spawner> <amount>
+  settings:
+    description: Open your player settings.
+    usage: /settings
   conquest:
     description: Configure and manage the server's Conquest.
     usage: /conquest <start|cancel|setinterval|setpos1|setpos2>
@@ -77,6 +102,18 @@ commands:
     aliases:
       - eco
 permissions:
+  hcf.command.schedule:
+    default: op
+  hcf.request.receive:
+    default: op
+  hcf.report.receive:
+    default: op
+  hcf.sign.shop.create:
+    default: op
+  hcf.command.crowbar:
+    default: op
+  hcf.command.spawner:
+    default: op
   hcf.command.conquest:
     default: op
   hcf.command.bottle:

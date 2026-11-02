@@ -5,6 +5,7 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
+import me.Thomas.HCF.Utils.Rewards.TechTree;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -20,7 +21,8 @@ public class BottleCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String alias, @NotNull String @NotNull [] args) {
-        if (!Permission.has(sender, "command.bottle", "donator")) {
+        if (!Permission.has(sender, "command.bottle", "donator")
+                && !(sender instanceof Player member && TechTree.canUseCommand(member, "bottle"))) {
             sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.no-permission")));
             return true;
         }

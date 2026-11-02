@@ -115,6 +115,14 @@ public class Board {
             if (configured.kothsOnly() && koths.isEmpty()) continue;
             if (configured.conquestOnly() && (conquest == null || !conquest.isRunning())) continue;
             String text = configured.text();
+            if (text.contains("<display=%has-bard%>")) {
+                if (!user.isBardActive()) continue;
+                text = text.replace("<display=%has-bard%>", "").stripTrailing();
+            }
+            if (text.contains("%bard-energy%")) {
+                text = text.replace("%bard-energy%", java.math.BigDecimal.valueOf(user.getBardEnergy())
+                        .setScale(1, java.math.RoundingMode.DOWN).stripTrailingZeros().toPlainString());
+            }
             if (text.contains("%mod-mode%")) {
                 if (!user.isInStaffMode()) continue;
                 long online = Bukkit.getOnlinePlayers().stream().filter(player::canSee).count();
@@ -132,6 +140,7 @@ public class Board {
                 continue;
             }
             if (configured.timer() != null) {
+                if (!user.isRequestReportCooldowns() && (configured.timer() == Timer.Type.REQUEST || configured.timer() == Timer.Type.REPORT)) continue;
                 Timer timer = user.getTimer(configured.timer());
                 if (timer == null || timer.getRemainingTimeMillis() <= 0) continue;
                 text = text.replace(configured.placeholder(), C.formatTime(timer.getRemainingTimeMillis()));
@@ -182,7 +191,7 @@ public class Board {
             String plain = PlainTextComponentSerializer.plainText().serialize(C.chat(text));
             if (!DIVIDER.matcher(plain).matches()) contentBelow = true;
         }
-        boolean show = lines.size() > 2;
+        boolean show = user.isScoreboard() && lines.size() > 2;
         if (visible != show) {
             objective.setDisplaySlot(show ? DisplaySlot.SIDEBAR : null);
             visible = show;

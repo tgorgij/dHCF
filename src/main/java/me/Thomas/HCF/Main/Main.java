@@ -16,6 +16,17 @@ import me.Thomas.HCF.Commands.Donator.CraftCommand;
 import me.Thomas.HCF.Commands.Donator.BottleCommand;
 import me.Thomas.HCF.Commands.User.MessageCommand;
 import me.Thomas.HCF.Commands.User.ReplyCommand;
+import me.Thomas.HCF.Commands.User.SettingsCommand;
+import me.Thomas.HCF.Commands.User.CoordsCommand;
+import me.Thomas.HCF.Commands.User.RewardsCommand;
+import me.Thomas.HCF.Events.Player.Interact.UserRewardsEvent;
+import me.Thomas.HCF.Commands.User.RequestCommand;
+import me.Thomas.HCF.Commands.User.ReportCommand;
+import me.Thomas.HCF.Commands.Admin.Schedule.ScheduleCommand;
+import me.Thomas.HCF.Utils.Events.EventScheduler;
+import me.Thomas.HCF.Utils.Rewards.TechTree;
+import me.Thomas.HCF.Commands.Admin.CrowbarCommand;
+import me.Thomas.HCF.Commands.Admin.SpawnerCommand;
 import me.Thomas.HCF.Commands.Admin.SOTW.SOTWCommand;
 import me.Thomas.HCF.Commands.Admin.PvP.PvPCommand;
 import me.Thomas.HCF.Commands.Admin.Economy.EconomyCommand;
@@ -25,6 +36,9 @@ import me.Thomas.HCF.Events.Player.Connection.UserCommandEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserDamageEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserArcherEvent;
+import me.Thomas.HCF.Events.Player.Combat.UserBardEvent;
+import me.Thomas.HCF.Events.Player.Combat.UserRogueEvent;
+import me.Thomas.HCF.Events.Player.Combat.UserMinerEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserCombatLogoutEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserDeathEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserQuitEvent;
@@ -32,10 +46,14 @@ import me.Thomas.HCF.Events.Player.Item.UserClaimEvent;
 import me.Thomas.HCF.Events.Player.Item.UserPearlEvent;
 import me.Thomas.HCF.Events.Player.Item.UserAppleEvent;
 import me.Thomas.HCF.Events.Player.Item.UserBottleEvent;
+import me.Thomas.HCF.Events.Player.Item.UserSpawnerEvent;
+import me.Thomas.HCF.Events.Player.Interact.UserElevatorEvent;
+import me.Thomas.HCF.Events.Player.Interact.UserShopSignEvent;
 import me.Thomas.HCF.Events.Player.Item.UserEnchantEvent;
 import me.Thomas.HCF.Events.Player.Item.UserBrewEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserInteractInFactionEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserSubclaimEvent;
+import me.Thomas.HCF.Events.Player.Interact.UserSettingsEvent;
 import me.Thomas.HCF.Events.Player.Movement.UserMoveFactionEvent;
 import me.Thomas.HCF.Events.Player.Movement.UserBorderEvent;
 import me.Thomas.HCF.IO.Claims.ChunkKey;
@@ -76,9 +94,12 @@ public class Main extends JavaPlugin {
     public static Main instance;
     private DatabaseManager databaseManager;
     private FileConfiguration localeConfig;
+    private FileConfiguration guiConfig;
     private FileConfiguration scoreboardConfig;
     private FileConfiguration messagesConfig;
     private BoardHandler boardHandler;
+    private EventScheduler eventScheduler;
+    private TechTree techTree;
     private StaffMode staffMode;
     private boolean dataLoaded;
 
@@ -123,6 +144,7 @@ public class Main extends JavaPlugin {
 
         files();
         loadLocale();
+        loadGui();
         loadScoreboard();
         loadMessages();
 
@@ -132,6 +154,8 @@ public class Main extends JavaPlugin {
         loadKOTHs();
         loadMountains();
         loadConquest();
+        techTree = new TechTree();
+        eventScheduler = new EventScheduler();
         dataLoaded = true;
         staffMode = new StaffMode();
         boardHandler = new BoardHandler();
@@ -150,6 +174,7 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (eventScheduler != null) eventScheduler.close();
         if (staffMode != null) staffMode.shutdown();
         StuckTimer.shutdownSearches();
         friendlyFire.clear();
@@ -174,6 +199,11 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("logout")).setExecutor(new LogoutCommand());
         Objects.requireNonNull(getCommand("message")).setExecutor(new MessageCommand());
         Objects.requireNonNull(getCommand("reply")).setExecutor(new ReplyCommand());
+        Objects.requireNonNull(getCommand("settings")).setExecutor(new SettingsCommand());
+        Objects.requireNonNull(getCommand("coords")).setExecutor(new CoordsCommand());
+        Objects.requireNonNull(getCommand("rewards")).setExecutor(new RewardsCommand());
+        Objects.requireNonNull(getCommand("request")).setExecutor(new RequestCommand());
+        Objects.requireNonNull(getCommand("report")).setExecutor(new ReportCommand());
         Objects.requireNonNull(getCommand("faction")).setExecutor(new FactionCommand());
         Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand());
         Objects.requireNonNull(getCommand("pay")).setExecutor(new PayCommand());
@@ -183,6 +213,9 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("bottle")).setExecutor(new BottleCommand());
 
         // Admin
+        Objects.requireNonNull(getCommand("schedule")).setExecutor(new ScheduleCommand());
+        Objects.requireNonNull(getCommand("crowbar")).setExecutor(new CrowbarCommand());
+        Objects.requireNonNull(getCommand("spawner")).setExecutor(new SpawnerCommand());
         Objects.requireNonNull(getCommand("pvp")).setExecutor(new PvPCommand());
         Objects.requireNonNull(getCommand("lives")).setExecutor(new LivesCommand());
         Objects.requireNonNull(getCommand("sotw")).setExecutor(new SOTWCommand());
@@ -210,9 +243,14 @@ public class Main extends JavaPlugin {
         // User
         pm.registerEvents(new UserJoinEvent(), this);
         pm.registerEvents(new UserChatEvent(), this);
+        pm.registerEvents(new UserSettingsEvent(), this);
+        pm.registerEvents(new UserRewardsEvent(), this);
         pm.registerEvents(new UserCommandEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
         pm.registerEvents(new UserArcherEvent(), this);
+        pm.registerEvents(new UserBardEvent(), this);
+        pm.registerEvents(new UserRogueEvent(), this);
+        pm.registerEvents(new UserMinerEvent(), this);
         pm.registerEvents(new UserCombatLogoutEvent(), this);
         pm.registerEvents(new UserDeathEvent(), this);
         pm.registerEvents(new UserPearlEvent(), this);
@@ -227,6 +265,9 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserCaptureEvent(), this);
         pm.registerEvents(new UserInteractInFactionEvent(), this);
         pm.registerEvents(new UserSubclaimEvent(), this);
+        pm.registerEvents(new UserSpawnerEvent(), this);
+        pm.registerEvents(new UserElevatorEvent(), this);
+        pm.registerEvents(new UserShopSignEvent(), this);
     }
 
     private void loadConquest() {
@@ -278,7 +319,10 @@ public class Main extends JavaPlugin {
         return koths.values().stream().filter(koth -> koth.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
     public void addKOTH(KOTH koth) { koths.put(koth.getUUID(), koth); }
-    public void removeKOTH(UUID uuid) { koths.remove(uuid); }
+    public void removeKOTH(UUID uuid) {
+        koths.remove(uuid);
+        if (eventScheduler != null) eventScheduler.removeKOTH(uuid);
+    }
 
     private void loadInvites() {
         String sql = """
@@ -389,6 +433,10 @@ public class Main extends JavaPlugin {
                 .contains(factionUuid);
     }
 
+    public TechTree getTechTree() { return techTree; }
+
+    public EventScheduler getEventScheduler() { return eventScheduler; }
+
     public StaffMode getStaffMode() { return staffMode; }
 
     public DatabaseManager getDatabaseManager() {
@@ -397,6 +445,10 @@ public class Main extends JavaPlugin {
 
     public FileConfiguration getLocaleConfig() {
         return localeConfig;
+    }
+
+    public FileConfiguration getGuiConfig() {
+        return guiConfig;
     }
 
     public FileConfiguration getMessagesConfig() {
@@ -489,6 +541,7 @@ public class Main extends JavaPlugin {
     private void files() {
         saveResource("config.yml", false);
         saveResource("locale.yml", false);
+        saveResource("gui.yml", false);
         saveResource("scoreboard.yml", false);
         saveResource("messages.yml", false);
     }
@@ -501,6 +554,17 @@ public class Main extends JavaPlugin {
             localeConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not load locale defaults", exception);
+        }
+    }
+
+    private void loadGui() {
+        java.io.File guiFile = new java.io.File(getDataFolder(), "gui.yml");
+        guiConfig = YamlConfiguration.loadConfiguration(guiFile);
+        try (java.io.InputStream resource = Objects.requireNonNull(getResource("gui.yml"));
+             java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
+            guiConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not load GUI defaults", exception);
         }
     }
 
@@ -651,6 +715,7 @@ public class Main extends JavaPlugin {
     }
 
     public void removeFaction(UUID uuid) {
+        if (techTree != null) techTree.forgetFaction(uuid);
         if (conquest != null) conquest.removeFaction(uuid);
         Mountain mountain = mountains.remove(uuid);
         if (mountain != null) mountain.cancelRegeneration();

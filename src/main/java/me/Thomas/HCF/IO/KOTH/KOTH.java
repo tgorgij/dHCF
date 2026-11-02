@@ -237,7 +237,7 @@ public class KOTH {
         User user = User.get(p);
         Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
         if (faction != null && faction.getType() == Faction.Type.PLAYER && faction.hasMember(p.getUniqueId())) {
-            faction.setKOTHCaptures(faction.getKOTHCaptures() + 1);
+            faction.setKOTHCaptures((int) Math.min(Integer.MAX_VALUE, (long) faction.getKOTHCaptures() + 1));
             faction.addPoints(Math.max(0, Main.getInstance().getConfig().getInt("factions.points.koth", 50)));
             faction.saveAsync();
         }

@@ -1,4 +1,16 @@
+
+coords:
+  - "&7&m---------------------------"
+  - "&eCoordinates"
+  - "&eSpawn&7: &f0, 0"
+  - "&7&m---------------------------"
+
 help:
+  schedule:
+    - "&e/%alias% add koth <name> <HH:mm> <capture-seconds>"
+    - "&e/%alias% add conquest <HH:mm>"
+    - "&e/%alias% list"
+    - "&e/%alias% remove <id>"
   conquest:
     - "&e/%alias% start"
     - "&e/%alias% cancel"
@@ -92,6 +104,13 @@ factions:
     death:
       - "&c%player% &edied"
       - "&2DTR: &f%dtr%"
+  top:
+    header:
+      - "&7&m---------------------------"
+      - "&eTop Factions &7(Page %page%/%pages%)"
+    entry: "&e%number%. %color%%faction% &7- &b%points% points"
+    footer:
+      - "&7&m---------------------------"
   list:
     header:
       - "&7&m---------------------------"
@@ -122,6 +141,7 @@ factions:
       - "&9Information Commands:"
       - "&e/%alias% show [faction;player] &7- Show faction information"
       - "&e/%alias% list &7- Show a list of online factions"
+      - "&e/%alias% top [page] &7- Show factions ranked by points"
       - "&e/%alias% map &7- Show nearby claims"
       - " "
       - "&9Captains Commands:"

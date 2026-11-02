@@ -31,6 +31,11 @@ public class User {
     private long deathbanExpiry;
     private boolean pvpProtectionPending;
     private boolean mountainMessages = true;
+    private boolean messages = true;
+    private boolean messageSounds = true;
+    private boolean scoreboard = true;
+    private boolean publicChat = true;
+    private boolean requestReportCooldowns = true;
     private byte[] lastInventory;
     private Integer lastExperience;
 
@@ -40,6 +45,8 @@ public class User {
     private UUID lastEnteredFaction;
     private UUID lastConversation;
     private boolean bypass;
+    private boolean bardActive;
+    private double bardEnergy;
     private ArrayList<Claim> map;
 
     private Map<Timer.Type, Timer> timers =
@@ -129,6 +136,11 @@ public class User {
         this.deathbanExpiry = resultSet.getLong("deathbanExpiry");
         this.pvpProtectionPending = resultSet.getBoolean("pvpProtectionPending");
         this.mountainMessages = resultSet.getBoolean("mountainMessages");
+        this.messages = resultSet.getBoolean("messages");
+        this.messageSounds = resultSet.getBoolean("messageSounds");
+        this.scoreboard = resultSet.getBoolean("scoreboard");
+        this.publicChat = resultSet.getBoolean("publicChat");
+        this.requestReportCooldowns = resultSet.getBoolean("requestReportCooldowns");
         this.lastInventory = resultSet.getBytes("lastInventory");
         int experience = resultSet.getInt("lastExperience");
         this.lastExperience = resultSet.wasNull() ? null : experience;
@@ -152,6 +164,11 @@ public class User {
         this.deathbanExpiry = 0;
         this.pvpProtectionPending = false;
         this.mountainMessages = true;
+        this.messages = true;
+        this.messageSounds = true;
+        this.scoreboard = true;
+        this.publicChat = true;
+        this.requestReportCooldowns = true;
         this.lastInventory = null;
         this.lastExperience = null;
         this.revision++;
@@ -162,6 +179,14 @@ public class User {
 
     }
 
+    public boolean isBardActive() { return bardActive; }
+
+    public void setBardActive(boolean active) { bardActive = active; }
+
+    public double getBardEnergy() { return bardEnergy; }
+
+    public void setBardEnergy(double energy) { bardEnergy = Double.isFinite(energy) ? Math.max(0, energy) : 0; }
+
     public UUID getLastConversation() { return lastConversation; }
 
     public void setLastConversation(UUID uuid) { lastConversation = uuid; }
@@ -171,6 +196,46 @@ public class User {
     public void setMountainMessages(boolean enabled) {
         if (mountainMessages == enabled) return;
         mountainMessages = enabled;
+        revision++;
+    }
+
+    public boolean isMessages() { return messages; }
+
+    public void setMessages(boolean enabled) {
+        if (messages == enabled) return;
+        messages = enabled;
+        revision++;
+    }
+
+    public boolean isMessageSounds() { return messageSounds; }
+
+    public void setMessageSounds(boolean enabled) {
+        if (messageSounds == enabled) return;
+        messageSounds = enabled;
+        revision++;
+    }
+
+    public boolean isScoreboard() { return scoreboard; }
+
+    public void setScoreboard(boolean enabled) {
+        if (scoreboard == enabled) return;
+        scoreboard = enabled;
+        revision++;
+    }
+
+    public boolean isPublicChat() { return publicChat; }
+
+    public void setPublicChat(boolean enabled) {
+        if (publicChat == enabled) return;
+        publicChat = enabled;
+        revision++;
+    }
+
+    public boolean isRequestReportCooldowns() { return requestReportCooldowns; }
+
+    public void setRequestReportCooldowns(boolean enabled) {
+        if (requestReportCooldowns == enabled) return;
+        requestReportCooldowns = enabled;
         revision++;
     }
 
@@ -185,18 +250,22 @@ public class User {
         String sql =
                 "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
-                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
                         + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
                         + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry, "
                         + "pvpProtectionPending=excluded.pvpProtectionPending, "
-                        + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience, mountainMessages=excluded.mountainMessages";
+                        + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience, mountainMessages=excluded.mountainMessages, "
+                        + "messages=excluded.messages, messageSounds=excluded.messageSounds, "
+                        + "scoreboard=excluded.scoreboard, publicChat=excluded.publicChat, "
+                        + "requestReportCooldowns=excluded.requestReportCooldowns";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), name, faction == null ? null : faction.toString(),
                 balance, kills, deaths, lives, serializeTimers(), deathbanExpiry, pvpProtectionPending ? 1 : 0,
-                getLastInventory(), lastExperience, mountainMessages ? 1 : 0);
+                getLastInventory(), lastExperience, mountainMessages ? 1 : 0,
+                messages ? 1 : 0, messageSounds ? 1 : 0, scoreboard ? 1 : 0, publicChat ? 1 : 0, requestReportCooldowns ? 1 : 0);
     }
 
     public byte[] getLastInventory() {

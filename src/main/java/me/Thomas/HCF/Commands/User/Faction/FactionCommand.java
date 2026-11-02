@@ -59,6 +59,7 @@ public class FactionCommand implements TabExecutor {
         register(new WithdrawCommand());
         register(new AnnouncementCommand());
         register(new ListCommand());
+        register(new TopCommand());
         register(new ChatCommand());
         register(new SubclaimCommand());
         register(new RenameCommand());

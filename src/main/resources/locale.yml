@@ -26,6 +26,9 @@ primary:
     hq: "&eWarped to &d%faction%&e's HQ."
 
 events:
+  staff:
+    joined: "&9[Staff] &b%player% &ejoined the server."
+    left: "&9[Staff] &b%player% &eleft the server."
   conquest:
     started: "&6[Conquest] %conquest% has started."
     cancelled: "&6[Conquest] %conquest% has been cancelled."
@@ -43,7 +46,27 @@ events:
     extended: "&6[KOTH] %koth% has been extended and has %time% remaining."
     pearl-blocked: "&6[KOTH] Enderpearls are disabled in %koth%'s territory."
   player:
+    shop:
+      invalid: "&cUse [Buy] or [Sell], a valid item, a positive amount, and a positive price with at most two decimal places."
+    elevator:
+      invalid-direction: "&cWrite Up or Down on the second line of an [Elevator] sign."
+      no-destination: "&cThere is no safe elevator destination through this column."
+    spawner:
+      crowbar-required: "&cUse a crowbar to break spawners."
     potion-disabled: "&cThis potion is disabled by the map kit."
+    miner:
+      activated: "&eMiner class activated."
+      deactivated: "&cMiner class deactivated."
+    rogue:
+      activated: "&eRogue class activated."
+      deactivated: "&cRogue class deactivated."
+      cooldown: "&cRogue %ability% is on cooldown for &b%time%&c."
+      backstab-cooldown: "&cYou must wait &b%time% &cbefore backstabbing again."
+    bard:
+      cooldown: "&cYou must wait &b%time% &cbefore using another Bard ability."
+      activated: "&eBard class activated."
+      deactivated: "&cBard class deactivated."
+      energy: "&cYou need &b%energy% &cBard energy to use this ability."
     archer:
       activated: "&eArcher class activated."
       deactivated: "&cArcher class deactivated."
@@ -154,6 +177,56 @@ faction:
     offline: "&4%player% &cis offline"
 
 commands:
+  rewards:
+    usage: "&cUsage: /rewards"
+    combat: "&cYou cannot open faction rewards while combat tagged."
+    no-faction: "&cYou must be in a player faction to use rewards."
+    location: "&cYou must be in a safezone or your own faction to use rewards."
+    unavailable: "&cThis reward is unavailable."
+    previous: "&cUnlock every earlier reward in this tree first."
+    already: "&cYour faction already unlocked this reward."
+    rank: "&cOnly the faction leader and co-leaders can spend faction points."
+    requirement: "&cYour faction has not met this reward's requirement."
+    failed: "&cThis reward could not be unlocked."
+    unlocked: "&eUnlocked &b%node% &efor your faction."
+  schedule:
+    add-usage: "&cUsage: /%alias% add koth <name> <HH:mm> <capture-seconds> or /%alias% add conquest <HH:mm>"
+    list-usage: "&cUsage: /%alias% list"
+    remove-usage: "&cUsage: /%alias% remove <id>"
+    invalid: "&cUse a valid 24-hour HH:mm time and positive KOTH capture duration in seconds."
+    no-koth: "&cThat KOTH does not exist."
+    duplicate: "&cThat event is already scheduled at that time."
+    failed: "&cThe schedule could not be updated."
+    added: "&eSchedule &b#%id%&e: &b%event% &ewill start daily at &b%time% %timezone%&e."
+    removed: "&eRemoved schedule &b#%id%&e."
+    not-found: "&cThat schedule does not exist."
+    header: "&eDaily Event Schedules &7(%timezone%)"
+    empty: "&7No events are scheduled."
+    entry: "&b#%id% &e%event% &7(%type%) &eat &b%time%"
+  request:
+    usage: "&cUsage: /%alias% <message>"
+    notification: "&9[Request] &b%player%&e: %message%"
+    sent: "&eYour request has been sent to staff."
+    cooldown: "&cYou must wait &b%time% &cbefore sending another request."
+  report:
+    usage: "&cUsage: /%alias% <player> <reason>"
+    notification: "&9[Report] &b%player% &ereported &b%target%&e: %reason%"
+    sent: "&eYour report against &b%player% &ehas been sent to staff."
+    cooldown: "&cYou must wait &b%time% &cbefore sending another report."
+    self: "&cYou cannot report yourself."
+  crowbar:
+    usage: "&cUsage: /%alias% <player> <uses>"
+    unavailable: "&cThat player cannot receive items while dead or in mod mode."
+    no-space: "&cThat player does not have enough inventory space."
+    success: "&eGave &b%player% &ea crowbar with &b%uses% &euses."
+  spawner:
+    usage: "&cUsage: /%alias% <player> <spawner> <amount>"
+    invalid-type: "&cThat is not a valid mob spawner type."
+    unavailable: "&cThat player cannot receive items while dead or in mod mode."
+    no-space: "&cThat player does not have enough inventory space."
+    success: "&eGave &b%player% &b%amount% %type% &espawners."
+  settings:
+    usage: "&cUsage: /%alias%"
   conquest:
     failed: "&cThe Conquest command could not be completed."
     running: "&cConquest is already running."
@@ -190,6 +263,7 @@ commands:
   message:
     usage: "&cUsage: /%alias% <player> <message>"
     self: "&cYou cannot message yourself."
+    disabled: "&c%player% has private messages disabled."
     sent: "&7(To &b%player%&7) &f%message%"
     received: "&7(From &b%player%&7) &f%message%"
   reply:
@@ -241,19 +315,6 @@ commands:
     freeze-usage: "&cUsage: /%alias% <player|all>"
     invsee-usage: "&cUsage: /%alias% <player>"
     vanish-usage: "&cUsage: /%alias%"
-    inventory-title: "&eInventory: %player%"
-    staff-title: "&eOnline Staff"
-    items:
-      compass: "&eTeleport Compass"
-      random: "&eRandom Teleport"
-      inspect: "&eInspect Inventory"
-      freeze: "&bFreeze Player"
-      staff: "&eOnline Staff"
-      wand: "&eWorldEdit Wand"
-      show: "&aUnvanish"
-      hide: "&7Vanish"
-      previous: "&ePrevious Page"
-      next: "&eNext Page"
   koth:
     not-found: "&6[KOTH] %koth% does not exist."
     already-exists: "&6[KOTH] A KOTH with this name already exists."
@@ -478,6 +539,9 @@ commands:
     announcement:
       usage: "&cUsage: /%alias% announcement <message...>"
       success: "&b%player% &eupdated the announcement: &f%announcement%"
+    top:
+      usage: "&cUsage: /%alias% top [page]"
+      invalid-page: "&cThat page does not exist. There are %pages% pages."
     list:
       usage: "&cUsage: /%alias% list [page]"
       invalid-page: "&cThat page does not exist. There are %pages% pages."
@@ -636,3 +700,13 @@ commands:
     start:
       usage: "&cUsage: /sotw start <time>"
       success: "&eYou have started the SOTW"
+
+items:
+  crowbar:
+    name: "&eCrowbar"
+    lore:
+      - "&7Breaks spawners only."
+      - "&eUses remaining&7: &f%uses%"
+  spawner:
+    name: "&e%type% Spawner"
+    lore: []

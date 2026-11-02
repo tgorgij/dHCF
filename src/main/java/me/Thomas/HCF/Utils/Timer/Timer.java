@@ -9,12 +9,18 @@ public class Timer {
         STARTING("timers.starting"),
         COMBAT("timers.combat"),
         CHAT("timers.chat"),
+        REQUEST("timers.request"),
+        REPORT("timers.report"),
         HOME("timers.home"),
         LOGOUT("timers.logout"),
         STUCK("timers.stuck"),
         ARCHERTAG("timers.archertag"),
         ARCHERSPEED("timers.archerSpeed"),
         ARCHERJUMP("timers.archerJump"),
+        BARD("timers.bard"),
+        ROGUESPEED("timers.rogueSpeed"),
+        ROGUEJUMP("timers.rogueJump"),
+        ROGUEBACKSTAB("timers.rogueBackstab"),
         APPLE("timers.apple"),
         GAPPLE("timers.gapple"),
         ENDERPEARL("timers.enderpearl");
@@ -27,10 +33,13 @@ public class Timer {
 
         public int getLength() {
             int defaultLength = switch (this) {
+                case REQUEST, REPORT -> 300;
+                case BARD -> 10;
                 case STUCK -> 60;
                 case LOGOUT -> 30;
                 case STARTING -> 3600;
-                case ARCHERSPEED, ARCHERJUMP -> 30;
+                case ROGUEBACKSTAB -> 15;
+                case ARCHERSPEED, ARCHERJUMP, ROGUESPEED, ROGUEJUMP -> 30;
                 default -> 0;
             };
             return Main.getInstance().getConfig().getInt(this.configPath, defaultLength);

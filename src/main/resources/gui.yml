@@ -1,0 +1,228 @@
+settings:
+  title: "&eSettings"
+  scoreboard-title: "&eScoreboard Settings"
+  messages-title: "&eMessage Settings"
+  items:
+    scoreboard-menu:
+      material: PAINTING
+      name: "&eScoreboard Settings"
+      lore:
+        - "&7Click to open."
+    messages-menu:
+      material: WRITABLE_BOOK
+      name: "&eMessage Settings"
+      lore:
+        - "&7Click to open."
+    scoreboard:
+      material: PAINTING
+      name: "&eScoreboard&7: %state%"
+      lore:
+        - "&7Click to toggle."
+    request-report-cooldowns:
+      material: CLOCK
+      name: "&eRequest / Report Cooldowns&7: %state%"
+      lore:
+        - "&7Show both cooldowns on your scoreboard."
+        - "&7Click to toggle."
+    mountains:
+      material: GLOWSTONE
+      name: "&eMountain Notifications&7: %state%"
+      lore:
+        - "&7Click to toggle."
+    messages:
+      material: WRITABLE_BOOK
+      name: "&ePrivate Messages&7: %state%"
+      lore:
+        - "&7Click to toggle."
+    message-sounds:
+      material: NOTE_BLOCK
+      name: "&eMessage Sounds&7: %state%"
+      lore:
+        - "&7Click to toggle."
+    public-chat:
+      material: PAPER
+      name: "&ePublic Chat&7: %state%"
+      lore:
+        - "&7Click to toggle."
+    back:
+      material: ARROW
+      name: "&eBack"
+      lore:
+        - "&7Click to open."
+
+staff:
+  inventory-title: "&eInventory: %player%"
+  staff-title: "&eOnline Staff"
+  items:
+    compass:
+      material: COMPASS
+      name: "&eTeleport Compass"
+      lore: []
+    random:
+      material: CLOCK
+      name: "&eRandom Teleport"
+      lore: []
+    inspect:
+      material: BOOK
+      name: "&eInspect Inventory"
+      lore: []
+    freeze:
+      material: BLUE_ICE
+      name: "&bFreeze Player"
+      lore: []
+    staff:
+      material: PLAYER_HEAD
+      name: "&eOnline Staff"
+      lore: []
+    wand:
+      material: WOODEN_AXE
+      name: "&eWorldEdit Wand"
+      lore: []
+    show:
+      material: LIME_DYE
+      name: "&aUnvanish"
+      lore: []
+    hide:
+      material: GRAY_DYE
+      name: "&7Vanish"
+      lore: []
+    previous:
+      material: ARROW
+      name: "&ePrevious Page"
+      lore: []
+    next:
+      material: ARROW
+      name: "&eNext Page"
+      lore: []
+    player:
+      material: PLAYER_HEAD
+      name: "&e%player%"
+      lore: []
+
+rewards:
+  title: "&e%faction% Tech Tree"
+  selected: "&aSelected"
+  states:
+    unlocked: "&aUnlocked"
+    available: "&eAvailable"
+    locked: "&cLocked"
+  requirements:
+    kills: "Faction Kills"
+    captures: "KOTH Captures"
+    points: "Faction Points"
+  tree:
+    material: BOOK
+    name: "&e%tree% %state%"
+    lore:
+      - "&7Click to view this tree."
+  trees:
+    potions:
+      material: BREWING_STAND
+      name: "&dPotions %state%"
+    enchantments:
+      material: ENCHANTED_BOOK
+      name: "&bEnchantments %state%"
+    commands:
+      material: COMMAND_BLOCK
+      name: "&6Commands %state%"
+  node:
+    material: PAPER
+    name: "&e%node% &7- %state%"
+    lore:
+      - "&7%requirement%&7: &e%progress%/%amount%"
+      - "&7Unlock every earlier node first."
+      - "&7Click to unlock for your faction."
+  previous:
+    material: ARROW
+    name: "&eScroll Left"
+    lore: []
+  next:
+    material: ARROW
+    name: "&eScroll Right"
+    lore: []
+  start:
+    material: GRAY_DYE
+    name: "&7Start of Tree"
+    lore: []
+  end:
+    material: GRAY_DYE
+    name: "&7End of Tree"
+    lore: []
+  summary:
+    material: NETHER_STAR
+    name: "&eFaction Progress"
+    lore:
+      - "&ePoints&7: &f%points%"
+      - "&eKills&7: &f%kills%"
+      - "&eKOTH Captures&7: &f%captures%"
+      - "&7Point purchases require leader or co-leader."
+  nodes:
+    potions:
+      swiftness:
+        label: "Speed Potions"
+        material: POTION
+      fire_resistance:
+        label: "Fire Resistance Potions"
+        material: POTION
+      regeneration:
+        label: "Regeneration Potions"
+        material: POTION
+      strength:
+        label: "Strength Potions"
+        material: POTION
+      healing:
+        label: "Healing Potions"
+        material: POTION
+      harming:
+        label: "Harming Potions"
+        material: POTION
+      poison:
+        label: "Poison Potions"
+        material: POTION
+      slow_falling:
+        label: "Slow Falling Potions"
+        material: POTION
+      night_vision:
+        label: "Night Vision Potions"
+        material: POTION
+      invisibility:
+        label: "Invisibility Potions"
+        material: POTION
+    enchantments:
+      fire_protection:
+        label: "Fire Protection"
+        material: ENCHANTED_BOOK
+      feather_falling:
+        label: "Feather Falling"
+        material: ENCHANTED_BOOK
+      blast_protection:
+        label: "Blast Protection"
+        material: ENCHANTED_BOOK
+      projectile_protection:
+        label: "Projectile Protection"
+        material: ENCHANTED_BOOK
+      respiration:
+        label: "Respiration"
+        material: ENCHANTED_BOOK
+      aqua_affinity:
+        label: "Aqua Affinity"
+        material: ENCHANTED_BOOK
+      thorns:
+        label: "Thorns"
+        material: ENCHANTED_BOOK
+      depth_strider:
+        label: "Depth Strider"
+        material: ENCHANTED_BOOK
+      looting:
+        label: "Looting"
+        material: ENCHANTED_BOOK
+      fortune:
+        label: "Fortune"
+        material: ENCHANTED_BOOK
+    commands:
+      craft:
+        label: "/craft"
+        material: CRAFTING_TABLE
+      bottle:
+        label: "/bottle"
+        material: EXPERIENCE_BOTTLE

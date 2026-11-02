@@ -3,6 +3,7 @@ boards:
   primary:
     - "&7&m---------------------"
     - "%mod-mode%"
+    - "&6&lBard Energy&7: &e%bard-energy% <display=%has-bard%>"
     - "%conquest% <display=%has-server-conquest%>"
     - "%rally% <display=%has-faction-rally%>"
     - "%koths% <display=%has-server-koths%>"
@@ -10,6 +11,7 @@ boards:
     - "&2&lStarting&7: &c%player-starting-timer% <display=%has-player-starting-timer%>"
     - "&e&lArcher Tag&7: &c%player-archertag-timer% <display=%has-player-archertag-timer%>"
     - "&b&lArcher Speed&7: &c%player-archerspeed-timer% <display=%has-player-archerspeed-timer%>"
+    - "&6&lBard Cooldown&7: &c%player-bard-timer% <display=%has-player-bard-timer%>"
     - "&b&lArcher Jump&7: &c%player-archerjump-timer% <display=%has-player-archerjump-timer%>"
     - "&5&lEnderpearl&7: &c%player-enderpearl-timer% <display=%has-player-enderpearl-timer%>"
     - "&e&lApple&7: &c%player-apple-timer% <display=%has-player-apple-timer%>"
@@ -18,6 +20,8 @@ boards:
     - "&9&lStuck&7: &c%player-stuck-timer% <display=%has-player-stuck-timer%>"
     - "&9&lHome&7: &c%player-home-timer% <display=%has-player-home-timer%>"
     - "&e&lLogout&7: &c%player-logout-timer% <display=%has-player-logout-timer%>"
+    - "&e&lRequest&7: &c%player-request-timer% <display=%has-player-request-timer%>"
+    - "&c&lReport&7: &c%player-report-timer% <display=%has-player-report-timer%>"
     - "&c&lSpawn Tag&7: &c%player-combat-timer% <display=%has-player-combat-timer%>"
     - "&7&m---------------------"
   staff:

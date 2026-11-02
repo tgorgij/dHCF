@@ -5,6 +5,7 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -42,10 +43,19 @@ public class MessageCommand implements TabExecutor {
             p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.message.self")));
             return;
         }
+        User recipient = User.get(target);
+        if (!recipient.isMessages()) {
+            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.message.disabled")
+                    .replace("%player%", target.getName())));
+            return;
+        }
         p.sendMessage(format("sent", target.getName(), message));
         target.sendMessage(format("received", p.getName(), message));
         User.get(p).setLastConversation(target.getUniqueId());
-        User.get(target).setLastConversation(p.getUniqueId());
+        recipient.setLastConversation(p.getUniqueId());
+        if (recipient.isMessageSounds()) {
+            target.playSound(target.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
+        }
     }
 
     private static Component format(String direction, String player, String message) {

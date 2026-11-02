@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 /** Versioned, transactional upgrades shared by fresh installs and existing databases. */
 public final class DatabaseSchema {
-    private static final int VERSION = 11;
+    private static final int VERSION = 15;
 
     private DatabaseSchema() {}
 
@@ -146,6 +146,46 @@ public final class DatabaseSchema {
                 statement.executeUpdate("DROP TABLE conquest");
                 statement.executeUpdate("ALTER TABLE conquestZones_v11 RENAME TO conquestZones");
                 statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (11)");
+            }
+            if (version < 12) {
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN messages INTEGER NOT NULL DEFAULT 1 CHECK (messages IN (0, 1))");
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN messageSounds INTEGER NOT NULL DEFAULT 1 CHECK (messageSounds IN (0, 1))");
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN scoreboard INTEGER NOT NULL DEFAULT 1 CHECK (scoreboard IN (0, 1))");
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN publicChat INTEGER NOT NULL DEFAULT 1 CHECK (publicChat IN (0, 1))");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (12)");
+            }
+            if (version < 13) {
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN requestReportCooldowns INTEGER NOT NULL DEFAULT 1 CHECK (requestReportCooldowns IN (0, 1))");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (13)");
+            }
+            if (version < 14) {
+                statement.executeUpdate("""
+                        CREATE TABLE eventSchedules (
+                            id INTEGER PRIMARY KEY,
+                            type TEXT NOT NULL CHECK (type IN ('KOTH', 'CONQUEST')),
+                            koth TEXT REFERENCES koths(uuid) ON DELETE CASCADE,
+                            startTime TEXT NOT NULL,
+                            durationSeconds INTEGER NOT NULL DEFAULT 0,
+                            lastRun TEXT,
+                            CHECK ((type = 'KOTH' AND koth IS NOT NULL AND durationSeconds > 0)
+                                OR (type = 'CONQUEST' AND koth IS NULL AND durationSeconds = 0))
+                        )
+                        """);
+                statement.executeUpdate("CREATE UNIQUE INDEX idxEventSchedule ON eventSchedules(type, COALESCE(koth, ''), startTime)");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (14)");
+            }
+            if (version < 15) {
+                statement.executeUpdate("ALTER TABLE factions ADD COLUMN kills INTEGER NOT NULL DEFAULT 0 CHECK (kills >= 0)");
+                statement.executeUpdate("UPDATE factions SET kills = MIN(2147483647, MAX(0, COALESCE((SELECT SUM(kills) FROM players WHERE players.faction = factions.uuid), 0)))");
+                statement.executeUpdate("""
+                        CREATE TABLE factionTechUnlocks (
+                            faction TEXT NOT NULL REFERENCES factions(uuid) ON DELETE CASCADE,
+                            tree TEXT NOT NULL,
+                            node TEXT NOT NULL,
+                            PRIMARY KEY (faction, tree, node)
+                        ) WITHOUT ROWID
+                        """);
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (15)");
             }
             connection.commit();
         } catch (SQLException exception) {

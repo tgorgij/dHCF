@@ -1,6 +1,7 @@
 
 settings:
   server-name: "HCF"
+  timezone: "America/Los_Angeles"
   colors:
     primary: AQUA
     secondary: BLUE
@@ -20,9 +21,123 @@ settings:
       - Arcane
 
 classes:
+  miner:
+    activation: 0
+    invisibility-below-y: 30
+    effects:
+      haste:
+        strength: 1
+        duration: 5
+      resistance:
+        strength: 1
+        duration: 5
+      fire_resistance:
+        strength: 1
+        duration: 5
+      invisibility:
+        strength: 1
+        duration: 5
+  rogue:
+    activation: 0
+    effects:
+      speed:
+        strength: 3
+        duration: 5
+      resistance:
+        strength: 1
+        duration: 5
+    abilities:
+      speed:
+        strength: 5
+        duration: 5
+      jump:
+        strength: 4
+        duration: 5
+    backstab:
+      damage-hearts: 4
+      angle: 45 # Degrees to either side of directly behind the victim (90-degree cone).
+  bard:
+    activation: 0
+    effects:
+      speed:
+        strength: 2
+        duration: 5
+      resistance:
+        strength: 1
+        duration: 5
+      fire_resistance:
+        strength: 1
+        duration: 5
+    radius: 15
+    energy:
+      maximum: 100
+      regeneration: 2
+    items:
+      SUGAR:
+        held:
+          effect: speed
+          strength: 1
+          duration: 5
+        click:
+          effect: speed
+          strength: 3
+          duration: 5
+          energy: 20
+          target: FACTION
+      BLAZE_POWDER:
+        held:
+          effect: strength
+          strength: 1
+          duration: 5
+        click:
+          effect: strength
+          strength: 2
+          duration: 5
+          energy: 45
+          target: FACTION
+      IRON_INGOT:
+        held:
+          effect: resistance
+          strength: 1
+          duration: 5
+        click:
+          effect: resistance
+          strength: 3
+          duration: 5
+          energy: 40
+          target: FACTION
+      FEATHER:
+        held:
+          effect: jump_boost
+          strength: 2
+          duration: 5
+        click:
+          effect: jump_boost
+          strength: 7
+          duration: 5
+          energy: 30
+          target: FACTION
+      GHAST_TEAR:
+        held:
+          effect: regeneration
+          strength: 1
+          duration: 5
+        click:
+          effect: regeneration
+          strength: 3
+          duration: 5
+          energy: 40
+          target: FACTION
+      SPIDER_EYE:
+        click:
+          effect: wither
+          strength: 1
+          duration: 5
+          energy: 35
+          target: ENEMIES
   archer:
-    activation: 0 # Seconds wearing the full leather set before activation.
-    effects: # Strength is the displayed potion level; duration is in seconds and refreshes while equipped.
+    activation: 0
+    effects:
       speed:
         strength: 2
         duration: 5
@@ -39,20 +154,47 @@ classes:
     tag:
       damage-multiplier: 1.25
 
-enchantments: # Map kit limits. Use Minecraft enchantment names; omitted or negative values are unrestricted.
+enchantments:
+  fire_protection: 0
+  feather_falling: 0
+  blast_protection: 0
+  projectile_protection: 0
+  respiration: 0
+  aqua_affinity: 0
+  thorns: 0
+  depth_strider: 0
+  looting: 0
+  fortune: 0
   protection: 2
   sharpness: 2
 
-potions: # Brewing limits. Unlisted potions are unrestricted; applies to drinkable, splash, and lingering potions.
+potions:
+  swiftness:
+    enabled: false
+  fire_resistance:
+    enabled: false
+  regeneration:
+    enabled: false
   strength:
     enabled: false
+  healing:
+    enabled: false
+  harming:
+    enabled: false
   poison:
-    extended: false # Disallow redstone's duration extension; regular poison and Poison II are allowed.
+    enabled: false
+    extended: false
+  slow_falling:
+    enabled: false
+  night_vision:
+    enabled: false
+  invisibility:
+    enabled: false
 
 koth:
   rewards:
     commands:
-      - "economy give %player% 1000" # Run as console; supports %player% and %koth%.
+      - "economy give %player% 1000"
 
 economy:
   kill-balance-percentage: 25.0
@@ -61,9 +203,9 @@ economy:
   minimum-transfer: 1
 
 combat-logger:
-  despawn-after: 30 # seconds after spawning or the last uncancelled hit
+  despawn-after: 30
 
-deathbans: # durations in seconds; shortest matching permission wins
+deathbans: # seconds
   default-duration: 3600
   permissions:
     - permission: "dhcf.deathban.30minutes"
@@ -72,6 +214,12 @@ deathbans: # durations in seconds; shortest matching permission wins
       duration: 900
 
 timers: # seconds
+  rogueSpeed: 30
+  rogueJump: 30
+  rogueBackstab: 15
+  bard: 10
+  request: 300
+  report: 300
   pvp: 1800
   starting: 3600
   combat: 30
@@ -89,7 +237,7 @@ factions:
   points:
     kill: 5
     death: 5
-    raidable: 15 # Replaces the normal death penalty when that death makes the faction raidable.
+    raidable: 15
     koth: 50
   border:
     material: RED_STAINED_GLASS
@@ -134,19 +282,8 @@ factions:
   home:
     disable-in-end: false
   stuck:
-    max-border-distance: 32 # Maximum blocks beyond the original claim to search (1-1024).
-    max-search-columns: 8192 # Bound the search when no safe unclaimed destination exists.
-
-staff-mode:
-  items:
-    compass: COMPASS
-    random: CLOCK
-    inspect: BOOK
-    freeze: BLUE_ICE
-    staff: PLAYER_HEAD
-    wand: WOODEN_AXE
-    show: LIME_DYE
-    hide: GRAY_DYE
+    max-border-distance: 32
+    max-search-columns: 8192
 
 freeze:
   blocked-commands:
@@ -162,20 +299,135 @@ freeze:
     - kill
 
 mountains:
-  default-interval: 30 # Minutes from completion until the next regeneration starts.
+  default-interval: 30 # minutes
   default-block: GLOWSTONE
   max-volume: 1000000
-  blocks-per-tick: 500 # Shared regeneration budget across all mountains.
+  blocks-per-tick: 500
 
 combat:
-  blocked-commands: # Command names or subcommands. Aliases and namespaces are matched too.
+  blocked-commands:
     - craft
     - f home
 
 conquest:
-  default-interval: 30 # Seconds required per zone capture; each zone can override this.
+  koth-equivalent: 5
+  default-interval: 30 # seconds
   capture-points: 1
   win-points: 100
   death-penalty: 5
   rewards:
-    commands: [] # Run as console; supports %player%, %faction%, %conquest%, and %points%.
+    commands: []
+
+shop-signs:
+  success-seconds: 2
+  failure-seconds: 2
+
+tech-tree:
+  trees:
+    potions:
+      requirement: CAPTURES
+      nodes:
+        swiftness:
+          type: POTION
+          value: swiftness
+          amount: 1
+        fire_resistance:
+          type: POTION
+          value: fire_resistance
+          amount: 2
+        regeneration:
+          type: POTION
+          value: regeneration
+          amount: 3
+        strength:
+          type: POTION
+          value: strength
+          amount: 4
+        healing:
+          type: POTION
+          value: healing
+          amount: 5
+        harming:
+          type: POTION
+          value: harming
+          amount: 6
+        poison:
+          type: POTION
+          value: poison
+          amount: 7
+        slow_falling:
+          type: POTION
+          value: slow_falling
+          amount: 8
+        night_vision:
+          type: POTION
+          value: night_vision
+          amount: 9
+        invisibility:
+          type: POTION
+          value: invisibility
+          amount: 10
+    enchantments:
+      requirement: KILLS
+      nodes:
+        fire_protection:
+          type: ENCHANTMENT
+          value: fire_protection
+          level: 4
+          amount: 25
+        feather_falling:
+          type: ENCHANTMENT
+          value: feather_falling
+          level: 4
+          amount: 50
+        blast_protection:
+          type: ENCHANTMENT
+          value: blast_protection
+          level: 4
+          amount: 75
+        projectile_protection:
+          type: ENCHANTMENT
+          value: projectile_protection
+          level: 4
+          amount: 100
+        respiration:
+          type: ENCHANTMENT
+          value: respiration
+          level: 3
+          amount: 125
+        aqua_affinity:
+          type: ENCHANTMENT
+          value: aqua_affinity
+          level: 1
+          amount: 150
+        thorns:
+          type: ENCHANTMENT
+          value: thorns
+          level: 3
+          amount: 175
+        depth_strider:
+          type: ENCHANTMENT
+          value: depth_strider
+          level: 3
+          amount: 200
+        looting:
+          type: ENCHANTMENT
+          value: looting
+          level: 3
+          amount: 225
+        fortune:
+          type: ENCHANTMENT
+          value: fortune
+          level: 3
+          amount: 250
+    commands:
+      requirement: POINTS
+      nodes:
+        craft:
+          type: COMMAND
+          value: craft
+          amount: 100
+        bottle:
+          type: COMMAND
+          value: bottle
+          amount: 250

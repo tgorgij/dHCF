@@ -86,6 +86,7 @@ public class Faction {
     private long dtrFreezeExpiry;
     private long dtrNextRegen;
     private int points;
+    private int kills;
     private int kothCaptures;
     private String announcement;
     private boolean deathban;
@@ -218,6 +219,7 @@ public class Faction {
         this.dtrNextRegen = resultSet.getLong("dtrNextRegen");
 
         this.points = resultSet.getInt("points");
+        this.kills = resultSet.getInt("kills");
 
         this.kothCaptures = resultSet.getInt("kothCaptures");
 
@@ -241,8 +243,8 @@ public class Faction {
         String sql =
                 "INSERT INTO factions "
                         + "(uuid, type, name, leader, balance, lives, "
-                        + "members, color, home, open, dtr, points, kothCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "members, color, home, open, dtr, points, kothCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET "
                         + "type = excluded.type, "
                         + "name = excluded.name, "
@@ -259,12 +261,12 @@ public class Faction {
                         + "announcement = excluded.announcement, "
                         + "deathban = excluded.deathban, "
                         + "dtrFreezeExpiry = excluded.dtrFreezeExpiry, "
-                        + "dtrNextRegen = excluded.dtrNextRegen";
+                        + "dtrNextRegen = excluded.dtrNextRegen, kills = excluded.kills";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), type.name(), name, leader == null ? null : leader.toString(),
                 balance, lives, serializeMembers(), color, serializeLocation(home), open, dtr,
-                points, kothCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen);
+                points, kothCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills);
     }
 
     private String serializeMembers() {
@@ -606,6 +608,14 @@ public class Faction {
     public void setDTR(double dtr) {
         if (this.dtr == dtr) return;
         this.dtr = dtr;
+        revision++;
+    }
+
+    public int getKills() { return kills; }
+
+    public void addKill() {
+        if (kills == Integer.MAX_VALUE) return;
+        kills++;
         revision++;
     }
 

@@ -70,7 +70,9 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import net.kyori.adventure.text.format.TextDecoration;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import net.kyori.adventure.text.Component;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,6 +116,27 @@ public class StaffMode implements Listener {
         return Permission.has(p, "command.staff", "staff") || Permission.has(p, "command.vanish", "staff")
                 || Permission.has(p, "command.freeze", "staff") || Permission.has(p, "command.invsee", "staff");
     }
+    public boolean isStaffOrAdmin(Player p) { return isStaff(p) || Permission.has(p, "admin"); }
+
+    private void announceConnection(Player p, boolean joined) {
+        if (!isStaffOrAdmin(p)) return;
+        Component notification = C.chat(Main.getInstance().getLocaleConfig()
+                .getString("events.staff." + (joined ? "joined" : "left")).replace("%player%", p.getName()));
+        for (Player staff : Bukkit.getOnlinePlayers()) {
+            if (isStaffOrAdmin(staff) && (joined || !staff.getUniqueId().equals(p.getUniqueId()))) staff.sendMessage(notification);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onStaffJoin(PlayerJoinEvent e) {
+        announceConnection(e.getPlayer(), true);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onStaffQuit(PlayerQuitEvent e) {
+        announceConnection(e.getPlayer(), false);
+    }
+
     public boolean isFrozen(Player p) {
         return (freezeAll || frozen.contains(p.getUniqueId())) && !canBypassFreeze(p);
     }
@@ -254,11 +277,21 @@ public class StaffMode implements Listener {
     }
 
     private ItemStack tool(String name, Material fallback) {
-        Material configured = Material.matchMaterial(Main.getInstance().getConfig().getString("staff-mode.items." + name, fallback.name()));
+        return tool(name, fallback, "");
+    }
+
+    private ItemStack tool(String name, Material fallback, String player) {
+        String path = "staff.items." + name;
+        Material configured = Material.matchMaterial(Main.getInstance().getGuiConfig().getString(path + ".material", fallback.name()));
         ItemStack item = new ItemStack(configured == null || configured.isAir() || !configured.isItem() ? fallback : configured);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(C.chat(Main.getInstance().getLocaleConfig().getString("commands.staff.items." + name, name))
-                .decoration(TextDecoration.ITALIC, false));
+        meta.displayName(C.chat(Main.getInstance().getGuiConfig().getString(path + ".name", name)
+                .replace("%player%", player)).decoration(TextDecoration.ITALIC, false));
+        List<Component> lore = new ArrayList<>();
+        for (String line : Main.getInstance().getGuiConfig().getStringList(path + ".lore")) {
+            lore.add(C.chat(line.replace("%player%", player)).decoration(TextDecoration.ITALIC, false));
+        }
+        meta.lore(lore);
         meta.getPersistentDataContainer().set(toolKey, PersistentDataType.STRING, name);
         item.setItemMeta(meta);
         return item;
@@ -280,8 +313,8 @@ public class StaffMode implements Listener {
     public void inspect(Player viewer, Player target) {
         if (isEnabled(target)) { message(viewer, "target-in-mode"); return; }
         Menu menu = new Menu(target.getUniqueId(), 0);
-        menu.inventory = Bukkit.createInventory(menu, 54, C.chat(Main.getInstance().getLocaleConfig()
-                .getString("commands.staff.inventory-title", "&eInventory: %player%").replace("%player%", target.getName())));
+        menu.inventory = Bukkit.createInventory(menu, 54, C.chat(Main.getInstance().getGuiConfig()
+                .getString("staff.inventory-title", "&eInventory: %player%").replace("%player%", target.getName())));
         copyInventory(menu, target);
         viewer.openInventory(menu.inventory);
     }
@@ -308,15 +341,15 @@ public class StaffMode implements Listener {
                 .filter(p::canSee).sorted(Comparator.comparing(Player::getName, String.CASE_INSENSITIVE_ORDER)).toList();
         int page = Math.clamp(requestedPage, 0, Math.max(0, (staff.size() - 1) / 45));
         Menu menu = new Menu(null, page);
-        menu.inventory = Bukkit.createInventory(menu, 54, C.chat(Main.getInstance().getLocaleConfig()
-                .getString("commands.staff.staff-title", "&eOnline Staff")));
+        menu.inventory = Bukkit.createInventory(menu, 54, C.chat(Main.getInstance().getGuiConfig()
+                .getString("staff.staff-title", "&eOnline Staff")));
         for (int i = page * 45; i < Math.min(staff.size(), (page + 1) * 45); i++) {
             Player target = staff.get(i);
-            ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-            SkullMeta meta = (SkullMeta) head.getItemMeta();
-            meta.setOwningPlayer(target);
-            meta.displayName(C.chat("&e" + target.getName()).decoration(TextDecoration.ITALIC, false));
-            head.setItemMeta(meta);
+            ItemStack head = tool("player", Material.PLAYER_HEAD, target.getName());
+            if (head.getItemMeta() instanceof SkullMeta meta) {
+                meta.setOwningPlayer(target);
+                head.setItemMeta(meta);
+            }
             menu.inventory.setItem(i % 45, head);
             menu.players.put(i % 45, target.getUniqueId());
         }

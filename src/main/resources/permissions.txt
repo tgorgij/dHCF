@@ -75,3 +75,17 @@
 
 14. Conquest
 - hcf.command.conquest
+
+15. Spawners
+- hcf.command.crowbar
+- hcf.command.spawner
+
+16. Shop signs
+- hcf.sign.shop.create
+
+17. Requests and reports
+- hcf.request.receive
+- hcf.report.receive
+
+18. Event schedules
+- hcf.command.schedule

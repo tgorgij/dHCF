@@ -198,6 +198,7 @@ public class UserDeathEvent implements Listener {
             if (killerSnapshot != null) snapshots.add(killerSnapshot);
             Faction faction = killerUser.hasFaction() ? Faction.get(killerUser.getFaction()) : null;
             if (faction != null && faction.getType() == Faction.Type.PLAYER && faction.hasMember(killerUser.getUUID())) {
+                faction.addKill();
                 faction.addPoints(Math.max(0, Main.getInstance().getConfig().getInt("factions.points.kill", 5)));
                 changedFactions.add(faction);
             }

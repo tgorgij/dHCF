@@ -245,6 +245,11 @@ public class Conquest {
         running = false;
         for (Zone zone : zones.values()) zone.reset(false);
         Faction team = Faction.get(winner.faction());
+        int equivalent = Math.max(0, Main.getInstance().getConfig().getInt("conquest.koth-equivalent", 5));
+        team.setKOTHCaptures((int) Math.min(Integer.MAX_VALUE, (long) team.getKOTHCaptures() + equivalent));
+        long gained = (long) Math.max(0, Main.getInstance().getConfig().getInt("factions.points.koth", 50)) * equivalent;
+        team.setPoints((int) Math.clamp((long) team.getPoints() + gained, Integer.MIN_VALUE, Integer.MAX_VALUE));
+        team.saveAsync();
         broadcast("captured", team.getName(), points);
         for (String configured : Main.getInstance().getConfig().getStringList("conquest.rewards.commands")) {
             String command = configured.replace("%player%", winner.player().getName()).replace("%faction%", team.getName())

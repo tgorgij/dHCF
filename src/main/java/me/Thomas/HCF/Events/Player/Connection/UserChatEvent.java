@@ -73,7 +73,9 @@ public class UserChatEvent implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPublicChat(ChatEvent e) {
         Player p = e.getPlayer();
-        if (factionChat.containsKey(p.getUniqueId()) || Permission.has(p, "chat.bypass")) return;
+        if (factionChat.containsKey(p.getUniqueId())) return;
+        e.viewers().removeIf(viewer -> viewer instanceof Player recipient && !User.get(recipient).isPublicChat());
+        if (Permission.has(p, "chat.bypass")) return;
         if (ChatCommand.isPaused()) {
             e.setCancelled(true);
             p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("events.player.chat.paused")));

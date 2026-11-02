@@ -22,6 +22,13 @@ public class UserPearlEvent implements Listener {
     public void onLand(PlayerTeleportEvent e) {
         if (e.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL || e.getTo() == null) return;
         Faction faction = Faction.getAtLocation(e.getTo());
+        Faction source = Faction.getAtLocation(e.getFrom());
+        if (faction != null && faction.getType() == Faction.Type.CONQUEST
+                || source != null && source.getType() == Faction.Type.CONQUEST) {
+            e.setCancelled(true);
+            e.getPlayer().sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("events.conquest.pearl-blocked")));
+            return;
+        }
         if (faction == null) return;
         for (KOTH koth : Main.getInstance().getAllKOTHs().values()) {
             if (koth.isPearlable() || !faction.getUUID().equals(koth.getFaction())) continue;
@@ -35,6 +42,12 @@ public class UserPearlEvent implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPearl(ProjectileLaunchEvent e) {
         if (!(e.getEntity() instanceof EnderPearl pearl) || !(pearl.getShooter() instanceof Player player)) return;
+        Faction faction = Faction.getAtLocation(player.getLocation());
+        if (faction != null && faction.getType() == Faction.Type.CONQUEST) {
+            e.setCancelled(true);
+            player.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("events.conquest.pearl-blocked")));
+            return;
+        }
         if (Timer.Type.ENDERPEARL.getLength() <= 0) return;
         User user = User.get(player);
         if (!user.hasTimer(Timer.Type.ENDERPEARL)) return;

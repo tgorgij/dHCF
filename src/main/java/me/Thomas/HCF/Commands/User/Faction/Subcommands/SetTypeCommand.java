@@ -89,7 +89,9 @@ public class SetTypeCommand implements Subcommand {
                             "SYSTEM",
                     "SAFEZONE",
                     "ROAD",
-                    "KOTH"
+                    "KOTH",
+                    "CONQUEST",
+                    "MOUNTAIN"
                     )
                     .filter(color -> color.startsWith(input))
                     .toList();

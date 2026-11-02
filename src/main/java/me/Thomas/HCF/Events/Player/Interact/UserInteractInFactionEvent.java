@@ -3,6 +3,7 @@ package me.Thomas.HCF.Events.Player.Interact;
 import com.destroystokyo.paper.event.player.PlayerSetSpawnEvent;
 import io.papermc.paper.event.block.PlayerShearBlockEvent;
 import me.Thomas.HCF.IO.Faction.Faction;
+import me.Thomas.HCF.IO.Mountain.Mountain;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -81,6 +82,16 @@ public class UserInteractInFactionEvent implements Listener {
     public void onBreak(BlockBreakEvent e) {
         Player p = e.getPlayer();
         Location location = e.getBlock().getLocation();
+        Faction faction = Faction.getAtLocation(location);
+        if (faction != null && faction.getType() == Faction.Type.MOUNTAIN && !User.get(p).isBypass()) {
+            Mountain mountain = Mountain.get(faction.getUUID());
+            if (mountain == null || !mountain.contains(location) || User.get(p).hasPvpProtection()) {
+                e.setCancelled(true);
+                p.sendMessage(C.chat(localeConfig.getString("faction.modify.build")
+                        .replace("%faction%", faction.getFormattedName(User.get(p)))));
+            }
+            return;
+        }
         if (disallowed(p, location, "build")) e.setCancelled(true);
     }
 
@@ -215,7 +226,7 @@ public class UserInteractInFactionEvent implements Listener {
         Faction faction = Faction.getAtLocation(location);
         boolean disallowed = faction == null
                 ? Faction.isInWarzoneBuildLimit(location)
-                : !user.hasFaction() || !user.getFaction().equals(faction.getUUID());
+                : faction.getType() == Faction.Type.MOUNTAIN || !user.hasFaction() || !user.getFaction().equals(faction.getUUID());
         if (faction != null && faction.getType().equals(Faction.Type.PLAYER) && faction.getDTR() <= 0) return false;
         if (disallowed && (!throttleMessage || canSendPressurePlateMessage(p))) {
             String messageFormat = "faction.modify.";

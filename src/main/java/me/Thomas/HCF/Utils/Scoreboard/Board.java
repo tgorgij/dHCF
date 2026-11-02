@@ -3,6 +3,7 @@ package me.Thomas.HCF.Utils.Scoreboard;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.KOTH.KOTH;
+import me.Thomas.HCF.IO.Conquest.Conquest;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
@@ -35,9 +36,10 @@ public class Board {
     private static final String RALLY_DISPLAY = "<display=%has-faction-rally%>";
     private static final String LINES_BELOW_DISPLAY = "<display=%has-lines-below%>";
     private static final Pattern DIVIDER = Pattern.compile("[-_=─━═\\s]*");
+    private static final String CONQUEST_DISPLAY = "<display=%has-server-conquest%>";
     private static final String KOTH_DISPLAY = "<display=%has-server-koths%>";
     private record Line(String text, Timer.Type timer, ServerTimer.Type serverTimer, String placeholder,
-                        boolean rallyOnly, boolean kothsOnly) {}
+                        boolean rallyOnly, boolean kothsOnly, boolean conquestOnly) {}
 
     private final Player player;
     private final Scoreboard scoreboard;
@@ -46,6 +48,8 @@ public class Board {
     private final List<String> rallyLines;
     private final List<String> staffLines;
     private final String kothLine;
+    private final List<String> conquestLines;
+    private final String conquestLeader;
     private final List<String> previousLines = new ArrayList<>();
     private boolean visible;
     private Team focusTeam;
@@ -65,13 +69,16 @@ public class Board {
         this.player = player;
         this.scoreboard = scoreboard;
         this.objective = objective;
+        this.conquestLines = Main.getInstance().getScoreboardConfig().getStringList("boards.conquest");
+        this.conquestLeader = Main.getInstance().getScoreboardConfig().getString("boards.conquest-leader", "&2%rank%. %faction%&7: &f%points%");
         this.staffLines = Main.getInstance().getScoreboardConfig().getStringList("boards.staff");
         this.rallyLines = Main.getInstance().getScoreboardConfig().getStringList("boards.rally");
         this.kothLine = Main.getInstance().getScoreboardConfig().getString("boards.koth", "%name% KOTH&7: &c%time%");
         for (String configuredText : lines) {
             boolean rallyOnly = configuredText.contains(RALLY_DISPLAY);
             boolean kothsOnly = configuredText.contains(KOTH_DISPLAY);
-            String text = configuredText.replace(RALLY_DISPLAY, "").replace(KOTH_DISPLAY, "").stripTrailing();
+            boolean conquestOnly = configuredText.contains(CONQUEST_DISPLAY);
+            String text = configuredText.replace(RALLY_DISPLAY, "").replace(KOTH_DISPLAY, "").replace(CONQUEST_DISPLAY, "").stripTrailing();
             Matcher matcher = TIMER_DISPLAY.matcher(text);
             if (matcher.find()) {
                 String scope = matcher.group(1);
@@ -80,12 +87,12 @@ public class Board {
                     configuredLines.add(new Line(text.replace(matcher.group(), ""),
                             scope.equals("player") ? Timer.Type.valueOf(timerName.toUpperCase(Locale.ROOT)) : null,
                             scope.equals("server") ? ServerTimer.Type.valueOf(timerName.toUpperCase(Locale.ROOT)) : null,
-                            "%" + scope + "-" + timerName + "-timer%", rallyOnly, kothsOnly));
+                            "%" + scope + "-" + timerName + "-timer%", rallyOnly, kothsOnly, conquestOnly));
                 } catch (IllegalArgumentException ignored) {
                     Main.getInstance().getLogger().warning("Unknown scoreboard timer: " + timerName);
                 }
             } else {
-                configuredLines.add(new Line(text, null, null, null, rallyOnly, kothsOnly));
+                configuredLines.add(new Line(text, null, null, null, rallyOnly, kothsOnly, conquestOnly));
             }
         }
         player.setScoreboard(scoreboard);
@@ -100,11 +107,13 @@ public class Board {
         List<String> lines = new ArrayList<>(MAX_LINES);
         Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
         Location rally = faction == null || !faction.hasMember(player.getUniqueId()) ? null : faction.getRally();
+        Conquest conquest = Conquest.get();
         List<KOTH> koths = Main.getInstance().getAllKOTHs().values().stream().filter(KOTH::isRunning)
                 .sorted(java.util.Comparator.comparing(KOTH::getName, String.CASE_INSENSITIVE_ORDER)).toList();
         for (Line configured : configuredLines) {
             if (configured.rallyOnly() && rally == null) continue;
             if (configured.kothsOnly() && koths.isEmpty()) continue;
+            if (configured.conquestOnly() && (conquest == null || !conquest.isRunning())) continue;
             String text = configured.text();
             if (text.contains("%mod-mode%")) {
                 if (!user.isInStaffMode()) continue;
@@ -132,7 +141,13 @@ public class Board {
                 if (timer == null || timer.getRemainingTimeMillis() <= 0) continue;
                 text = text.replace(configured.placeholder(), C.formatTime(timer.getRemainingTimeMillis()));
             }
-            if (text.contains("%koths%")) {
+            if (text.contains("%conquest%")) {
+                if (conquest == null || !conquest.isRunning()) continue;
+                for (String line : conquestLines(conquest, user)) {
+                    lines.add(text.replace("%conquest%", line));
+                    if (lines.size() == MAX_LINES) break;
+                }
+            } else if (text.contains("%koths%")) {
                 for (KOTH koth : koths) {
                     lines.add(text.replace("%koths%", kothLine
                             .replace("%name%", C.getColorCode(koth.getColor()) + koth.getName())
@@ -184,6 +199,27 @@ public class Board {
         }
         previousLines.clear();
         previousLines.addAll(lines);
+    }
+
+    private List<String> conquestLines(Conquest conquest, User user) {
+        List<String> result = new ArrayList<>();
+        List<Conquest.Standing> leaders = conquest.getLeaders();
+        for (String configured : conquestLines) {
+            String line = configured.replace("%name%", conquest.getName());
+            for (Conquest.Color color : Conquest.Color.values()) {
+                line = line.replace("%" + color.name().toLowerCase(Locale.ROOT) + "-time%", conquest.getZone(color).getFormattedTime());
+            }
+            if (line.contains("%leaders%")) {
+                for (int i = 0; i < leaders.size(); i++) {
+                    Conquest.Standing standing = leaders.get(i);
+                    Faction team = Faction.get(standing.faction());
+                    if (team == null) continue;
+                    result.add(line.replace("%leaders%", conquestLeader.replace("%rank%", Integer.toString(i + 1))
+                            .replace("%faction%", team.getFormattedName(user)).replace("%points%", Integer.toString(standing.points()))));
+                }
+            } else result.add(line);
+        }
+        return result;
     }
 
     static Set<String> getArcherTaggedNames() {

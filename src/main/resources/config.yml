@@ -55,6 +55,7 @@ koth:
       - "economy give %player% 1000" # Run as console; supports %player% and %koth%.
 
 economy:
+  kill-balance-percentage: 25.0
   default-balance: 500
   currency-symbol: "$"
   minimum-transfer: 1
@@ -85,6 +86,11 @@ timers: # seconds
   enderpearl: 15
 
 factions:
+  points:
+    kill: 5
+    death: 5
+    raidable: 15 # Replaces the normal death penalty when that death makes the faction raidable.
+    koth: 50
   border:
     material: RED_STAINED_GLASS
   player-format: "&9%player%&7[&c%kills%&7]"
@@ -154,3 +160,22 @@ freeze:
     - warp
     - suicide
     - kill
+
+mountains:
+  default-interval: 30 # Minutes from completion until the next regeneration starts.
+  default-block: GLOWSTONE
+  max-volume: 1000000
+  blocks-per-tick: 500 # Shared regeneration budget across all mountains.
+
+combat:
+  blocked-commands: # Command names or subcommands. Aliases and namespaces are matched too.
+    - craft
+    - f home
+
+conquest:
+  default-interval: 30 # Seconds required per zone capture; each zone can override this.
+  capture-points: 1
+  win-points: 100
+  death-penalty: 5
+  rewards:
+    commands: [] # Run as console; supports %player%, %faction%, %conquest%, and %points%.

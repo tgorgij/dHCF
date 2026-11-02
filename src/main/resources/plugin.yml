@@ -5,6 +5,26 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  conquest:
+    description: Configure and manage the server's Conquest.
+    usage: /conquest <start|cancel|setinterval|setpos1|setpos2>
+  bottle:
+    description: Store all your experience in a throwable bottle.
+    usage: /bottle
+  craft:
+    description: Open a portable crafting table.
+    usage: /craft
+  message:
+    aliases: [msg, w]
+    description: Send a private message to an online player.
+    usage: /message <player> <message>
+  reply:
+    aliases: [r]
+    description: Reply to your last private conversation.
+    usage: /reply <message>
+  mountain:
+    description: Create and configure regenerating mountains.
+    usage: /mountain <name> <create|delete|reset|setinterval|setblock|setpos1|setpos2>
   staff:
     aliases: [h]
     description: Toggle mod mode or its world interaction bypass.
@@ -57,6 +77,16 @@ commands:
     aliases:
       - eco
 permissions:
+  hcf.command.conquest:
+    default: op
+  hcf.command.bottle:
+    default: false
+  hcf.command.craft:
+    default: false
+  hcf.donator:
+    default: false
+  hcf.command.mountain:
+    default: op
   hcf.command.staff:
     default: op
   hcf.command.freeze:

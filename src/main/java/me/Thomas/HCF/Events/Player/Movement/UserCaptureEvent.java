@@ -1,6 +1,7 @@
 package me.Thomas.HCF.Events.Player.Movement;
 
 import me.Thomas.HCF.IO.KOTH.KOTH;
+import me.Thomas.HCF.IO.Conquest.Conquest;
 import me.Thomas.HCF.Main.Main;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -12,9 +13,11 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
-public class UserKOTHEvent implements Listener {
+public class UserCaptureEvent implements Listener {
 
     private void checkCapture(Player p, Location destination) {
+        Conquest conquest = Conquest.get();
+        if (conquest != null) conquest.checkCapture(p, destination);
         for (KOTH koth : Main.getInstance().getAllKOTHs().values()) {
             if (p.getUniqueId().equals(koth.getCapturingPlayer()) && !koth.contains(destination)) koth.resetCapture();
         }

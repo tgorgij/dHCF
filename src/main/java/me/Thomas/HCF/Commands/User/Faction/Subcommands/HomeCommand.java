@@ -42,10 +42,6 @@ public class HomeCommand implements Subcommand {
             return true;
         }
         User user = User.get(p);
-        if (user.hasTimer(Timer.Type.COMBAT)) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.combat-tagged"))));
-            return true;
-        }
         if (!user.hasFaction()) {
             p.sendMessage(C.chat(localeConfig.getString("commands.faction.not-in")));
             return true;

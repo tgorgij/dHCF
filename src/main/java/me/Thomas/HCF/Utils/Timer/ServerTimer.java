@@ -5,6 +5,7 @@ public class ServerTimer {
     public enum Type {
         SOTW,
         KOTH,
+        CONQUEST,
         EOTW,
         SALE,
         KEYSALE

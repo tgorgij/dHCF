@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 /** Versioned, transactional upgrades shared by fresh installs and existing databases. */
 public final class DatabaseSchema {
-    private static final int VERSION = 8;
+    private static final int VERSION = 11;
 
     private DatabaseSchema() {}
 
@@ -98,6 +98,54 @@ public final class DatabaseSchema {
                         )
                         """);
                 statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (8)");
+            }
+            if (version < 9) {
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN mountainMessages INTEGER NOT NULL DEFAULT 1 CHECK (mountainMessages IN (0, 1))");
+                statement.executeUpdate("""
+                        CREATE TABLE mountains (
+                            faction TEXT PRIMARY KEY REFERENCES factions(uuid) ON DELETE CASCADE,
+                            intervalMinutes INTEGER NOT NULL DEFAULT 30 CHECK (intervalMinutes > 0),
+                            block TEXT NOT NULL DEFAULT 'GLOWSTONE',
+                            pos1 TEXT,
+                            pos2 TEXT,
+                            nextRegeneration INTEGER NOT NULL DEFAULT 0
+                        )
+                        """);
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (9)");
+            }
+            if (version < 10) {
+                statement.executeUpdate("""
+                        CREATE TABLE conquest (
+                            id INTEGER PRIMARY KEY CHECK (id = 1),
+                            faction TEXT NOT NULL UNIQUE REFERENCES factions(uuid) ON DELETE CASCADE
+                        )
+                        """);
+                statement.executeUpdate("""
+                        CREATE TABLE conquestZones (
+                            conquest INTEGER NOT NULL DEFAULT 1 REFERENCES conquest(id) ON DELETE CASCADE CHECK (conquest = 1),
+                            color TEXT NOT NULL CHECK (color IN ('RED', 'YELLOW', 'GREEN', 'BLUE')),
+                            intervalSeconds INTEGER NOT NULL DEFAULT 30 CHECK (intervalSeconds > 0),
+                            pos1 TEXT,
+                            pos2 TEXT,
+                            PRIMARY KEY (conquest, color)
+                        ) WITHOUT ROWID
+                        """);
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (10)");
+            }
+            if (version < 11) {
+                statement.executeUpdate("""
+                        CREATE TABLE conquestZones_v11 (
+                            color TEXT PRIMARY KEY CHECK (color IN ('RED', 'YELLOW', 'GREEN', 'BLUE')),
+                            intervalSeconds INTEGER NOT NULL DEFAULT 30 CHECK (intervalSeconds > 0),
+                            pos1 TEXT,
+                            pos2 TEXT
+                        ) WITHOUT ROWID
+                        """);
+                statement.executeUpdate("INSERT INTO conquestZones_v11 (color, intervalSeconds, pos1, pos2) SELECT color, intervalSeconds, pos1, pos2 FROM conquestZones");
+                statement.executeUpdate("DROP TABLE conquestZones");
+                statement.executeUpdate("DROP TABLE conquest");
+                statement.executeUpdate("ALTER TABLE conquestZones_v11 RENAME TO conquestZones");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (11)");
             }
             connection.commit();
         } catch (SQLException exception) {

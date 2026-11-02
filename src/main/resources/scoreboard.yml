@@ -3,6 +3,7 @@ boards:
   primary:
     - "&7&m---------------------"
     - "%mod-mode%"
+    - "%conquest% <display=%has-server-conquest%>"
     - "%rally% <display=%has-faction-rally%>"
     - "%koths% <display=%has-server-koths%>"
     - "&a&lPvP Timer&7: &c%player-pvp-timer% <display=%has-player-pvp-timer%>"
@@ -30,3 +31,14 @@ boards:
     - "&eLocation: &f%location%"
     - "&7&m--------------------- <display=%has-lines-below%>"
   koth: "%name% KOTH&7: &c%time%"
+
+  conquest:
+    - "&2Conquest&7:"
+    - "%leaders%"
+    - "&7&m---------------------"
+    - "&cRed&7: &f%red-time%"
+    - "&9Blue&7: &f%blue-time%"
+    - "&eYellow&7: &f%yellow-time%"
+    - "&aGreen&7: &f%green-time%"
+    - "&7&m--------------------- <display=%has-lines-below%>"
+  conquest-leader: "&2%rank%. %faction%&7: &f%points%"

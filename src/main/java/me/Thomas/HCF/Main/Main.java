@@ -12,11 +12,16 @@ import me.Thomas.HCF.Commands.Admin.Lives.LivesCommand;
 import me.Thomas.HCF.Commands.User.Economy.BalanceCommand;
 import me.Thomas.HCF.Commands.User.Economy.PayCommand;
 import me.Thomas.HCF.Commands.User.LogoutCommand;
+import me.Thomas.HCF.Commands.Donator.CraftCommand;
+import me.Thomas.HCF.Commands.Donator.BottleCommand;
+import me.Thomas.HCF.Commands.User.MessageCommand;
+import me.Thomas.HCF.Commands.User.ReplyCommand;
 import me.Thomas.HCF.Commands.Admin.SOTW.SOTWCommand;
 import me.Thomas.HCF.Commands.Admin.PvP.PvPCommand;
 import me.Thomas.HCF.Commands.Admin.Economy.EconomyCommand;
 import me.Thomas.HCF.Commands.User.Faction.FactionCommand;
 import me.Thomas.HCF.Events.Player.Connection.UserChatEvent;
+import me.Thomas.HCF.Events.Player.Connection.UserCommandEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserDamageEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserArcherEvent;
@@ -26,6 +31,7 @@ import me.Thomas.HCF.Events.Player.Connection.UserQuitEvent;
 import me.Thomas.HCF.Events.Player.Item.UserClaimEvent;
 import me.Thomas.HCF.Events.Player.Item.UserPearlEvent;
 import me.Thomas.HCF.Events.Player.Item.UserAppleEvent;
+import me.Thomas.HCF.Events.Player.Item.UserBottleEvent;
 import me.Thomas.HCF.Events.Player.Item.UserEnchantEvent;
 import me.Thomas.HCF.Events.Player.Item.UserBrewEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserInteractInFactionEvent;
@@ -40,8 +46,13 @@ import me.Thomas.HCF.IO.Database.DatabaseManager;
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.KOTH.KOTH;
+import me.Thomas.HCF.IO.Conquest.Conquest;
+import me.Thomas.HCF.Commands.Admin.Conquest.ConquestCommand;
+import me.Thomas.HCF.IO.Mountain.Mountain;
+import me.Thomas.HCF.Events.World.MountainEvent;
+import me.Thomas.HCF.Commands.Admin.Mountain.MountainCommand;
 import me.Thomas.HCF.Commands.Admin.KOTH.KOTHCommand;
-import me.Thomas.HCF.Events.Player.Movement.UserKOTHEvent;
+import me.Thomas.HCF.Events.Player.Movement.UserCaptureEvent;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Combat.DTR;
@@ -79,6 +90,8 @@ public class Main extends JavaPlugin {
     private final HashMap<UUID, Faction> factions = new HashMap<>();
     private final HashMap<String, Faction> factionNames = new HashMap<>();
     private final Map<UUID, KOTH> koths = new LinkedHashMap<>();
+    private Conquest conquest;
+    private final Map<UUID, Mountain> mountains = new LinkedHashMap<>();
     private boolean factionDebug = false;
 
     private final Map<UUID, Set<UUID>> userInvites = new HashMap<>();
@@ -117,6 +130,8 @@ public class Main extends JavaPlugin {
         loadInvites();
         loadClaims();
         loadKOTHs();
+        loadMountains();
+        loadConquest();
         dataLoaded = true;
         staffMode = new StaffMode();
         boardHandler = new BoardHandler();
@@ -129,6 +144,7 @@ public class Main extends JavaPlugin {
         Bukkit.getScheduler().runTaskTimer(this, this::updateDTR, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             for (KOTH koth : List.copyOf(koths.values())) koth.tick();
+            if (conquest != null) conquest.tick();
         }, 1L, 1L);
     }
 
@@ -156,9 +172,15 @@ public class Main extends JavaPlugin {
     private void commands() {
         // User
         Objects.requireNonNull(getCommand("logout")).setExecutor(new LogoutCommand());
+        Objects.requireNonNull(getCommand("message")).setExecutor(new MessageCommand());
+        Objects.requireNonNull(getCommand("reply")).setExecutor(new ReplyCommand());
         Objects.requireNonNull(getCommand("faction")).setExecutor(new FactionCommand());
         Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand());
         Objects.requireNonNull(getCommand("pay")).setExecutor(new PayCommand());
+
+        // Donator
+        Objects.requireNonNull(getCommand("craft")).setExecutor(new CraftCommand());
+        Objects.requireNonNull(getCommand("bottle")).setExecutor(new BottleCommand());
 
         // Admin
         Objects.requireNonNull(getCommand("pvp")).setExecutor(new PvPCommand());
@@ -166,6 +188,8 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("sotw")).setExecutor(new SOTWCommand());
         Objects.requireNonNull(getCommand("economy")).setExecutor(new EconomyCommand());
         Objects.requireNonNull(getCommand("koth")).setExecutor(new KOTHCommand());
+        Objects.requireNonNull(getCommand("conquest")).setExecutor(new ConquestCommand());
+        Objects.requireNonNull(getCommand("mountain")).setExecutor(new MountainCommand());
 
         // Staff
         Objects.requireNonNull(getCommand("staff")).setExecutor(new StaffCommand());
@@ -181,26 +205,59 @@ public class Main extends JavaPlugin {
         PluginManager pm = getServer().getPluginManager();
 
         pm.registerEvents(staffMode, this);
+        pm.registerEvents(new MountainEvent(), this);
 
         // User
         pm.registerEvents(new UserJoinEvent(), this);
         pm.registerEvents(new UserChatEvent(), this);
+        pm.registerEvents(new UserCommandEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
         pm.registerEvents(new UserArcherEvent(), this);
         pm.registerEvents(new UserCombatLogoutEvent(), this);
         pm.registerEvents(new UserDeathEvent(), this);
         pm.registerEvents(new UserPearlEvent(), this);
         pm.registerEvents(new UserAppleEvent(), this);
+        pm.registerEvents(new UserBottleEvent(), this);
         pm.registerEvents(new UserEnchantEvent(), this);
         pm.registerEvents(new UserBrewEvent(), this);
         pm.registerEvents(new UserQuitEvent(), this);
         pm.registerEvents(new UserClaimEvent(), this);
         pm.registerEvents(new UserBorderEvent(), this);
         pm.registerEvents(new UserMoveFactionEvent(), this);
-        pm.registerEvents(new UserKOTHEvent(), this);
+        pm.registerEvents(new UserCaptureEvent(), this);
         pm.registerEvents(new UserInteractInFactionEvent(), this);
         pm.registerEvents(new UserSubclaimEvent(), this);
     }
+
+    private void loadConquest() {
+        conquest = new Conquest();
+        try (Connection connection = databaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM conquestZones");
+             ResultSet zones = statement.executeQuery()) {
+            while (zones.next()) conquest.loadZone(zones);
+        } catch (SQLException | IllegalArgumentException exception) {
+            throw new IllegalStateException("Could not load Conquest", exception);
+        }
+    }
+
+    public Conquest getConquest() { return conquest; }
+
+    private void loadMountains() {
+        try (Connection connection = databaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM mountains");
+             ResultSet rows = statement.executeQuery()) {
+            while (rows.next()) {
+                Mountain mountain = new Mountain(rows);
+                mountains.put(mountain.getUUID(), mountain);
+            }
+        } catch (SQLException | IllegalArgumentException exception) {
+            throw new IllegalStateException("Could not load mountains", exception);
+        }
+    }
+
+    public Map<UUID, Mountain> getAllMountains() { return Collections.unmodifiableMap(mountains); }
+    public Mountain getMountain(UUID uuid) { return mountains.get(uuid); }
+    public void addMountain(Mountain mountain) { mountains.put(mountain.getUUID(), mountain); }
 
     private void loadKOTHs() {
         try (Connection connection = databaseManager.getConnection();
@@ -483,6 +540,11 @@ public class Main extends JavaPlugin {
             SaveSnapshot snapshot = koth.snapshot();
             if (snapshot != null) snapshots.add(snapshot);
         }
+        if (conquest != null) snapshots.addAll(conquest.snapshot());
+        for (Mountain mountain : mountains.values()) {
+            SaveSnapshot snapshot = mountain.snapshot();
+            if (snapshot != null) snapshots.add(snapshot);
+        }
         for (User user : users.values()) {
             SaveSnapshot snapshot = user.snapshot();
             if (snapshot != null) snapshots.add(snapshot);
@@ -589,6 +651,9 @@ public class Main extends JavaPlugin {
     }
 
     public void removeFaction(UUID uuid) {
+        if (conquest != null) conquest.removeFaction(uuid);
+        Mountain mountain = mountains.remove(uuid);
+        if (mountain != null) mountain.cancelRegeneration();
         for (KOTH koth : koths.values()) {
             if (!uuid.equals(koth.getFaction())) continue;
             koth.setFaction(null);

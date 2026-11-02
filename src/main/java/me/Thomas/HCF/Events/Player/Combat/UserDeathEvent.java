@@ -5,6 +5,7 @@ import me.Thomas.HCF.IO.Database.CombatLoggerStateStore;
 import me.Thomas.HCF.IO.Database.CombatLoggerStateStore.State;
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import me.Thomas.HCF.IO.Faction.Faction;
+import me.Thomas.HCF.IO.Conquest.Conquest;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Deathban.Deathban;
@@ -36,6 +37,9 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
@@ -179,24 +183,37 @@ public class UserDeathEvent implements Listener {
     private void recordDeathStatistics(EntityDeathEvent e, User victim) {
         victim.setPvpProtectionPending(true);
         victim.setDeaths(victim.getDeaths() + 1);
+        Conquest conquest = Conquest.get();
+        if (conquest != null) conquest.onDeath(victim);
         Player killer = resolvePlayerAttacker(getAttackingEntity(e));
         // Preserve vanilla kill attribution for deaths following earlier player damage (such as a fall).
         if (killer == null) killer = e.getEntity().getKiller();
         List<SaveSnapshot> snapshots = new ArrayList<>();
-        SaveSnapshot victimSnapshot = victim.snapshot();
-        if (victimSnapshot != null) snapshots.add(victimSnapshot);
+        Set<Faction> changedFactions = new LinkedHashSet<>();
         if (killer != null && !killer.getUniqueId().equals(victim.getUUID())) {
             User killerUser = User.get(killer);
             killerUser.setKills(killerUser.getKills() + 1);
+            transferKillBalance(victim, killerUser);
             SaveSnapshot killerSnapshot = killerUser.snapshot();
             if (killerSnapshot != null) snapshots.add(killerSnapshot);
+            Faction faction = killerUser.hasFaction() ? Faction.get(killerUser.getFaction()) : null;
+            if (faction != null && faction.getType() == Faction.Type.PLAYER && faction.hasMember(killerUser.getUUID())) {
+                faction.addPoints(Math.max(0, Main.getInstance().getConfig().getInt("factions.points.kill", 5)));
+                changedFactions.add(faction);
+            }
         }
+        SaveSnapshot victimSnapshot = victim.snapshot();
+        if (victimSnapshot != null) snapshots.add(victimSnapshot);
         if (victim.hasFaction()) {
             Faction faction = Faction.get(victim.getFaction());
             if (faction != null && faction.getType() == Faction.Type.PLAYER && faction.hasMember(victim.getUUID())) {
+                boolean raidable = faction.isRaidable();
                 DTR.onDeath(faction, System.currentTimeMillis());
-                SaveSnapshot factionSnapshot = faction.snapshot();
-                if (factionSnapshot != null) snapshots.add(factionSnapshot);
+                boolean becameRaidable = !raidable && faction.isRaidable();
+                int penalty = Math.max(0, Main.getInstance().getConfig().getInt(
+                        "factions.points." + (becameRaidable ? "raidable" : "death"), becameRaidable ? 15 : 5));
+                faction.addPoints(-penalty);
+                changedFactions.add(faction);
                 String dtr = C.getFormattedDTR(faction);
                 for (String line : Main.getInstance().getMessagesConfig().getStringList("factions.member.death")) {
                     Component message = C.chat(line.replace("%player%", victim.getName()).replace("%dtr%", dtr));
@@ -207,8 +224,31 @@ public class UserDeathEvent implements Listener {
                 }
             }
         }
-        // Keep deaths, kills, and the faction's DTR/freeze update in the same database transaction.
+        for (Faction faction : changedFactions) {
+            SaveSnapshot snapshot = faction.snapshot();
+            if (snapshot != null) snapshots.add(snapshot);
+        }
+        // Save statistics, transferred money, faction points, and DTR together.
         Main.getInstance().getDatabaseManager().save(snapshots);
+    }
+
+    private void transferKillBalance(User victim, User killer) {
+        double percentage = Main.getInstance().getConfig().getDouble("economy.kill-balance-percentage", 25.0);
+        if (!Double.isFinite(percentage) || !Double.isFinite(victim.getBalance()) || !Double.isFinite(killer.getBalance())
+                || victim.getBalance() <= 0 || killer.getBalance() < 0) return;
+        BigDecimal balance = BigDecimal.valueOf(victim.getBalance());
+        BigDecimal amount = balance.multiply(BigDecimal.valueOf(Math.clamp(percentage, 0.0, 100.0)))
+                .movePointLeft(2).setScale(2, RoundingMode.DOWN);
+        if (amount.signum() == 0) return;
+        BigDecimal remaining = balance.subtract(amount);
+        BigDecimal received = BigDecimal.valueOf(killer.getBalance()).add(amount);
+        double newBalance = remaining.doubleValue();
+        double newKillerBalance = received.doubleValue();
+        if (!Double.isFinite(newBalance) || !Double.isFinite(newKillerBalance)
+                || BigDecimal.valueOf(newBalance).compareTo(remaining) != 0
+                || BigDecimal.valueOf(newKillerBalance).compareTo(received) != 0) return;
+        victim.setBalance(newBalance);
+        killer.setBalance(newKillerBalance);
     }
 
     private Player resolvePlayerAttacker(Entity entity) {

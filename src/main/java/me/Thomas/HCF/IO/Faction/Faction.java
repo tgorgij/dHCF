@@ -33,6 +33,8 @@ public class Faction {
         PLAYER,
         SAFEZONE,
         KOTH,
+        CONQUEST,
+        MOUNTAIN,
         ROAD
     }
 
@@ -611,6 +613,10 @@ public class Faction {
         return points;
     }
 
+    public void addPoints(int points) {
+        setPoints(Math.clamp((long) this.points + points, Integer.MIN_VALUE, Integer.MAX_VALUE));
+    }
+
     public void setPoints(int points) {
         if (this.points == points) return;
         this.points = points;
@@ -792,6 +798,8 @@ public class Faction {
                 }
             }
             case KOTH -> name = C.getColorCode(this.color) + this.name + " KOTH";
+            case CONQUEST -> name = C.getColorCode(this.color) + this.name + (this.name.equalsIgnoreCase("Conquest") ? "" : " Conquest");
+            case MOUNTAIN -> name = C.getColorCode(this.color) + this.name + " Mountain";
             case ROAD -> name = C.getColorCode(this.color) + this.name + " Road";
             default -> name = C.getColorCode(this.color) + this.name;
         }

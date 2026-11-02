@@ -3,6 +3,7 @@
 - hcf.*
 - hcf.admin
 - hcf.staff
+- hcf.donator
 
 2. Faction commands
 - hcf.command.faction.createsystem
@@ -64,3 +65,13 @@
 - hcf.freeze.bypass
 - hcf.vanish.see
 - worldedit.wand
+
+12. Mountains
+- hcf.command.mountain
+
+13. Donator commands
+- hcf.command.craft
+- hcf.command.bottle
+
+14. Conquest
+- hcf.command.conquest

@@ -30,6 +30,7 @@ public class User {
     private int lives;
     private long deathbanExpiry;
     private boolean pvpProtectionPending;
+    private boolean mountainMessages = true;
     private byte[] lastInventory;
     private Integer lastExperience;
 
@@ -37,6 +38,7 @@ public class User {
     private volatile long savedRevision;
     private Claiming claiming;
     private UUID lastEnteredFaction;
+    private UUID lastConversation;
     private boolean bypass;
     private ArrayList<Claim> map;
 
@@ -126,6 +128,7 @@ public class User {
 
         this.deathbanExpiry = resultSet.getLong("deathbanExpiry");
         this.pvpProtectionPending = resultSet.getBoolean("pvpProtectionPending");
+        this.mountainMessages = resultSet.getBoolean("mountainMessages");
         this.lastInventory = resultSet.getBytes("lastInventory");
         int experience = resultSet.getInt("lastExperience");
         this.lastExperience = resultSet.wasNull() ? null : experience;
@@ -148,6 +151,7 @@ public class User {
         this.timers = new EnumMap<>(Timer.Type.class);
         this.deathbanExpiry = 0;
         this.pvpProtectionPending = false;
+        this.mountainMessages = true;
         this.lastInventory = null;
         this.lastExperience = null;
         this.revision++;
@@ -156,6 +160,18 @@ public class User {
         this.bypass = false;
         this.map = new ArrayList<>();
 
+    }
+
+    public UUID getLastConversation() { return lastConversation; }
+
+    public void setLastConversation(UUID uuid) { lastConversation = uuid; }
+
+    public boolean isMountainMessages() { return mountainMessages; }
+
+    public void setMountainMessages(boolean enabled) {
+        if (mountainMessages == enabled) return;
+        mountainMessages = enabled;
+        revision++;
     }
 
     public void save() {
@@ -169,18 +185,18 @@ public class User {
         String sql =
                 "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
-                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
                         + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
                         + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry, "
                         + "pvpProtectionPending=excluded.pvpProtectionPending, "
-                        + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience";
+                        + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience, mountainMessages=excluded.mountainMessages";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), name, faction == null ? null : faction.toString(),
                 balance, kills, deaths, lives, serializeTimers(), deathbanExpiry, pvpProtectionPending ? 1 : 0,
-                getLastInventory(), lastExperience);
+                getLastInventory(), lastExperience, mountainMessages ? 1 : 0);
     }
 
     public byte[] getLastInventory() {

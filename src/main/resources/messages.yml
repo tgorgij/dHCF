@@ -1,4 +1,18 @@
 help:
+  conquest:
+    - "&e/%alias% start"
+    - "&e/%alias% cancel"
+    - "&e/%alias% setinterval <red|yellow|green|blue> <seconds>"
+    - "&e/%alias% setpos1 <zone>"
+    - "&e/%alias% setpos2 <zone>"
+  mountain:
+    - "&e/%alias% <name> create"
+    - "&e/%alias% <name> delete &7- Deletes the mountain faction and claims."
+    - "&e/%alias% <name> reset"
+    - "&e/%alias% <name> setinterval <minutes>"
+    - "&e/%alias% <name> setblock <material>"
+    - "&e/%alias% <name> setpos1"
+    - "&e/%alias% <name> setpos2"
   koth:
     - "&6[KOTH] /%alias% %koth% create"
     - "&6[KOTH] /%alias% %koth% delete"

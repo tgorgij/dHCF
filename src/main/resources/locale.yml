@@ -26,6 +26,13 @@ primary:
     hq: "&eWarped to &d%faction%&e's HQ."
 
 events:
+  conquest:
+    started: "&6[Conquest] %conquest% has started."
+    cancelled: "&6[Conquest] %conquest% has been cancelled."
+    captured: "&6[Conquest] &b%faction% &6has captured %conquest% with %points% points."
+    pearl-blocked: "&6[Conquest] Enderpearls are disabled in Conquest territory."
+  mountain:
+    regenerated: "&6[Mountain] %mountain% Mountain has regenerated."
   koth:
     started: "&6[KOTH] %koth% has started with %time% to capture."
     capturing: "&6[KOTH] &b%player% &6is capturing %koth%."
@@ -147,6 +154,73 @@ faction:
     offline: "&4%player% &cis offline"
 
 commands:
+  conquest:
+    failed: "&cThe Conquest command could not be completed."
+    running: "&cConquest is already running."
+    not-running: "&cConquest is not running."
+    no-area: "&cSet both positions of all four zones in a loaded world before starting Conquest."
+    invalid-zone: "&cChoose RED, YELLOW, GREEN, or BLUE."
+    invalid-interval: "&cThe interval must be a positive whole number of seconds."
+    different-world: "&cAll Conquest zones must be in the same world."
+    invalid-height: "&cConquest positions must be inside the world's build height."
+    overlapping-zones: "&cConquest capture zones cannot overlap."
+    cancel-before-edit: "&cCancel Conquest before editing its zones or intervals."
+    interval-set: "&e%zone% now awards capture points every %time% seconds."
+    position-set: "&eSet position %position% for the %zone% zone."
+    start-usage: "&cUsage: /%alias% start"
+    cancel-usage: "&cUsage: /%alias% cancel"
+    setinterval-usage: "&cUsage: /%alias% setinterval <zone> <seconds>"
+    setpos1-usage: "&cUsage: /%alias% setpos1 <zone>"
+    setpos2-usage: "&cUsage: /%alias% setpos2 <zone>"
+  bottle:
+    usage: "&cUsage: /%alias%"
+    unavailable: "&cYou cannot bottle experience while dead or in mod mode."
+    no-experience: "&cYou have no experience to bottle."
+    no-space: "&cYou need inventory space for the experience bottle."
+    failed: "&cYour experience could not be bottled."
+    success: "&eBottled &b%experience% &eexperience."
+    redeemed: "&eRecovered &b%experience% &eexperience."
+    too-much-experience: "&cYou have too much experience. Your bottle has been returned."
+    item-name: "&bExperience Bottle"
+    item-lore:
+      - "&eContains &b%experience% &eexperience."
+      - "&7Throw to recover the stored experience."
+  craft:
+    usage: "&cUsage: /%alias%"
+  message:
+    usage: "&cUsage: /%alias% <player> <message>"
+    self: "&cYou cannot message yourself."
+    sent: "&7(To &b%player%&7) &f%message%"
+    received: "&7(From &b%player%&7) &f%message%"
+  reply:
+    usage: "&cUsage: /%alias% <message>"
+    no-conversation: "&cYou have no conversation to reply to."
+  mountain:
+    no-area: "&cSet both regeneration positions first."
+    world-unavailable: "&cThe mountain's world is not loaded."
+    reset: "&eStarted regeneration of %mountain% Mountain."
+    reset-usage: "&cUsage: /%alias% %mountain% reset"
+    not-found: "&cMountain %mountain% does not exist."
+    already-exists: "&cThat mountain already exists."
+    faction-exists: "&cThat name belongs to a faction which is not a Mountain."
+    failed: "&cThe mountain could not be updated."
+    different-world: "&cBoth mountain positions must be in the same world."
+    invalid-height: "&cThe mountain must be within the world's build height."
+    outside-claim: "&cSelect a cuboid entirely inside this Mountain faction's claims. Claim its territory with /f claimfor first."
+    too-large: "&cThat mountain exceeds the configured maximum volume."
+    invalid-interval: "&cThe regeneration interval must be a positive whole number of minutes."
+    invalid-block: "&cChoose a valid non-air block material."
+    created: "&eCreated %mountain% Mountain. Claim its territory with /f claimfor, then set both regeneration positions."
+    deleted: "&eDeleted %mountain% Mountain and its faction."
+    interval-set: "&e%mountain% Mountain now regenerates every %interval% minutes."
+    block-set: "&e%mountain% Mountain will regenerate %block%."
+    position-set: "&eSet position %position% for %mountain% Mountain."
+    create-usage: "&cUsage: /%alias% %mountain% create"
+    delete-usage: "&cUsage: /%alias% %mountain% delete"
+    setinterval-usage: "&cUsage: /%alias% %mountain% setinterval <minutes>"
+    setblock-usage: "&cUsage: /%alias% %mountain% setblock <material>"
+    setpos1-usage: "&cUsage: /%alias% %mountain% setpos1"
+    setpos2-usage: "&cUsage: /%alias% %mountain% setpos2"
   staff:
     enabled: "&eMod mode enabled."
     disabled: "&eMod mode disabled."

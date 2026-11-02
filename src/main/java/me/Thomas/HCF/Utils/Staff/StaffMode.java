@@ -281,7 +281,7 @@ public class StaffMode implements Listener {
     }
 
     private ItemStack tool(String name, Material fallback, String player) {
-        String path = "staff.items." + name;
+        String path = (name.equals("player") || name.equals("previous") || name.equals("next") ? "staff.online.items." : "staff.items.") + name;
         Material configured = Material.matchMaterial(Main.getInstance().getGuiConfig().getString(path + ".material", fallback.name()));
         ItemStack item = new ItemStack(configured == null || configured.isAir() || !configured.isItem() ? fallback : configured);
         ItemMeta meta = item.getItemMeta();
@@ -313,8 +313,9 @@ public class StaffMode implements Listener {
     public void inspect(Player viewer, Player target) {
         if (isEnabled(target)) { message(viewer, "target-in-mode"); return; }
         Menu menu = new Menu(target.getUniqueId(), 0);
-        menu.inventory = Bukkit.createInventory(menu, 54, C.chat(Main.getInstance().getGuiConfig()
-                .getString("staff.inventory-title", "&eInventory: %player%").replace("%player%", target.getName())));
+        int rows = Math.clamp(Main.getInstance().getGuiConfig().getInt("staff.inventory.rows", 6), 5, 6);
+        menu.inventory = Bukkit.createInventory(menu, rows * 9, C.chat(Main.getInstance().getGuiConfig()
+                .getString("staff.inventory.title", "&eInventory: %player%").replace("%player%", target.getName())));
         copyInventory(menu, target);
         viewer.openInventory(menu.inventory);
     }
@@ -339,22 +340,24 @@ public class StaffMode implements Listener {
     private void staffMenu(Player p, int requestedPage) {
         List<? extends Player> staff = Bukkit.getOnlinePlayers().stream().filter(this::isStaff)
                 .filter(p::canSee).sorted(Comparator.comparing(Player::getName, String.CASE_INSENSITIVE_ORDER)).toList();
-        int page = Math.clamp(requestedPage, 0, Math.max(0, (staff.size() - 1) / 45));
+        int rows = Math.clamp(Main.getInstance().getGuiConfig().getInt("staff.online.rows", 6), 2, 6);
+        int capacity = (rows - 1) * 9;
+        int page = Math.clamp(requestedPage, 0, Math.max(0, (staff.size() - 1) / capacity));
         Menu menu = new Menu(null, page);
-        menu.inventory = Bukkit.createInventory(menu, 54, C.chat(Main.getInstance().getGuiConfig()
-                .getString("staff.staff-title", "&eOnline Staff")));
-        for (int i = page * 45; i < Math.min(staff.size(), (page + 1) * 45); i++) {
+        menu.inventory = Bukkit.createInventory(menu, rows * 9, C.chat(Main.getInstance().getGuiConfig()
+                .getString("staff.online.title", "&eOnline Staff")));
+        for (int i = page * capacity; i < Math.min(staff.size(), (page + 1) * capacity); i++) {
             Player target = staff.get(i);
             ItemStack head = tool("player", Material.PLAYER_HEAD, target.getName());
             if (head.getItemMeta() instanceof SkullMeta meta) {
                 meta.setOwningPlayer(target);
                 head.setItemMeta(meta);
             }
-            menu.inventory.setItem(i % 45, head);
-            menu.players.put(i % 45, target.getUniqueId());
+            menu.inventory.setItem(i % capacity, head);
+            menu.players.put(i % capacity, target.getUniqueId());
         }
-        if (page > 0) menu.inventory.setItem(45, tool("previous", Material.ARROW));
-        if ((page + 1) * 45 < staff.size()) menu.inventory.setItem(53, tool("next", Material.ARROW));
+        if (page > 0) menu.inventory.setItem(capacity, tool("previous", Material.ARROW));
+        if ((page + 1) * capacity < staff.size()) menu.inventory.setItem(menu.inventory.getSize() - 1, tool("next", Material.ARROW));
         p.openInventory(menu.inventory);
     }
 
@@ -415,8 +418,8 @@ public class StaffMode implements Listener {
                 int slot = e.getRawSlot();
                 Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
                     if (!p.isOnline() || !isEnabled(p) || p.getOpenInventory().getTopInventory() != menu.inventory) return;
-                    if (slot == 45 && menu.page > 0) staffMenu(p, menu.page - 1);
-                    else if (slot == 53 && menu.inventory.getItem(53) != null) staffMenu(p, menu.page + 1);
+                    if (slot == menu.inventory.getSize() - 9 && menu.page > 0) staffMenu(p, menu.page - 1);
+                    else if (slot == menu.inventory.getSize() - 1 && menu.inventory.getItem(menu.inventory.getSize() - 1) != null) staffMenu(p, menu.page + 1);
                     else {
                         Player target = menu.players.containsKey(slot) ? Bukkit.getPlayer(menu.players.get(slot)) : null;
                         if (target != null && target.isOnline() && isStaff(target) && p.canSee(target)) {

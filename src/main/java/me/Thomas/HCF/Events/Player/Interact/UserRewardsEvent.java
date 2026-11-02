@@ -67,16 +67,19 @@ public class UserRewardsEvent implements Listener {
         Menu menu = new Menu(p, treeId);
         FileConfiguration gui = Main.getInstance().getGuiConfig();
         String treeName = treeId == null ? "" : gui.getString("rewards.trees." + treeId + ".label", treeId);
-        String title = gui.getString(treeId == null ? "rewards.title" : "rewards.tree-title")
+        String title = gui.getString(treeId == null ? "rewards.main.title" : "rewards.trees." + treeId + ".title", treeId == null ? "&eRewards" : "&e%tree% Tech Tree")
                 .replace("%faction%", TechTree.faction(p).getName()).replace("%tree%", treeName);
-        menu.inventory = Bukkit.createInventory(menu, treeId == null ? 27 : 54, C.chat(title));
+        int rows = Math.clamp(gui.getInt(treeId == null ? "rewards.main.rows" : "rewards.trees." + treeId + ".rows", treeId == null ? 3 : 5), treeId == null ? 1 : 3, 6);
+        menu.inventory = Bukkit.createInventory(menu, rows * 9, C.chat(title));
         render(menu, TechTree.faction(p));
         p.openInventory(menu.inventory);
     }
 
-    private static int treeSlot(int index, int count) {
-        return count <= 4 ? 14 - count + index * 2 : 9 + index;
+    private static int treeSlot(int index, int count, int size) {
+        return size / 18 * 9 + (count <= 4 ? 5 - count + index * 2 : index);
     }
+
+    private static int nodeStart(int size) { return Math.max(1, (size / 9 - 1) / 2) * 9 + 1; }
 
     private static void navigate(Player p, Menu menu, String treeId) {
         Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
@@ -94,7 +97,7 @@ public class UserRewardsEvent implements Listener {
     }
 
     public static String label(TechTree.Tree tree, TechTree.Node node) {
-        return Main.getInstance().getGuiConfig().getString("rewards.nodes." + tree.id() + "." + node.id() + ".label", node.id());
+        return Main.getInstance().getGuiConfig().getString("rewards.trees." + tree.id() + ".items.nodes." + node.id() + ".label", node.id());
     }
 
     private static ItemStack item(String path, String fallbackPath, Material fallback, Map<String, String> replacements) {
@@ -120,42 +123,40 @@ public class UserRewardsEvent implements Listener {
         FileConfiguration gui = Main.getInstance().getGuiConfig();
         TechTree tech = TechTree.get();
         menu.inventory.clear();
-        ItemStack background = item("rewards.background", "rewards.background", Material.GRAY_STAINED_GLASS_PANE, Map.of());
+        String path = menu.tree == null ? "rewards.main.items" : "rewards.trees." + menu.tree + ".items";
+        ItemStack background = item(path + ".background", "rewards.main.items.background", Material.GRAY_STAINED_GLASS_PANE, Map.of());
         for (int slot = 0; slot < menu.inventory.getSize(); slot++) menu.inventory.setItem(slot, background);
-        Map<String, String> progress = Map.of("%points%", Integer.toString(faction.getPoints()), "%kills%", Integer.toString(faction.getKills()),
-                "%captures%", Integer.toString(faction.getKOTHCaptures()));
         if (menu.tree == null) {
             List<TechTree.Tree> trees = tech.getTrees();
             for (int i = 0; i < trees.size(); i++) {
                 TechTree.Tree choice = trees.get(i);
-                menu.inventory.setItem(treeSlot(i, trees.size()), item("rewards.trees." + choice.id(), "rewards.tree", Material.BOOK,
+                menu.inventory.setItem(treeSlot(i, trees.size(), menu.inventory.getSize()), item("rewards.main.items." + choice.id(), "rewards.main.items.tree", Material.BOOK,
                         Map.of("%tree%", choice.id(), "%state%", "")));
             }
-            menu.inventory.setItem(22, item("rewards.summary", "rewards.summary", Material.NETHER_STAR, progress));
             return;
         }
         TechTree.Tree tree = tech.getTree(menu.tree);
         if (tree == null) return;
         menu.offset = Math.clamp(menu.offset, 0, Math.max(0, tree.nodes().size() - VISIBLE));
-        menu.inventory.setItem(4, item("rewards.trees." + tree.id(), "rewards.tree", Material.BOOK, Map.of("%tree%", tree.id(), "%state%", "")));
+        ItemStack header = item(path + ".header", "rewards.main.items." + tree.id(), Material.BOOK, Map.of("%tree%", tree.id(), "%state%", ""));
+        menu.inventory.setItem(4, header);
         for (int column = 0; column < VISIBLE && menu.offset + column < tree.nodes().size(); column++) {
             TechTree.Node node = tree.nodes().get(menu.offset + column);
             boolean unlocked = tech.isUnlocked(faction, tree, node);
             String state = unlocked ? "unlocked" : tech.prerequisites(faction, tree, node)
                     && tech.progress(faction, node) >= node.amount() ? "available" : "locked";
             String requirement = gui.getString("rewards.requirements." + node.requirement().name().toLowerCase(java.util.Locale.ROOT));
-            ItemStack reward = item("rewards.nodes." + tree.id() + "." + node.id(), "rewards.node", Material.PAPER,
+            ItemStack reward = item("rewards.trees." + tree.id() + ".items.nodes." + node.id(), path + ".node", Material.PAPER,
                     Map.of("%node%", label(tree, node), "%state%", gui.getString("rewards.states." + state),
                             "%requirement%", requirement, "%amount%", Integer.toString(node.amount()), "%progress%", Integer.toString(tech.progress(faction, node))));
             ItemMeta meta = reward.getItemMeta();
             meta.setEnchantmentGlintOverride(unlocked);
             reward.setItemMeta(meta);
-            menu.inventory.setItem(19 + column, reward);
+            menu.inventory.setItem(nodeStart(menu.inventory.getSize()) + column, reward);
         }
-        if (menu.offset > 0) menu.inventory.setItem(45, item("rewards.previous", "rewards.previous", Material.ARROW, Map.of()));
-        if (menu.offset < Math.max(0, tree.nodes().size() - VISIBLE)) menu.inventory.setItem(53, item("rewards.next", "rewards.next", Material.ARROW, Map.of()));
-        menu.inventory.setItem(40, item("rewards.summary", "rewards.summary", Material.NETHER_STAR, progress));
-        menu.inventory.setItem(49, item("rewards.back", "rewards.back", Material.ARROW, Map.of()));
+        if (menu.offset > 0) menu.inventory.setItem(menu.inventory.getSize() - 9, item(path + ".previous", path + ".previous", Material.ARROW, Map.of()));
+        if (menu.offset < Math.max(0, tree.nodes().size() - VISIBLE)) menu.inventory.setItem(menu.inventory.getSize() - 1, item(path + ".next", path + ".next", Material.ARROW, Map.of()));
+        menu.inventory.setItem(menu.inventory.getSize() - 5, item(path + ".back", path + ".back", Material.ARROW, Map.of()));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -176,22 +177,22 @@ public class UserRewardsEvent implements Listener {
         if (menu.tree == null) {
             List<TechTree.Tree> trees = tech.getTrees();
             for (int i = 0; i < trees.size(); i++) {
-                if (slot == treeSlot(i, trees.size())) { navigate(p, menu, trees.get(i).id()); return; }
+                if (slot == treeSlot(i, trees.size(), menu.inventory.getSize())) { navigate(p, menu, trees.get(i).id()); return; }
             }
             return;
         }
-        if (slot == 49) { navigate(p, menu, null); return; }
-        if (slot == 45) {
+        if (slot == menu.inventory.getSize() - 5) { navigate(p, menu, null); return; }
+        if (slot == menu.inventory.getSize() - 9) {
             if (menu.offset == 0) return;
             menu.offset--;
-        } else if (slot == 53) {
+        } else if (slot == menu.inventory.getSize() - 1) {
             int maximum = Math.max(0, tech.getTree(menu.tree).nodes().size() - VISIBLE);
             if (menu.offset >= maximum) return;
             menu.offset++;
         }
-        else if (slot >= 19 && slot <= 25) {
+        else if (slot >= nodeStart(menu.inventory.getSize()) && slot < nodeStart(menu.inventory.getSize()) + VISIBLE) {
             TechTree.Tree tree = tech.getTree(menu.tree);
-            int index = menu.offset + slot - 19;
+            int index = menu.offset + slot - nodeStart(menu.inventory.getSize());
             if (index >= tree.nodes().size()) return;
             TechTree.Node node = tree.nodes().get(index);
             try {

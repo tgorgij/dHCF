@@ -7,7 +7,7 @@ api-version: 26.2
 commands:
   rewards:
     description: Open your faction tech tree.
-    usage: /rewards
+    usage: /rewards [<faction> list]
   schedule:
     description: Manage daily event schedules.
     usage: /schedule <add|list|remove>
@@ -102,6 +102,30 @@ commands:
     aliases:
       - eco
 permissions:
+  hcf.command.rewards.list:
+    default: op
+  hcf.command.faction.setkothcaptures:
+    default: op
+  hcf.command.faction.setpoints:
+    default: op
+  hcf.command.faction.setkills:
+    default: op
+  hcf.command.faction.forcejoin:
+    default: op
+  hcf.command.faction.forcepromote:
+    default: op
+  hcf.command.faction.forcedemote:
+    default: op
+  hcf.command.faction.forcetransfer:
+    default: op
+  hcf.command.faction.forcekick:
+    default: op
+  hcf.command.faction.forceinvite:
+    default: op
+  hcf.command.faction.setlives:
+    default: op
+  hcf.command.faction.forcerename:
+    default: op
   hcf.command.schedule:
     default: op
   hcf.request.receive:

@@ -576,6 +576,12 @@ public class Main extends JavaPlugin {
     private void loadMessages() {
         java.io.File messagesFile = new java.io.File(getDataFolder(), "messages.yml");
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+        try (java.io.InputStream resource = Objects.requireNonNull(getResource("messages.yml"));
+             java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
+            messagesConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not load message defaults", exception);
+        }
     }
 
     private void updateDTR() {

@@ -66,6 +66,17 @@ public class FactionCommand implements TabExecutor {
         register(new ClaimforCommand());
         register(new SetDeathbanCommand());
         register(new SetDTRCommand());
+        register(new SetKOTHCapturesCommand());
+        register(new SetPointsCommand());
+        register(new SetKillsCommand());
+        register(new ForceJoinCommand());
+        register(new ForcePromoteCommand());
+        register(new ForceDemoteCommand());
+        register(new ForceTransferCommand());
+        register(new ForceKickCommand());
+        register(new ForceInviteCommand());
+        register(new SetLivesCommand());
+        register(new ForceRenameCommand());
         register(new SetRegenCommand());
         register(new BypassCommand());
         register(new ClaimCommand());

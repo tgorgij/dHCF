@@ -100,8 +100,17 @@ staff:
       lore: []
 
 rewards:
-  title: "&e%faction% Tech Tree"
-  selected: "&aSelected"
+  title: "&e%faction% Rewards"
+  tree-title: "&e%tree% Tech Tree"
+  background:
+    material: GRAY_STAINED_GLASS_PANE
+    name: " "
+    lore: []
+  back:
+    material: ARROW
+    name: "&eBack"
+    lore:
+      - "&7Return to rewards."
   states:
     unlocked: "&aUnlocked"
     available: "&eAvailable"
@@ -112,19 +121,22 @@ rewards:
     points: "Faction Points"
   tree:
     material: BOOK
-    name: "&e%tree% %state%"
+    name: "&e%tree%"
     lore:
       - "&7Click to view this tree."
   trees:
     potions:
+      label: "Potion"
       material: BREWING_STAND
-      name: "&dPotions %state%"
+      name: "&dPotions"
     enchantments:
-      material: ENCHANTED_BOOK
-      name: "&bEnchantments %state%"
+      label: "Enchantment"
+      material: BOOK
+      name: "&bEnchantments"
     commands:
+      label: "Command"
       material: COMMAND_BLOCK
-      name: "&6Commands %state%"
+      name: "&6Commands"
   node:
     material: PAPER
     name: "&e%node% &7- %state%"
@@ -140,14 +152,6 @@ rewards:
     material: ARROW
     name: "&eScroll Right"
     lore: []
-  start:
-    material: GRAY_DYE
-    name: "&7Start of Tree"
-    lore: []
-  end:
-    material: GRAY_DYE
-    name: "&7End of Tree"
-    lore: []
   summary:
     material: NETHER_STAR
     name: "&eFaction Progress"
@@ -158,26 +162,14 @@ rewards:
       - "&7Point purchases require leader or co-leader."
   nodes:
     potions:
-      swiftness:
-        label: "Speed Potions"
-        material: POTION
-      fire_resistance:
-        label: "Fire Resistance Potions"
-        material: POTION
       regeneration:
         label: "Regeneration Potions"
         material: POTION
       strength:
         label: "Strength Potions"
         material: POTION
-      healing:
-        label: "Healing Potions"
-        material: POTION
       harming:
         label: "Harming Potions"
-        material: POTION
-      poison:
-        label: "Poison Potions"
         material: POTION
       slow_falling:
         label: "Slow Falling Potions"
@@ -185,40 +177,52 @@ rewards:
       night_vision:
         label: "Night Vision Potions"
         material: POTION
-      invisibility:
-        label: "Invisibility Potions"
+      water_breathing:
+        label: "Water Breathing Potions"
+        material: POTION
+      weakness:
+        label: "Weakness Potions"
+        material: POTION
+      leaping:
+        label: "Leaping Potions"
+        material: POTION
+      turtle_master:
+        label: "Turtle Master Potions"
+        material: POTION
+      wind_charged:
+        label: "Wind Charged Potions"
         material: POTION
     enchantments:
       fire_protection:
         label: "Fire Protection"
-        material: ENCHANTED_BOOK
-      feather_falling:
-        label: "Feather Falling"
-        material: ENCHANTED_BOOK
+        material: BOOK
+      fire_aspect:
+        label: "Fire Aspect"
+        material: BOOK
       blast_protection:
         label: "Blast Protection"
-        material: ENCHANTED_BOOK
+        material: BOOK
       projectile_protection:
         label: "Projectile Protection"
-        material: ENCHANTED_BOOK
+        material: BOOK
       respiration:
         label: "Respiration"
-        material: ENCHANTED_BOOK
+        material: BOOK
       aqua_affinity:
         label: "Aqua Affinity"
-        material: ENCHANTED_BOOK
+        material: BOOK
       thorns:
         label: "Thorns"
-        material: ENCHANTED_BOOK
+        material: BOOK
       depth_strider:
         label: "Depth Strider"
-        material: ENCHANTED_BOOK
-      looting:
-        label: "Looting"
-        material: ENCHANTED_BOOK
-      fortune:
-        label: "Fortune"
-        material: ENCHANTED_BOOK
+        material: BOOK
+      knockback:
+        label: "Knockback"
+        material: BOOK
+      punch:
+        label: "Punch"
+        material: BOOK
     commands:
       craft:
         label: "/craft"

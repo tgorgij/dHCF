@@ -36,7 +36,7 @@ public class UserRewardsEvent implements Listener {
     private static class Menu implements InventoryHolder {
         private final UUID owner;
         private final UUID faction;
-        private String tree;
+        private final String tree;
         private int offset;
         private Inventory inventory;
         private Menu(Player p, String tree) { this.owner = p.getUniqueId(); this.faction = TechTree.faction(p).getUUID(); this.tree = tree; }
@@ -60,14 +60,31 @@ public class UserRewardsEvent implements Listener {
         p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.rewards." + key)));
     }
 
-    public static void open(Player p) {
-        List<TechTree.Tree> trees = TechTree.get().getTrees();
-        if (trees.isEmpty()) { message(p, "unavailable"); return; }
-        Menu menu = new Menu(p, trees.getFirst().id());
-        menu.inventory = Bukkit.createInventory(menu, 54, C.chat(Main.getInstance().getGuiConfig().getString("rewards.title")
-                .replace("%faction%", TechTree.faction(p).getName())));
+    public static void open(Player p) { open(p, null); }
+
+    private static void open(Player p, String treeId) {
+        if (TechTree.get().getTrees().isEmpty()) { message(p, "unavailable"); return; }
+        Menu menu = new Menu(p, treeId);
+        FileConfiguration gui = Main.getInstance().getGuiConfig();
+        String treeName = treeId == null ? "" : gui.getString("rewards.trees." + treeId + ".label", treeId);
+        String title = gui.getString(treeId == null ? "rewards.title" : "rewards.tree-title")
+                .replace("%faction%", TechTree.faction(p).getName()).replace("%tree%", treeName);
+        menu.inventory = Bukkit.createInventory(menu, treeId == null ? 27 : 54, C.chat(title));
         render(menu, TechTree.faction(p));
         p.openInventory(menu.inventory);
+    }
+
+    private static int treeSlot(int index, int count) {
+        return count <= 4 ? 14 - count + index * 2 : 9 + index;
+    }
+
+    private static void navigate(Player p, Menu menu, String treeId) {
+        Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+            if (!p.isOnline() || p.getOpenInventory().getTopInventory() != menu.inventory) return;
+            String denied = validate(p, menu);
+            if (denied != null) { p.closeInventory(); message(p, denied); return; }
+            open(p, treeId);
+        });
     }
 
     private static String validate(Player p, Menu menu) {
@@ -76,7 +93,7 @@ public class UserRewardsEvent implements Listener {
         return menu.owner.equals(p.getUniqueId()) && menu.faction.equals(TechTree.faction(p).getUUID()) ? null : "no-faction";
     }
 
-    private static String label(TechTree.Tree tree, TechTree.Node node) {
+    public static String label(TechTree.Tree tree, TechTree.Node node) {
         return Main.getInstance().getGuiConfig().getString("rewards.nodes." + tree.id() + "." + node.id() + ".label", node.id());
     }
 
@@ -102,29 +119,43 @@ public class UserRewardsEvent implements Listener {
     private static void render(Menu menu, Faction faction) {
         FileConfiguration gui = Main.getInstance().getGuiConfig();
         TechTree tech = TechTree.get();
+        menu.inventory.clear();
+        ItemStack background = item("rewards.background", "rewards.background", Material.GRAY_STAINED_GLASS_PANE, Map.of());
+        for (int slot = 0; slot < menu.inventory.getSize(); slot++) menu.inventory.setItem(slot, background);
+        Map<String, String> progress = Map.of("%points%", Integer.toString(faction.getPoints()), "%kills%", Integer.toString(faction.getKills()),
+                "%captures%", Integer.toString(faction.getKOTHCaptures()));
+        if (menu.tree == null) {
+            List<TechTree.Tree> trees = tech.getTrees();
+            for (int i = 0; i < trees.size(); i++) {
+                TechTree.Tree choice = trees.get(i);
+                menu.inventory.setItem(treeSlot(i, trees.size()), item("rewards.trees." + choice.id(), "rewards.tree", Material.BOOK,
+                        Map.of("%tree%", choice.id(), "%state%", "")));
+            }
+            menu.inventory.setItem(22, item("rewards.summary", "rewards.summary", Material.NETHER_STAR, progress));
+            return;
+        }
         TechTree.Tree tree = tech.getTree(menu.tree);
         if (tree == null) return;
         menu.offset = Math.clamp(menu.offset, 0, Math.max(0, tree.nodes().size() - VISIBLE));
-        menu.inventory.clear();
-        for (int i = 0; i < tech.getTrees().size(); i++) {
-            TechTree.Tree choice = tech.getTrees().get(i);
-            menu.inventory.setItem(i, item("rewards.trees." + choice.id(), "rewards.tree", Material.BOOK,
-                    Map.of("%tree%", choice.id(), "%state%", choice.id().equals(menu.tree) ? gui.getString("rewards.selected") : "")));
-        }
+        menu.inventory.setItem(4, item("rewards.trees." + tree.id(), "rewards.tree", Material.BOOK, Map.of("%tree%", tree.id(), "%state%", "")));
         for (int column = 0; column < VISIBLE && menu.offset + column < tree.nodes().size(); column++) {
             TechTree.Node node = tree.nodes().get(menu.offset + column);
-            String state = tech.isUnlocked(faction, tree, node) ? "unlocked" : tech.prerequisites(faction, tree, node)
+            boolean unlocked = tech.isUnlocked(faction, tree, node);
+            String state = unlocked ? "unlocked" : tech.prerequisites(faction, tree, node)
                     && tech.progress(faction, node) >= node.amount() ? "available" : "locked";
             String requirement = gui.getString("rewards.requirements." + node.requirement().name().toLowerCase(java.util.Locale.ROOT));
-            menu.inventory.setItem(19 + column, item("rewards.nodes." + tree.id() + "." + node.id(), "rewards.node", Material.PAPER,
+            ItemStack reward = item("rewards.nodes." + tree.id() + "." + node.id(), "rewards.node", Material.PAPER,
                     Map.of("%node%", label(tree, node), "%state%", gui.getString("rewards.states." + state),
-                            "%requirement%", requirement, "%amount%", Integer.toString(node.amount()), "%progress%", Integer.toString(tech.progress(faction, node)))));
+                            "%requirement%", requirement, "%amount%", Integer.toString(node.amount()), "%progress%", Integer.toString(tech.progress(faction, node))));
+            ItemMeta meta = reward.getItemMeta();
+            meta.setEnchantmentGlintOverride(unlocked);
+            reward.setItemMeta(meta);
+            menu.inventory.setItem(19 + column, reward);
         }
-        String previous = menu.offset == 0 ? "start" : "previous", next = menu.offset >= Math.max(0, tree.nodes().size() - VISIBLE) ? "end" : "next";
-        menu.inventory.setItem(45, item("rewards." + previous, "rewards.previous", Material.ARROW, Map.of()));
-        menu.inventory.setItem(53, item("rewards." + next, "rewards.next", Material.ARROW, Map.of()));
-        menu.inventory.setItem(49, item("rewards.summary", "rewards.summary", Material.NETHER_STAR,
-                Map.of("%points%", Integer.toString(faction.getPoints()), "%kills%", Integer.toString(faction.getKills()), "%captures%", Integer.toString(faction.getKOTHCaptures()))));
+        if (menu.offset > 0) menu.inventory.setItem(45, item("rewards.previous", "rewards.previous", Material.ARROW, Map.of()));
+        if (menu.offset < Math.max(0, tree.nodes().size() - VISIBLE)) menu.inventory.setItem(53, item("rewards.next", "rewards.next", Material.ARROW, Map.of()));
+        menu.inventory.setItem(40, item("rewards.summary", "rewards.summary", Material.NETHER_STAR, progress));
+        menu.inventory.setItem(49, item("rewards.back", "rewards.back", Material.ARROW, Map.of()));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -142,9 +173,22 @@ public class UserRewardsEvent implements Listener {
         if (e.getClick() != ClickType.LEFT && e.getClick() != ClickType.RIGHT) return;
         TechTree tech = TechTree.get();
         int slot = e.getRawSlot();
-        if (slot >= 0 && slot < tech.getTrees().size()) { menu.tree = tech.getTrees().get(slot).id(); menu.offset = 0; }
-        else if (slot == 45) menu.offset = Math.max(0, menu.offset - 1);
-        else if (slot == 53) menu.offset = Math.min(Math.max(0, tech.getTree(menu.tree).nodes().size() - VISIBLE), menu.offset + 1);
+        if (menu.tree == null) {
+            List<TechTree.Tree> trees = tech.getTrees();
+            for (int i = 0; i < trees.size(); i++) {
+                if (slot == treeSlot(i, trees.size())) { navigate(p, menu, trees.get(i).id()); return; }
+            }
+            return;
+        }
+        if (slot == 49) { navigate(p, menu, null); return; }
+        if (slot == 45) {
+            if (menu.offset == 0) return;
+            menu.offset--;
+        } else if (slot == 53) {
+            int maximum = Math.max(0, tech.getTree(menu.tree).nodes().size() - VISIBLE);
+            if (menu.offset >= maximum) return;
+            menu.offset++;
+        }
         else if (slot >= 19 && slot <= 25) {
             TechTree.Tree tree = tech.getTree(menu.tree);
             int index = menu.offset + slot - 19;

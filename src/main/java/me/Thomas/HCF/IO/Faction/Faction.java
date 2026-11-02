@@ -6,6 +6,7 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Names.Names;
+import me.Thomas.HCF.Utils.Timer.Timer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -493,6 +494,29 @@ public class Faction {
         return members.containsKey(member);
     }
 
+    public void changeMembership(User user, Runnable change) {
+        Map<UUID, Integer> previousMembers = new HashMap<>(getMembers());
+        UUID leader = getLeader(), previousFaction = user.getFaction();
+        Timer home = user.getTimer(Timer.Type.HOME);
+        try {
+            change.run();
+            List<SaveSnapshot> snapshots = new ArrayList<>();
+            SaveSnapshot factionSnapshot = snapshot(), userSnapshot = user.snapshot();
+            if (factionSnapshot != null) snapshots.add(factionSnapshot);
+            if (userSnapshot != null) snapshots.add(userSnapshot);
+            Main.getInstance().getDatabaseManager().save(snapshots).join();
+        } catch (RuntimeException exception) {
+            for (UUID uuid : List.copyOf(getMembers().keySet())) if (!previousMembers.containsKey(uuid)) removeMember(uuid);
+            previousMembers.forEach(this::addMember);
+            setLeader(leader);
+            user.setFaction(previousFaction);
+            if (home != null) user.addTimer(Timer.Type.HOME, home);
+            else user.removeTimer(Timer.Type.HOME);
+            throw exception;
+        }
+        Main.getInstance().refreshNameColors();
+    }
+
     public boolean changeMemberRank(UUID actor, UUID target, boolean promote) {
         if (!hasMember(actor) || !hasMember(target) || actor.equals(target) || target.equals(leader)) return false;
         MemberType rank = MemberType.getChangedRank(getMemberType(actor), getMemberType(target), promote);
@@ -612,6 +636,13 @@ public class Faction {
     }
 
     public int getKills() { return kills; }
+
+    public void setKills(int kills) {
+        if (kills < 0) throw new IllegalArgumentException("Kills must be nonnegative");
+        if (this.kills == kills) return;
+        this.kills = kills;
+        revision++;
+    }
 
     public void addKill() {
         if (kills == Integer.MAX_VALUE) return;

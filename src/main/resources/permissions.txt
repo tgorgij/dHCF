@@ -19,6 +19,17 @@
 - hcf.command.faction.setdeathban
 - hcf.command.faction.setdtr
 - hcf.command.faction.setregen
+- hcf.command.faction.setkothcaptures
+- hcf.command.faction.setpoints
+- hcf.command.faction.setkills
+- hcf.command.faction.forcejoin
+- hcf.command.faction.forcepromote
+- hcf.command.faction.forcedemote
+- hcf.command.faction.forcetransfer
+- hcf.command.faction.forcekick
+- hcf.command.faction.forceinvite
+- hcf.command.faction.setlives
+- hcf.command.faction.forcerename
 
 3. Economy
 - hcf.command.economy
@@ -89,3 +100,6 @@
 
 18. Event schedules
 - hcf.command.schedule
+
+19. Faction rewards
+- hcf.command.rewards.list

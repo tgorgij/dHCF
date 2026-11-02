@@ -214,3 +214,11 @@ factions:
       - "%faction%"
       - "&9Location&7: &e%hq%"
       - "&7&m---------------------------"
+
+rewards:
+  list:
+    header:
+      - "&eUnlocked Rewards &7- &b%faction%"
+    tree: "&e%tree%&7:"
+    entry: " &7- &b%reward%"
+    empty: " &7None"

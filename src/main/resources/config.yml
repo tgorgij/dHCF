@@ -156,39 +156,57 @@ classes:
 
 enchantments:
   fire_protection: 0
-  feather_falling: 0
+  fire_aspect: 0
   blast_protection: 0
   projectile_protection: 0
   respiration: 0
   aqua_affinity: 0
   thorns: 0
   depth_strider: 0
-  looting: 0
-  fortune: 0
+  knockback: 0
+  punch: 0
+  efficiency: 5
+  unbreaking: 3
+  feather_falling: 4
+  looting: 3
+  fortune: 3
+  silk_touch: 1
   protection: 2
   sharpness: 2
 
 potions:
   swiftness:
-    enabled: false
+    enabled: true
   fire_resistance:
-    enabled: false
+    enabled: true
+  healing:
+    enabled: true
+  poison:
+    enabled: true
+    extended: false
+  slowness:
+    enabled: true
+  invisibility:
+    enabled: true
   regeneration:
     enabled: false
   strength:
     enabled: false
-  healing:
-    enabled: false
   harming:
     enabled: false
-  poison:
-    enabled: false
-    extended: false
   slow_falling:
     enabled: false
   night_vision:
     enabled: false
-  invisibility:
+  water_breathing:
+    enabled: false
+  weakness:
+    enabled: false
+  leaping:
+    enabled: false
+  turtle_master:
+    enabled: false
+  wind_charged:
     enabled: false
 
 koth:
@@ -327,45 +345,45 @@ tech-tree:
     potions:
       requirement: CAPTURES
       nodes:
-        swiftness:
-          type: POTION
-          value: swiftness
-          amount: 1
-        fire_resistance:
-          type: POTION
-          value: fire_resistance
-          amount: 2
         regeneration:
           type: POTION
           value: regeneration
-          amount: 3
+          amount: 1
         strength:
           type: POTION
           value: strength
-          amount: 4
-        healing:
-          type: POTION
-          value: healing
-          amount: 5
+          amount: 2
         harming:
           type: POTION
           value: harming
-          amount: 6
-        poison:
-          type: POTION
-          value: poison
-          amount: 7
+          amount: 3
         slow_falling:
           type: POTION
           value: slow_falling
-          amount: 8
+          amount: 4
         night_vision:
           type: POTION
           value: night_vision
-          amount: 9
-        invisibility:
+          amount: 5
+        water_breathing:
           type: POTION
-          value: invisibility
+          value: water_breathing
+          amount: 6
+        weakness:
+          type: POTION
+          value: weakness
+          amount: 7
+        leaping:
+          type: POTION
+          value: leaping
+          amount: 8
+        turtle_master:
+          type: POTION
+          value: turtle_master
+          amount: 9
+        wind_charged:
+          type: POTION
+          value: wind_charged
           amount: 10
     enchantments:
       requirement: KILLS
@@ -375,10 +393,10 @@ tech-tree:
           value: fire_protection
           level: 4
           amount: 25
-        feather_falling:
+        fire_aspect:
           type: ENCHANTMENT
-          value: feather_falling
-          level: 4
+          value: fire_aspect
+          level: 2
           amount: 50
         blast_protection:
           type: ENCHANTMENT
@@ -410,15 +428,15 @@ tech-tree:
           value: depth_strider
           level: 3
           amount: 200
-        looting:
+        knockback:
           type: ENCHANTMENT
-          value: looting
-          level: 3
+          value: knockback
+          level: 2
           amount: 225
-        fortune:
+        punch:
           type: ENCHANTMENT
-          value: fortune
-          level: 3
+          value: punch
+          level: 2
           amount: 250
     commands:
       requirement: POINTS

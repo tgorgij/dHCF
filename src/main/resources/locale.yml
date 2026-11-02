@@ -178,6 +178,7 @@ faction:
 
 commands:
   rewards:
+    admin-usage: "&cUsage: /%alias% <faction> list"
     usage: "&cUsage: /rewards"
     combat: "&cYou cannot open faction rewards while combat tagged."
     no-faction: "&cYou must be in a player faction to use rewards."
@@ -489,6 +490,48 @@ commands:
       usage: "&cUsage: /%alias% setcolor <faction> <color>"
       only-system: "&cYou can only set the color of non-player factions."
       success: "&eYou have set the color of &b%faction%&e to %color%this&e."
+    admin:
+      invalid-amount: "&cEnter a valid whole number. Only points may be negative."
+      already-member: "&cThat player is already in this faction."
+      invited: "&cThat player already has an invitation to this faction."
+      no-membership: "&cThat player is not a member of a player faction."
+      transfer-first: "&cTransfer leadership with /f forcetransfer before removing or demoting a leader."
+      rank-limit: "&cThat player cannot be moved to that rank. Use /f forcetransfer to change the leader."
+      failed: "&cThe faction changes could not be saved."
+      target: "&b%admin% &eupdated your membership in &b%faction% &eusing &b/f %action%&e."
+    setkothcaptures:
+      usage: "&cUsage: /%alias% setkothcaptures <faction> <amount>"
+      success: "&eSet &b%faction% &eKOTH captures to &b%amount%&e."
+    setpoints:
+      usage: "&cUsage: /%alias% setpoints <faction> <amount>"
+      success: "&eSet &b%faction% &epoints to &b%amount%&e."
+    setkills:
+      usage: "&cUsage: /%alias% setkills <faction> <amount>"
+      success: "&eSet &b%faction% &ekills to &b%amount%&e."
+    forcejoin:
+      usage: "&cUsage: /%alias% forcejoin <faction>"
+      success: "&eForce joined &b%faction%&e."
+    forcepromote:
+      usage: "&cUsage: /%alias% forcepromote <player>"
+      success: "&ePromoted &b%player% &ein &b%faction%&e."
+    forcedemote:
+      usage: "&cUsage: /%alias% forcedemote <player>"
+      success: "&eDemoted &b%player% &ein &b%faction%&e."
+    forcetransfer:
+      usage: "&cUsage: /%alias% forcetransfer <player>"
+      success: "&eTransferred leadership of &b%faction% &eto &b%player%&e."
+    forcekick:
+      usage: "&cUsage: /%alias% forcekick <player>"
+      success: "&eRemoved &b%player% &efrom &b%faction%&e."
+    forceinvite:
+      usage: "&cUsage: /%alias% forceinvite <faction> <player>"
+      success: "&eInvited &b%player% &eto &b%faction%&e."
+    setlives:
+      usage: "&cUsage: /%alias% setlives <faction> <amount>"
+      success: "&eSet &b%faction% &elives to &b%amount%&e."
+    forcerename:
+      usage: "&cUsage: /%alias% forcerename <faction> <new-name>"
+      success: "&eRenamed &b%faction% &eto &b%name%&e."
     setdtr:
       usage: "&cUsage: /%alias% setdtr <faction> <amount>"
       invalid-amount: "&cDTR must be a finite number between %minimum% and %maximum%."

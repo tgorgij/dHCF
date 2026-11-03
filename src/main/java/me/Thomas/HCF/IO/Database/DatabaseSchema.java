@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 /** Versioned, transactional upgrades shared by fresh installs and existing databases. */
 public final class DatabaseSchema {
-    private static final int VERSION = 15;
+    private static final int VERSION = 19;
 
     private DatabaseSchema() {}
 
@@ -186,6 +186,48 @@ public final class DatabaseSchema {
                         ) WITHOUT ROWID
                         """);
                 statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (15)");
+            }
+            if (version < 16) {
+                statement.executeUpdate("ALTER TABLE factions RENAME COLUMN kothCaptures TO eventCaptures");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (16)");
+            }
+            if (version < 17) {
+                statement.executeUpdate("""
+                        CREATE TABLE dtc (
+                            id INTEGER PRIMARY KEY CHECK (id = 1),
+                            world TEXT,
+                            x INTEGER NOT NULL DEFAULT 0,
+                            y INTEGER NOT NULL DEFAULT 0,
+                            z INTEGER NOT NULL DEFAULT 0,
+                            blockData TEXT,
+                            health INTEGER NOT NULL CHECK (health > 0)
+                        )
+                        """);
+                statement.executeUpdate("""
+                        CREATE TABLE eventSchedules_v17 (
+                            id INTEGER PRIMARY KEY,
+                            type TEXT NOT NULL CHECK (type IN ('KOTH', 'CONQUEST', 'DTC')),
+                            koth TEXT REFERENCES koths(uuid) ON DELETE CASCADE,
+                            startTime TEXT NOT NULL,
+                            durationSeconds INTEGER NOT NULL DEFAULT 0,
+                            lastRun TEXT,
+                            CHECK ((type = 'KOTH' AND koth IS NOT NULL AND durationSeconds > 0)
+                                OR (type IN ('CONQUEST', 'DTC') AND koth IS NULL AND durationSeconds = 0))
+                        )
+                        """);
+                statement.executeUpdate("INSERT INTO eventSchedules_v17 SELECT * FROM eventSchedules");
+                statement.executeUpdate("DROP TABLE eventSchedules");
+                statement.executeUpdate("ALTER TABLE eventSchedules_v17 RENAME TO eventSchedules");
+                statement.executeUpdate("CREATE UNIQUE INDEX idxEventSchedule ON eventSchedules(type, COALESCE(koth, ''), startTime)");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (17)");
+            }
+            if (version < 18) {
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN reclaimed INTEGER NOT NULL DEFAULT 0 CHECK (reclaimed IN (0, 1))");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (18)");
+            }
+            if (version < 19) {
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN abilityCooldowns INTEGER NOT NULL DEFAULT 1 CHECK (abilityCooldowns IN (0, 1))");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (19)");
             }
             connection.commit();
         } catch (SQLException exception) {

@@ -4,7 +4,9 @@ import me.Thomas.HCF.Commands.Staff.ReviveCommand;
 import me.Thomas.HCF.Commands.Staff.StaffCommand;
 import me.Thomas.HCF.Commands.Staff.FreezeCommand;
 import me.Thomas.HCF.Commands.Staff.InvseeCommand;
+import me.Thomas.HCF.Commands.Staff.TPHereCommand;
 import me.Thomas.HCF.Commands.Staff.VanishCommand;
+import me.Thomas.HCF.Commands.Staff.SocialSpyCommand;
 import me.Thomas.HCF.Utils.Staff.StaffMode;
 import me.Thomas.HCF.Commands.Staff.RestoreCommand;
 import me.Thomas.HCF.Commands.Staff.Chat.ChatCommand;
@@ -14,6 +16,7 @@ import me.Thomas.HCF.Commands.User.Economy.PayCommand;
 import me.Thomas.HCF.Commands.User.LogoutCommand;
 import me.Thomas.HCF.Commands.Donator.CraftCommand;
 import me.Thomas.HCF.Commands.Donator.BottleCommand;
+import me.Thomas.HCF.Commands.Donator.Reclaim.ReclaimCommand;
 import me.Thomas.HCF.Commands.User.MessageCommand;
 import me.Thomas.HCF.Commands.User.ReplyCommand;
 import me.Thomas.HCF.Commands.User.SettingsCommand;
@@ -23,10 +26,15 @@ import me.Thomas.HCF.Events.Player.Interact.UserRewardsEvent;
 import me.Thomas.HCF.Commands.User.RequestCommand;
 import me.Thomas.HCF.Commands.User.ReportCommand;
 import me.Thomas.HCF.Commands.Admin.Schedule.ScheduleCommand;
+import me.Thomas.HCF.Commands.Admin.CustomTimer.CustomTimerCommand;
 import me.Thomas.HCF.Utils.Events.EventScheduler;
 import me.Thomas.HCF.Utils.Rewards.TechTree;
 import me.Thomas.HCF.Commands.Admin.CrowbarCommand;
+import me.Thomas.HCF.Commands.Admin.AbilityCommand;
+import me.Thomas.HCF.Events.Player.Combat.UserAbilityEvent;
 import me.Thomas.HCF.Commands.Admin.SpawnerCommand;
+import me.Thomas.HCF.Commands.Admin.SetEnd.SetEndCommand;
+import me.Thomas.HCF.Events.Player.Movement.UserEndPortalEvent;
 import me.Thomas.HCF.Commands.Admin.SOTW.SOTWCommand;
 import me.Thomas.HCF.Commands.Admin.PvP.PvPCommand;
 import me.Thomas.HCF.Commands.Admin.Economy.EconomyCommand;
@@ -35,6 +43,7 @@ import me.Thomas.HCF.Events.Player.Connection.UserChatEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserCommandEvent;
 import me.Thomas.HCF.Events.Player.Connection.UserJoinEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserDamageEvent;
+import me.Thomas.HCF.Events.Player.Combat.UserMobProtectionEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserArcherEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserBardEvent;
 import me.Thomas.HCF.Events.Player.Combat.UserRogueEvent;
@@ -47,6 +56,7 @@ import me.Thomas.HCF.Events.Player.Item.UserPearlEvent;
 import me.Thomas.HCF.Events.Player.Item.UserAppleEvent;
 import me.Thomas.HCF.Events.Player.Item.UserBottleEvent;
 import me.Thomas.HCF.Events.Player.Item.UserSpawnerEvent;
+import me.Thomas.HCF.Events.Player.Item.UserDeathSignEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserElevatorEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserShopSignEvent;
 import me.Thomas.HCF.Events.Player.Item.UserEnchantEvent;
@@ -65,6 +75,9 @@ import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.KOTH.KOTH;
 import me.Thomas.HCF.IO.Conquest.Conquest;
+import me.Thomas.HCF.IO.DTC.DTC;
+import me.Thomas.HCF.Events.Player.Interact.UserDTCEvent;
+import me.Thomas.HCF.Commands.Admin.DTC.DTCCommand;
 import me.Thomas.HCF.Commands.Admin.Conquest.ConquestCommand;
 import me.Thomas.HCF.IO.Mountain.Mountain;
 import me.Thomas.HCF.Events.World.MountainEvent;
@@ -95,6 +108,7 @@ public class Main extends JavaPlugin {
     private DatabaseManager databaseManager;
     private FileConfiguration localeConfig;
     private FileConfiguration guiConfig;
+    private FileConfiguration itemsConfig;
     private FileConfiguration scoreboardConfig;
     private FileConfiguration messagesConfig;
     private BoardHandler boardHandler;
@@ -112,6 +126,7 @@ public class Main extends JavaPlugin {
     private final HashMap<String, Faction> factionNames = new HashMap<>();
     private final Map<UUID, KOTH> koths = new LinkedHashMap<>();
     private Conquest conquest;
+    private DTC dtc;
     private final Map<UUID, Mountain> mountains = new LinkedHashMap<>();
     private boolean factionDebug = false;
 
@@ -124,6 +139,7 @@ public class Main extends JavaPlugin {
 
     // Server Timers
     private final Map<ServerTimer.Type, ServerTimer> serverTimers = new HashMap<>();
+    private final Map<String, ServerTimer> customServerTimers = new LinkedHashMap<>();
     private final Set<UUID> sotwEnabled = new HashSet<>();
     private final Set<UUID> friendlyFire = new HashSet<>();
     public record Focus(UUID target, boolean faction) {}
@@ -145,6 +161,7 @@ public class Main extends JavaPlugin {
         files();
         loadLocale();
         loadGui();
+        loadItems();
         loadScoreboard();
         loadMessages();
 
@@ -154,6 +171,7 @@ public class Main extends JavaPlugin {
         loadKOTHs();
         loadMountains();
         loadConquest();
+        loadDTC();
         techTree = new TechTree();
         eventScheduler = new EventScheduler();
         dataLoaded = true;
@@ -175,6 +193,7 @@ public class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         if (eventScheduler != null) eventScheduler.close();
+        if (dtc != null) dtc.restoreCore();
         if (staffMode != null) staffMode.shutdown();
         StuckTimer.shutdownSearches();
         friendlyFire.clear();
@@ -211,24 +230,31 @@ public class Main extends JavaPlugin {
         // Donator
         Objects.requireNonNull(getCommand("craft")).setExecutor(new CraftCommand());
         Objects.requireNonNull(getCommand("bottle")).setExecutor(new BottleCommand());
+        Objects.requireNonNull(getCommand("reclaim")).setExecutor(new ReclaimCommand());
 
         // Admin
         Objects.requireNonNull(getCommand("schedule")).setExecutor(new ScheduleCommand());
+        Objects.requireNonNull(getCommand("customtimer")).setExecutor(new CustomTimerCommand());
         Objects.requireNonNull(getCommand("crowbar")).setExecutor(new CrowbarCommand());
+        Objects.requireNonNull(getCommand("ability")).setExecutor(new AbilityCommand());
         Objects.requireNonNull(getCommand("spawner")).setExecutor(new SpawnerCommand());
+        Objects.requireNonNull(getCommand("setend")).setExecutor(new SetEndCommand());
         Objects.requireNonNull(getCommand("pvp")).setExecutor(new PvPCommand());
         Objects.requireNonNull(getCommand("lives")).setExecutor(new LivesCommand());
         Objects.requireNonNull(getCommand("sotw")).setExecutor(new SOTWCommand());
         Objects.requireNonNull(getCommand("economy")).setExecutor(new EconomyCommand());
         Objects.requireNonNull(getCommand("koth")).setExecutor(new KOTHCommand());
         Objects.requireNonNull(getCommand("conquest")).setExecutor(new ConquestCommand());
+        Objects.requireNonNull(getCommand("dtc")).setExecutor(new DTCCommand());
         Objects.requireNonNull(getCommand("mountain")).setExecutor(new MountainCommand());
 
         // Staff
         Objects.requireNonNull(getCommand("staff")).setExecutor(new StaffCommand());
         Objects.requireNonNull(getCommand("freeze")).setExecutor(new FreezeCommand());
         Objects.requireNonNull(getCommand("invsee")).setExecutor(new InvseeCommand());
+        Objects.requireNonNull(getCommand("tphere")).setExecutor(new TPHereCommand());
         Objects.requireNonNull(getCommand("vanish")).setExecutor(new VanishCommand());
+        Objects.requireNonNull(getCommand("socialspy")).setExecutor(new SocialSpyCommand());
         Objects.requireNonNull(getCommand("revive")).setExecutor(new ReviveCommand());
         Objects.requireNonNull(getCommand("restore")).setExecutor(new RestoreCommand());
         Objects.requireNonNull(getCommand("chat")).setExecutor(new ChatCommand());
@@ -247,6 +273,7 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserRewardsEvent(), this);
         pm.registerEvents(new UserCommandEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
+        pm.registerEvents(new UserMobProtectionEvent(), this);
         pm.registerEvents(new UserArcherEvent(), this);
         pm.registerEvents(new UserBardEvent(), this);
         pm.registerEvents(new UserRogueEvent(), this);
@@ -266,9 +293,28 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserInteractInFactionEvent(), this);
         pm.registerEvents(new UserSubclaimEvent(), this);
         pm.registerEvents(new UserSpawnerEvent(), this);
+        pm.registerEvents(new UserDeathSignEvent(), this);
+        pm.registerEvents(new UserEndPortalEvent(), this);
+        pm.registerEvents(new UserDTCEvent(), this);
         pm.registerEvents(new UserElevatorEvent(), this);
         pm.registerEvents(new UserShopSignEvent(), this);
+        // Check lethal damage after the protection and class damage handlers.
+        pm.registerEvents(new UserAbilityEvent(), this);
     }
+
+    private void loadDTC() {
+        dtc = new DTC();
+        try (Connection connection = databaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM dtc WHERE id=1");
+             ResultSet row = statement.executeQuery()) {
+            if (row.next()) dtc.load(row);
+        } catch (SQLException | IllegalArgumentException exception) {
+            throw new IllegalStateException("Could not load DTC", exception);
+        }
+        dtc.restoreCore();
+    }
+
+    public DTC getDTC() { return dtc; }
 
     private void loadConquest() {
         conquest = new Conquest();
@@ -447,6 +493,8 @@ public class Main extends JavaPlugin {
         return localeConfig;
     }
 
+    public FileConfiguration getItemsConfig() { return itemsConfig; }
+
     public FileConfiguration getGuiConfig() {
         return guiConfig;
     }
@@ -542,6 +590,7 @@ public class Main extends JavaPlugin {
         saveResource("config.yml", false);
         saveResource("locale.yml", false);
         saveResource("gui.yml", false);
+        saveResource("items.yml", false);
         saveResource("scoreboard.yml", false);
         saveResource("messages.yml", false);
     }
@@ -565,6 +614,17 @@ public class Main extends JavaPlugin {
             guiConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not load GUI defaults", exception);
+        }
+    }
+
+    private void loadItems() {
+        java.io.File itemsFile = new java.io.File(getDataFolder(), "items.yml");
+        itemsConfig = YamlConfiguration.loadConfiguration(itemsFile);
+        try (java.io.InputStream resource = Objects.requireNonNull(getResource("items.yml"));
+             java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
+            itemsConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not load item defaults", exception);
         }
     }
 
@@ -611,6 +671,10 @@ public class Main extends JavaPlugin {
             if (snapshot != null) snapshots.add(snapshot);
         }
         if (conquest != null) snapshots.addAll(conquest.snapshot());
+        if (dtc != null) {
+            SaveSnapshot snapshot = dtc.snapshot();
+            if (snapshot != null) snapshots.add(snapshot);
+        }
         for (Mountain mountain : mountains.values()) {
             SaveSnapshot snapshot = mountain.snapshot();
             if (snapshot != null) snapshots.add(snapshot);
@@ -668,6 +732,7 @@ public class Main extends JavaPlugin {
         if (user != null) {
             user.setClaiming(null);
             user.setBypass(false);
+            user.setSocialSpy(false);
             user.setLastEnteredFaction(null);
             user.getMap().clear();
             user.removeTimer(me.Thomas.HCF.Utils.Timer.Timer.Type.HOME);
@@ -922,6 +987,11 @@ public class Main extends JavaPlugin {
         claims.add(candidate);
         indexClaim(candidate);
         return true;
+    }
+
+    public Map<String, ServerTimer> getCustomServerTimers() {
+        customServerTimers.values().removeIf(timer -> timer.getRemainingTimeMillis() <= 0);
+        return customServerTimers;
     }
 
     public boolean hasServerTimer(ServerTimer.Type type) {

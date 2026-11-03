@@ -61,7 +61,7 @@ public class TechTree {
                 if (amount < 0 || level < 1 || level > 255) throw new IllegalArgumentException("Invalid tech node: " + name);
                 NamespacedKey key = NamespacedKey.fromString(value);
                 if (reward == Reward.ENCHANTMENT && (key == null || Registry.ENCHANTMENT.get(key) == null)
-                        || reward == Reward.POTION && java.util.Arrays.stream(PotionType.values()).noneMatch(type -> potionName(type).equals(value))
+                        || reward == Reward.POTION && java.util.Arrays.stream(PotionType.values()).noneMatch(type -> type.getKey().getKey().equals(value))
                         || reward == Reward.COMMAND && !Set.of("craft", "bottle").contains(value)) {
                     throw new IllegalArgumentException("Invalid tech reward: " + value);
                 }
@@ -122,7 +122,7 @@ public class TechTree {
     public int progress(Faction faction, Node node) {
         return switch (node.requirement()) {
             case KILLS -> faction.getKills();
-            case CAPTURES -> faction.getKOTHCaptures();
+            case CAPTURES -> faction.getEventCaptures();
             case POINTS -> faction.getPoints();
         };
     }
@@ -193,12 +193,21 @@ public class TechTree {
 
     public static boolean producedPotion(ItemStack item) {
         if (item == null || !(item.getItemMeta() instanceof PotionMeta meta) || meta.getBasePotionType() == null) return false;
-        return potionName(meta.getBasePotionType()).equals(meta.getPersistentDataContainer().get(potionKey(), PersistentDataType.STRING));
+        String authorization = meta.getPersistentDataContainer().get(potionKey(), PersistentDataType.STRING);
+        // Older items authorized the whole effect; retain those items, but never carry that grant into an upgrade.
+        return ("variant:" + meta.getBasePotionType().getKey().getKey()).equals(authorization)
+                || potionName(meta.getBasePotionType()).equals(authorization);
     }
 
     public static void markPotion(ItemStack item) {
         PotionMeta meta = (PotionMeta) item.getItemMeta();
-        meta.getPersistentDataContainer().set(potionKey(), PersistentDataType.STRING, potionName(meta.getBasePotionType()));
+        meta.getPersistentDataContainer().set(potionKey(), PersistentDataType.STRING, "variant:" + meta.getBasePotionType().getKey().getKey());
+        item.setItemMeta(meta);
+    }
+
+    public static void clearPotion(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        meta.getPersistentDataContainer().remove(potionKey());
         item.setItemMeta(meta);
     }
 

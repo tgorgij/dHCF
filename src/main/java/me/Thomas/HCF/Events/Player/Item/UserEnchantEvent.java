@@ -33,6 +33,7 @@ public class UserEnchantEvent implements Listener {
         while (enchants.hasNext()) {
             Map.Entry<Enchantment, Integer> enchant = enchants.next();
             int limit = limit(e.getEnchanter(), enchant.getKey());
+            limit = limit < 0 ? enchant.getKey().getMaxLevel() : Math.min(limit, enchant.getKey().getMaxLevel());
             if (limit >= 0 && enchant.getValue() > limit) {
                 if (limit == 0) { enchants.remove(); continue; }
                 enchant.setValue(limit);
@@ -60,6 +61,13 @@ public class UserEnchantEvent implements Listener {
             int limit = limit(p, type);
             if (limit >= 0) limit = Math.max(limit, inherited);
             int level = limit < 0 ? enchant.getValue() : Math.min(enchant.getValue(), limit);
+            ItemStack left = e.getInventory().getItem(0), right = e.getInventory().getItem(1);
+            int leftLevel = left == null || !left.hasItemMeta() ? 0 : TechTree.enchants(left.getItemMeta()).getOrDefault(type, 0);
+            int rightLevel = right == null || !right.hasItemMeta() ? 0 : TechTree.enchants(right.getItemMeta()).getOrDefault(type, 0);
+            // Vanilla stops combining at its maximum; equal levels can advance further only with the tech unlock.
+            if (leftLevel == rightLevel && leftLevel >= type.getMaxLevel() && limit > leftLevel) {
+                level = leftLevel + 1;
+            }
             if (meta.hasEnchant(type)) {
                 meta.removeEnchant(type);
                 if (level > 0) meta.addEnchant(type, level, true);

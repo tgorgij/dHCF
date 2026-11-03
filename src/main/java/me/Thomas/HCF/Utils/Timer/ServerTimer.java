@@ -8,18 +8,30 @@ public class ServerTimer {
         CONQUEST,
         EOTW,
         SALE,
-        KEYSALE
+        KEYSALE,
+        CUSTOM
     }
 
     private final Type type;
+    private final String name;
     private long expires;
     private long pausedTime;
 
     public ServerTimer(Type type, long expires) {
         this.type = type;
+        this.name = type.name();
         this.expires = System.currentTimeMillis() + expires * 1000L;
         this.pausedTime = 0L;
     }
+
+    public ServerTimer(String name, long seconds) {
+        this.type = Type.CUSTOM;
+        this.name = name;
+        this.expires = Math.addExact(System.currentTimeMillis(), Math.multiplyExact(seconds, 1000L));
+        this.pausedTime = 0L;
+    }
+
+    public String getName() { return name; }
 
     public ServerTimer.Type getType() {
         return type;

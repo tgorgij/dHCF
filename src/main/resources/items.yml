@@ -1,0 +1,97 @@
+
+crowbar:
+  material: GOLDEN_HOE
+  name: '&eCrowbar'
+  lore:
+  - '&eUses remaining&7: &f%uses%'
+claim-wand:
+  material: DIAMOND_HOE
+  name: '&bClaim Wand'
+  lore:
+  - '&eLeft click block for position one'
+  - '&eRight click block for position two'
+  - '&eShift left click air to claim'
+  - '&eShift right click air to cancel'
+spawner:
+  material: SPAWNER
+  name: '&e%type% Spawner'
+  lore: []
+experience-bottle:
+  material: EXPERIENCE_BOTTLE
+  name: '&bExperience Bottle'
+  lore:
+  - '&eContains &b%experience% &eexperience.'
+  - '&7Throw to recover the stored experience.'
+
+death-sign:
+  material: OAK_SIGN
+  name: "&eDeath of &c%player%"
+  lore:
+    - "%line1%"
+    - "%line2%"
+    - "%line3%"
+    - "%line4%"
+  date-format: "MM/dd/yy HH:mm"
+  lines:
+    player:
+      - "&c%player%"
+      - "&7%cause%"
+      - "&c%killer%"
+      - "&7%time%"
+    other:
+      - "&c%player%"
+      - "&7%cause%"
+      - "&7%time%"
+      - ""
+  causes:
+    entity-attack: Melee
+    entity-sweep-attack: Melee
+    projectile: Projectile
+    fire-tick: Fire
+    fall: Fall
+    lava: Lava
+    void: Void
+    drowning: Drowning
+    unknown: Unknown
+
+abilities:
+  switcher:
+    material: SNOWBALL
+    name: '&dSwitcher Snowball'
+    lore: []
+  bone:
+    material: BONE
+    name: '&dExotic Bone'
+    lore: []
+  rage:
+    material: EGG
+    name: '&dRage Ball'
+    lore: []
+  ninja:
+    material: NETHER_STAR
+    name: '&dNinja Star'
+    lore: []
+  archer:
+    material: BOW
+    name: '&dPortable Archer'
+    lore: ["&7%uses% successful archer tags remaining."]
+  brick:
+    material: BRICK
+    name: '&dRes 3 Brick'
+    lore: []
+  switchstick:
+    material: STICK
+    name: '&dSwitch Stick'
+    lore: []
+  secondchance:
+    material: CLOCK
+    name: '&dSecond Chance'
+    lore: []
+  potioncounter:
+    material: BLAZE_ROD
+    name: '&dPotion Counter'
+    lore: []
+  starvation:
+    material: ROTTEN_FLESH
+    name: '&dStarvation Flesh'
+    lore: []

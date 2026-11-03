@@ -1,6 +1,7 @@
 package me.Thomas.HCF.Events.Player.Interact;
 
 import me.Thomas.HCF.Main.Main;
+import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import me.Thomas.HCF.Utils.Chat.C;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -9,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -27,8 +29,22 @@ public class UserElevatorEvent implements Listener {
         return line == null ? "" : PlainTextComponentSerializer.plainText().serialize(line).trim();
     }
 
+    private static boolean isElevator(Sign sign) {
+        for (Side side : Side.values()) {
+            SignSide text = sign.getSide(side);
+            String direction = plain(text.line(1));
+            if (plain(text.line(0)).equalsIgnoreCase("[Elevator]")
+                    && (direction.equalsIgnoreCase("up") || direction.equalsIgnoreCase("down"))) return true;
+        }
+        return false;
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSignChange(SignChangeEvent e) {
+        if (e.getBlock().getState() instanceof Sign sign && isElevator(sign)) {
+            e.setCancelled(true);
+            return;
+        }
         if (!plain(e.line(0)).equalsIgnoreCase("[Elevator]")) return;
         String direction = plain(e.line(1));
         if (!direction.equalsIgnoreCase("up") && !direction.equalsIgnoreCase("down")) {
@@ -38,6 +54,29 @@ public class UserElevatorEvent implements Listener {
         }
         e.line(0, C.chat("&9[Elevator]"));
         e.line(1, Component.text(direction.equalsIgnoreCase("up") ? "Up" : "Down"));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSignChanged(SignChangeEvent e) {
+        if (!plain(e.line(0)).equalsIgnoreCase("[Elevator]")) return;
+        String direction = plain(e.line(1));
+        if (!direction.equalsIgnoreCase("up") && !direction.equalsIgnoreCase("down")) return;
+        if (e.getBlock().getState() instanceof Sign sign) {
+            sign.setWaxed(true);
+            sign.setAllowedEditorUniqueId(null);
+            sign.update();
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSignOpen(PlayerOpenSignEvent e) {
+        if (!isElevator(e.getSign())) return;
+        e.setCancelled(true);
+        if (!e.getSign().isWaxed()) {
+            e.getSign().setWaxed(true);
+            e.getSign().setAllowedEditorUniqueId(null);
+            e.getSign().update();
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

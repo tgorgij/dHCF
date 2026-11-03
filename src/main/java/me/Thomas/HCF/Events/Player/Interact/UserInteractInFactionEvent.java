@@ -3,6 +3,7 @@ package me.Thomas.HCF.Events.Player.Interact;
 import com.destroystokyo.paper.event.player.PlayerSetSpawnEvent;
 import io.papermc.paper.event.block.PlayerShearBlockEvent;
 import me.Thomas.HCF.IO.Faction.Faction;
+import me.Thomas.HCF.IO.DTC.DTC;
 import me.Thomas.HCF.IO.Mountain.Mountain;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
@@ -80,6 +81,7 @@ public class UserInteractInFactionEvent implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent e) {
+        if (DTC.get() != null && DTC.get().contains(e.getBlock().getLocation())) return;
         Player p = e.getPlayer();
         Location location = e.getBlock().getLocation();
         Faction faction = Faction.getAtLocation(location);

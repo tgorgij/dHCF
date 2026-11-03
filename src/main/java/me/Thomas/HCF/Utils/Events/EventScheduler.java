@@ -1,6 +1,7 @@
 package me.Thomas.HCF.Utils.Events;
 
 import me.Thomas.HCF.IO.Conquest.Conquest;
+import me.Thomas.HCF.IO.DTC.DTC;
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import me.Thomas.HCF.IO.KOTH.KOTH;
 import me.Thomas.HCF.Main.Main;
@@ -27,7 +28,7 @@ import java.util.logging.Level;
 
 public class EventScheduler {
 
-    public enum Type { KOTH, CONQUEST }
+    public enum Type { KOTH, CONQUEST, DTC }
     public record Schedule(long id, Type type, UUID koth, LocalTime time, int seconds, LocalDate lastRun) {}
 
     private final Map<Long, Schedule> schedules = new HashMap<>();
@@ -70,7 +71,7 @@ public class EventScheduler {
     public Schedule add(Type type, UUID koth, LocalTime time, int seconds) {
         if (time.getSecond() != 0 || time.getNano() != 0 || type == null
                 || type == Type.KOTH && (koth == null || KOTH.get(koth) == null || seconds <= 0)
-                || type == Type.CONQUEST && (koth != null || seconds != 0)) throw new IllegalArgumentException("invalid");
+                || type != Type.KOTH && (koth != null || seconds != 0)) throw new IllegalArgumentException("invalid");
         if (schedules.values().stream().anyMatch(schedule -> schedule.type() == type
                 && java.util.Objects.equals(schedule.koth(), koth) && schedule.time().equals(time))) {
             throw new IllegalArgumentException("duplicate");
@@ -115,7 +116,14 @@ public class EventScheduler {
     }
 
     private void start(Schedule schedule) {
-        if (schedule.type() == Type.CONQUEST) {
+        if (schedule.type() == Type.DTC) {
+            DTC dtc = DTC.get();
+            if (dtc == null || dtc.isRunning()) {
+                Main.getInstance().getLogger().info("Skipped DTC schedule #" + schedule.id() + ": already running or unavailable.");
+                return;
+            }
+            dtc.start();
+        } else if (schedule.type() == Type.CONQUEST) {
             Conquest conquest = Conquest.get();
             if (conquest == null || conquest.isRunning()) {
                 Main.getInstance().getLogger().info("Skipped Conquest schedule #" + schedule.id() + ": already running or unavailable.");
@@ -124,7 +132,7 @@ public class EventScheduler {
             conquest.start();
         } else {
             KOTH koth = KOTH.get(schedule.koth());
-            if (koth == null || koth.isRunning() || !koth.hasCaptureArea()) {
+            if (koth == null || koth.isRunning() || !koth.isConfigured()) {
                 Main.getInstance().getLogger().info("Skipped KOTH schedule #" + schedule.id() + ": already running or unavailable.");
                 return;
             }

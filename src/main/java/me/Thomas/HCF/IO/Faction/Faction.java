@@ -11,11 +11,14 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import me.Thomas.HCF.Utils.Items.Items;
 import org.jetbrains.annotations.NotNull;
 
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
@@ -88,7 +91,7 @@ public class Faction {
     private long dtrNextRegen;
     private int points;
     private int kills;
-    private int kothCaptures;
+    private int eventCaptures;
     private String announcement;
     private boolean deathban;
 
@@ -124,7 +127,7 @@ public class Faction {
         this.open = false;
         this.dtr = 0;
         this.points = 0;
-        this.kothCaptures = 0;
+        this.eventCaptures = 0;
         this.announcement = null;
         this.deathban = true;
         this.claiming = false;
@@ -148,7 +151,7 @@ public class Faction {
         this.open = false;
         this.dtr = 1.01;
         this.points = 0;
-        this.kothCaptures = 0;
+        this.eventCaptures = 0;
         this.announcement = null;
         this.deathban = true;
         this.claiming = false;
@@ -222,7 +225,7 @@ public class Faction {
         this.points = resultSet.getInt("points");
         this.kills = resultSet.getInt("kills");
 
-        this.kothCaptures = resultSet.getInt("kothCaptures");
+        this.eventCaptures = resultSet.getInt("eventCaptures");
 
         this.announcement = resultSet.getString("announcement");
 
@@ -244,7 +247,7 @@ public class Faction {
         String sql =
                 "INSERT INTO factions "
                         + "(uuid, type, name, leader, balance, lives, "
-                        + "members, color, home, open, dtr, points, kothCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills) "
+                        + "members, color, home, open, dtr, points, eventCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET "
                         + "type = excluded.type, "
@@ -258,7 +261,7 @@ public class Faction {
                         + "open = excluded.open, "
                         + "dtr = excluded.dtr, "
                         + "points = excluded.points, "
-                        + "kothCaptures = excluded.kothCaptures, "
+                        + "eventCaptures = excluded.eventCaptures, "
                         + "announcement = excluded.announcement, "
                         + "deathban = excluded.deathban, "
                         + "dtrFreezeExpiry = excluded.dtrFreezeExpiry, "
@@ -267,7 +270,7 @@ public class Faction {
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), type.name(), name, leader == null ? null : leader.toString(),
                 balance, lives, serializeMembers(), color, serializeLocation(home), open, dtr,
-                points, kothCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills);
+                points, eventCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills);
     }
 
     private String serializeMembers() {
@@ -664,13 +667,13 @@ public class Faction {
         revision++;
     }
 
-    public int getKOTHCaptures() {
-        return kothCaptures;
+    public int getEventCaptures() {
+        return eventCaptures;
     }
 
-    public void setKOTHCaptures(int kothCaptures) {
-        if (this.kothCaptures == kothCaptures) return;
-        this.kothCaptures = kothCaptures;
+    public void setEventCaptures(int eventCaptures) {
+        if (this.eventCaptures == eventCaptures) return;
+        this.eventCaptures = eventCaptures;
         revision++;
     }
 
@@ -734,14 +737,9 @@ public class Faction {
     }
 
     public static ItemStack getClaimWand() {
-        ItemStack wand = new ItemStack(Objects.requireNonNull(Material.matchMaterial(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.claim-wand.item")))));
+        ItemStack wand = Items.create("claim-wand", Material.DIAMOND_HOE, Map.of());
         ItemMeta meta = wand.getItemMeta();
-        ArrayList<Component> lore = new ArrayList<>();
-        for (String s : Main.getInstance().getConfig().getStringList("factions.claim-wand.lore")) {
-            lore.add(C.chat(s));
-        }
-        meta.lore(lore);
-        meta.displayName(C.chat(Main.getInstance().getConfig().getString("factions.claim-wand.name")));
+        meta.getPersistentDataContainer().set(new NamespacedKey(Main.getInstance(), "claim-wand"), PersistentDataType.BYTE, (byte) 1);
         wand.setItemMeta(meta);
         return wand;
     }

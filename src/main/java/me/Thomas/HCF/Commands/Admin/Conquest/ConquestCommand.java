@@ -24,6 +24,7 @@ public class ConquestCommand implements TabExecutor {
         register(new StartCommand());
         register(new CancelCommand());
         register(new SetIntervalCommand());
+        register(new SetPointsCommand());
         register(new SetPos1Command());
         register(new SetPos2Command());
     }

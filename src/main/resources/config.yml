@@ -257,6 +257,7 @@ factions:
     death: 5
     raidable: 15
     koth: 50
+    dtc: 50
   border:
     material: RED_STAINED_GLASS
   player-format: "&9%player%&7[&c%kills%&7]"
@@ -277,14 +278,6 @@ factions:
     archer-tag: YELLOW
   members:
     max: 10
-  claim-wand:
-    item: DIAMOND_HOE
-    name: "&bClaim Wand"
-    lore:
-      - "&eLeft click block for position one"
-      - "&eRight click block for position two"
-      - "&eShift left click air to claim"
-      - "&eShift right click air to cancel"
   sizes:
     worlds:
       default:
@@ -328,7 +321,7 @@ combat:
     - f home
 
 conquest:
-  koth-equivalent: 5
+  event-captures: 5
   default-interval: 30 # seconds
   capture-points: 1
   win-points: 100
@@ -349,95 +342,252 @@ tech-tree:
           type: POTION
           value: regeneration
           amount: 1
+        long_regeneration:
+          type: POTION
+          value: long_regeneration
+          amount: 2
+        strong_regeneration:
+          type: POTION
+          value: strong_regeneration
+          amount: 3
         strength:
           type: POTION
           value: strength
-          amount: 2
+          amount: 4
+        long_strength:
+          type: POTION
+          value: long_strength
+          amount: 5
+        strong_strength:
+          type: POTION
+          value: strong_strength
+          amount: 6
         harming:
           type: POTION
           value: harming
-          amount: 3
+          amount: 7
+        strong_harming:
+          type: POTION
+          value: strong_harming
+          amount: 8
         slow_falling:
           type: POTION
           value: slow_falling
-          amount: 4
+          amount: 9
+        long_slow_falling:
+          type: POTION
+          value: long_slow_falling
+          amount: 10
         night_vision:
           type: POTION
           value: night_vision
-          amount: 5
+          amount: 11
+        long_night_vision:
+          type: POTION
+          value: long_night_vision
+          amount: 12
         water_breathing:
           type: POTION
           value: water_breathing
-          amount: 6
+          amount: 13
+        long_water_breathing:
+          type: POTION
+          value: long_water_breathing
+          amount: 14
         weakness:
           type: POTION
           value: weakness
-          amount: 7
+          amount: 15
+        long_weakness:
+          type: POTION
+          value: long_weakness
+          amount: 16
         leaping:
           type: POTION
           value: leaping
-          amount: 8
+          amount: 17
+        long_leaping:
+          type: POTION
+          value: long_leaping
+          amount: 18
+        strong_leaping:
+          type: POTION
+          value: strong_leaping
+          amount: 19
         turtle_master:
           type: POTION
           value: turtle_master
-          amount: 9
+          amount: 20
+        long_turtle_master:
+          type: POTION
+          value: long_turtle_master
+          amount: 21
+        strong_turtle_master:
+          type: POTION
+          value: strong_turtle_master
+          amount: 22
         wind_charged:
           type: POTION
           value: wind_charged
-          amount: 10
+          amount: 23
     enchantments:
       requirement: KILLS
       nodes:
         fire_protection:
           type: ENCHANTMENT
           value: fire_protection
-          level: 4
+          level: 1
           amount: 25
+        fire_protection_2:
+          type: ENCHANTMENT
+          value: fire_protection
+          level: 2
+          amount: 50
+        fire_protection_3:
+          type: ENCHANTMENT
+          value: fire_protection
+          level: 3
+          amount: 75
+        fire_protection_4:
+          type: ENCHANTMENT
+          value: fire_protection
+          level: 4
+          amount: 100
         fire_aspect:
           type: ENCHANTMENT
           value: fire_aspect
+          level: 1
+          amount: 125
+        fire_aspect_2:
+          type: ENCHANTMENT
+          value: fire_aspect
           level: 2
-          amount: 50
+          amount: 150
         blast_protection:
           type: ENCHANTMENT
           value: blast_protection
+          level: 1
+          amount: 175
+        blast_protection_2:
+          type: ENCHANTMENT
+          value: blast_protection
+          level: 2
+          amount: 200
+        blast_protection_3:
+          type: ENCHANTMENT
+          value: blast_protection
+          level: 3
+          amount: 225
+        blast_protection_4:
+          type: ENCHANTMENT
+          value: blast_protection
           level: 4
-          amount: 75
+          amount: 250
         projectile_protection:
           type: ENCHANTMENT
           value: projectile_protection
+          level: 1
+          amount: 275
+        projectile_protection_2:
+          type: ENCHANTMENT
+          value: projectile_protection
+          level: 2
+          amount: 300
+        projectile_protection_3:
+          type: ENCHANTMENT
+          value: projectile_protection
+          level: 3
+          amount: 325
+        projectile_protection_4:
+          type: ENCHANTMENT
+          value: projectile_protection
           level: 4
-          amount: 100
+          amount: 350
         respiration:
           type: ENCHANTMENT
           value: respiration
+          level: 1
+          amount: 375
+        respiration_2:
+          type: ENCHANTMENT
+          value: respiration
+          level: 2
+          amount: 400
+        respiration_3:
+          type: ENCHANTMENT
+          value: respiration
           level: 3
-          amount: 125
+          amount: 425
         aqua_affinity:
           type: ENCHANTMENT
           value: aqua_affinity
           level: 1
-          amount: 150
+          amount: 450
         thorns:
           type: ENCHANTMENT
           value: thorns
+          level: 1
+          amount: 475
+        thorns_2:
+          type: ENCHANTMENT
+          value: thorns
+          level: 2
+          amount: 500
+        thorns_3:
+          type: ENCHANTMENT
+          value: thorns
           level: 3
-          amount: 175
+          amount: 525
         depth_strider:
           type: ENCHANTMENT
           value: depth_strider
+          level: 1
+          amount: 550
+        depth_strider_2:
+          type: ENCHANTMENT
+          value: depth_strider
+          level: 2
+          amount: 575
+        depth_strider_3:
+          type: ENCHANTMENT
+          value: depth_strider
           level: 3
-          amount: 200
+          amount: 600
         knockback:
           type: ENCHANTMENT
           value: knockback
+          level: 1
+          amount: 625
+        knockback_2:
+          type: ENCHANTMENT
+          value: knockback
           level: 2
-          amount: 225
+          amount: 650
         punch:
           type: ENCHANTMENT
           value: punch
+          level: 1
+          amount: 675
+        punch_2:
+          type: ENCHANTMENT
+          value: punch
           level: 2
-          amount: 250
+          amount: 700
+        protection_3:
+          type: ENCHANTMENT
+          value: protection
+          level: 3
+          amount: 725
+        protection_4:
+          type: ENCHANTMENT
+          value: protection
+          level: 4
+          amount: 750
+        protection_5:
+          type: ENCHANTMENT
+          value: protection
+          level: 5
+          amount: 775
     commands:
       requirement: POINTS
       nodes:
@@ -449,3 +599,84 @@ tech-tree:
           type: COMMAND
           value: bottle
           amount: 250
+
+dtc:
+  default-health: 100
+  event-captures: 1
+  break-cooldown-millis: 1000
+  announce-at: [75, 50, 25, 10, 5, 1]
+  rewards:
+    commands: []
+
+reclaim:
+  permissions: # First matching permission is used.
+    - permission: "hcf.reclaim.diamond"
+      commands:
+        - "economy give %player% 1000"
+    - permission: "hcf.reclaim.gold"
+      commands:
+        - "economy give %player% 500"
+    - permission: "hcf.reclaim.default"
+      commands:
+        - "economy give %player% 250"
+
+end:
+  entrance: null
+  exit: null
+
+abilities:
+  global-cooldown: 15
+  global-name: '&dAbility'
+  items:
+    switcher:
+      name: '&dSwitcher Snowball'
+      cooldown: 60
+      max-distance: 10
+    bone:
+      name: '&dExotic Bone'
+      cooldown: 60
+      hits: 3
+      hit-window: 10
+      duration: 10
+      prevent-building: true
+      prevent-breaking: true
+    rage:
+      name: '&dRage Ball'
+      cooldown: 60
+      radius: 3
+      effects:
+        - type: strength
+          level: 2
+          duration: 10
+    ninja:
+      name: '&dNinja Star'
+      cooldown: 60
+      delay: 3
+    archer:
+      name: '&dPortable Archer'
+      cooldown: 60
+      uses: 5
+    brick:
+      name: '&dRes 3 Brick'
+      cooldown: 60
+      effects:
+        - type: resistance
+          level: 3
+          duration: 5
+    switchstick:
+      name: '&dSwitch Stick'
+      cooldown: 60
+      chance: 0.5
+    secondchance:
+      name: '&dSecond Chance'
+      cooldown: 60
+    potioncounter:
+      name: '&dPotion Counter'
+      cooldown: 60
+      hits: 3
+      hit-window: 10
+    starvation:
+      name: '&dStarvation Flesh'
+      cooldown: 60
+      hits: 3
+      hit-window: 10

@@ -91,7 +91,7 @@ public class UserDamageEvent implements Listener {
         }
     }
 
-    private boolean isDamageProtected(LivingEntity victim) {
+    static boolean isDamageProtected(LivingEntity victim) {
         User victimUser = Objects.requireNonNull(getVictimUser(victim));
         Faction victimTerritory = Faction.getAtLocation(victim.getLocation());
         if (victimTerritory != null && victimTerritory.getType() == Faction.Type.SAFEZONE) {
@@ -185,7 +185,7 @@ public class UserDamageEvent implements Listener {
         return true;
     }
 
-    private Player resolveAttacker(Entity entity) {
+    static Player resolveAttacker(Entity entity) {
         if (entity instanceof Player player) return player;
         if (entity instanceof Projectile projectile && projectile.getShooter() instanceof Player player) return player;
         if (entity instanceof TNTPrimed tnt) return resolveAttacker(tnt.getSource());
@@ -230,7 +230,7 @@ public class UserDamageEvent implements Listener {
         if (!hasHarmfulEffects(e.getPotion().getEffects())) return;
         Player attacker = resolveAttacker(e.getPotion());
         for (LivingEntity victim : e.getAffectedEntities()) {
-            if (e.getIntensity(victim) > 0) applySuccessfulPotionCombat(victim, attacker);
+            if (e.getIntensity(victim) > 0) applySuccessfulCombat(victim, attacker);
         }
     }
 
@@ -241,11 +241,11 @@ public class UserDamageEvent implements Listener {
         if (cloud.getBasePotionType() != null) effects.addAll(cloud.getBasePotionType().getPotionEffects());
         if (!hasHarmfulEffects(effects)) return;
         for (LivingEntity victim : e.getAffectedEntities()) {
-            applySuccessfulPotionCombat(victim, resolveAttacker(cloud));
+            applySuccessfulCombat(victim, resolveAttacker(cloud));
         }
     }
 
-    static void applySuccessfulPotionCombat(LivingEntity victim, Player attacker) {
+    static void applySuccessfulCombat(LivingEntity victim, Player attacker) {
         User user = getVictimUser(victim);
         if (user == null || attacker == null || attacker.getUniqueId().equals(user.getUUID())) return;
         applyVictimCombatTimer(victim);

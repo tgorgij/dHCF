@@ -2,6 +2,7 @@ package me.Thomas.HCF.Commands.Admin.KOTH.Subcommands;
 
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.KOTH.KOTH;
+import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
@@ -42,6 +43,10 @@ public class StartCommand implements Subcommand {
         }
         if (!koth.hasCaptureArea()) {
             sender.sendMessage(C.chat(localeConfig.getString("commands.koth.no-area")));
+            return true;
+        }
+        if (koth.getFaction() == null || Faction.get(koth.getFaction()) == null) {
+            sender.sendMessage(C.chat(localeConfig.getString("commands.koth.no-faction")));
             return true;
         }
         long seconds;

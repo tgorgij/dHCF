@@ -88,6 +88,14 @@ public class Conquest {
     public boolean isRunning() { return running; }
     public Zone getZone(Color color) { return zones.get(color); }
     public int getPoints(UUID uuid) { return scores.getOrDefault(uuid, 0); }
+    public void setPoints(UUID uuid, int points) {
+        if (!running) throw new IllegalArgumentException("not-running");
+        Faction faction = Faction.get(uuid);
+        if (faction == null || faction.getType() != Faction.Type.PLAYER) throw new IllegalArgumentException("invalid-faction");
+        if (points < 0) throw new IllegalArgumentException("invalid-points");
+        scores.put(uuid, points);
+    }
+
     public static Color color(String name) {
         try { return Color.valueOf(name.toUpperCase(Locale.ROOT)); }
         catch (IllegalArgumentException exception) { throw new IllegalArgumentException("invalid-zone"); }
@@ -148,8 +156,12 @@ public class Conquest {
 
     public void start() {
         if (running) throw new IllegalArgumentException("running");
-        for (Zone zone : zones.values()) {
-            if (zone.pos1 == null || zone.pos2 == null || Bukkit.getWorld(zone.pos1.world()) == null) throw new IllegalArgumentException("no-area");
+        for (Map.Entry<Color, Zone> entry : zones.entrySet()) {
+            Zone zone = entry.getValue();
+            if (zone.pos1 == null || zone.pos2 == null || Bukkit.getWorld(zone.pos1.world()) == null
+                    || Bukkit.getWorld(zone.pos2.world()) == null) throw new IllegalArgumentException("no-area");
+            if (zone.interval <= 0) throw new IllegalArgumentException("invalid-interval");
+            validate(entry.getKey(), zone.pos1, zone.pos2);
         }
         scores.clear();
         running = true;
@@ -245,8 +257,10 @@ public class Conquest {
         running = false;
         for (Zone zone : zones.values()) zone.reset(false);
         Faction team = Faction.get(winner.faction());
-        int equivalent = Math.max(0, Main.getInstance().getConfig().getInt("conquest.koth-equivalent", 5));
-        team.setKOTHCaptures((int) Math.min(Integer.MAX_VALUE, (long) team.getKOTHCaptures() + equivalent));
+        String captureSetting = Main.getInstance().getConfig().isSet("conquest.event-captures")
+                || !Main.getInstance().getConfig().isSet("conquest.koth-equivalent") ? "conquest.event-captures" : "conquest.koth-equivalent";
+        int equivalent = Math.max(0, Main.getInstance().getConfig().getInt(captureSetting, 5));
+        team.setEventCaptures((int) Math.min(Integer.MAX_VALUE, (long) team.getEventCaptures() + equivalent));
         long gained = (long) Math.max(0, Main.getInstance().getConfig().getInt("factions.points.koth", 50)) * equivalent;
         team.setPoints((int) Math.clamp((long) team.getPoints() + gained, Integer.MIN_VALUE, Integer.MAX_VALUE));
         team.saveAsync();

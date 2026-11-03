@@ -4,6 +4,7 @@ import io.papermc.paper.event.entity.EntityEquipmentChangedEvent;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
+import me.Thomas.HCF.Utils.Ability.AbilityItems;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.Bukkit;
@@ -147,7 +148,7 @@ public class UserBardEvent implements Listener {
         if (held && now >= state.nextHeld) {
             state.nextHeld = now + 1000L;
             ItemStack item = p.getInventory().getItemInMainHand();
-            Effect effect = item == null ? null : heldEffects.get(item.getType());
+            Effect effect = item == null || AbilityItems.getType(item) != null ? null : heldEffects.get(item.getType());
             if (effect != null) apply(p, effect);
         }
         return state;
@@ -228,7 +229,7 @@ public class UserBardEvent implements Listener {
             // Native potion merging preserves stronger boosts and resumes weaker held effects when they expire.
             if (!target.addPotionEffect(effect.potion())) continue;
             applied = true;
-            if (!self && harmful) UserDamageEvent.applySuccessfulPotionCombat(target, bard);
+            if (!self && harmful) UserDamageEvent.applySuccessfulCombat(target, bard);
         }
         return applied;
     }
@@ -250,6 +251,7 @@ public class UserBardEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onAbility(PlayerInteractEvent e) {
+        if (AbilityItems.getType(e.getItem()) != null) return;
         if ((e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK)
                 || e.getHand() != EquipmentSlot.HAND || e.useItemInHand() == Event.Result.DENY || e.getItem() == null) return;
         Effect effect = clickEffects.get(e.getItem().getType());

@@ -205,8 +205,9 @@ public class ShowCommand implements Subcommand {
                 s = s.replace("%points%", faction.getPoints() + "");
             }
 
-            if (s.contains("%koth-captures%")) {
-                s = s.replace("%koth-captures%", faction.getKOTHCaptures() + "");
+            s = s.replace("%koth-captures%", Integer.toString(faction.getEventCaptures()));
+            if (s.contains("%event-captures%")) {
+                s = s.replace("%event-captures%", faction.getEventCaptures() + "");
             }
 
             if (s.contains("%dtr%")) {
@@ -325,8 +326,9 @@ public class ShowCommand implements Subcommand {
                 s = s.replace("%points%", faction.getPoints() + "");
             }
 
-            if (s.contains("%koth-captures%")) {
-                s = s.replace("%koth-captures%", faction.getKOTHCaptures() + "");
+            s = s.replace("%koth-captures%", Integer.toString(faction.getEventCaptures()));
+            if (s.contains("%event-captures%")) {
+                s = s.replace("%event-captures%", faction.getEventCaptures() + "");
             }
 
             if (s.contains("%dtr%")) {

@@ -3,6 +3,7 @@ package me.Thomas.HCF.Commands.User;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
+import me.Thomas.HCF.Utils.Permission.Permission;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
@@ -53,6 +54,13 @@ public class MessageCommand implements TabExecutor {
         target.sendMessage(format("received", p.getName(), message));
         User.get(p).setLastConversation(target.getUniqueId());
         recipient.setLastConversation(p.getUniqueId());
+        Component spyMessage = C.chat(Main.getInstance().getLocaleConfig().getString("commands.socialspy.format")
+                .replace("%sender%", p.getName()).replace("%recipient%", target.getName()))
+                .replaceText(builder -> builder.matchLiteral("%message%").replacement(Component.text(message)));
+        for (Player staff : Bukkit.getOnlinePlayers()) {
+            if (staff.getUniqueId().equals(p.getUniqueId()) || staff.getUniqueId().equals(target.getUniqueId())) continue;
+            if (User.get(staff).isSocialSpy() && Permission.has(staff, "command.socialspy", "staff")) staff.sendMessage(spyMessage);
+        }
         if (recipient.isMessageSounds()) {
             target.playSound(target.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
         }

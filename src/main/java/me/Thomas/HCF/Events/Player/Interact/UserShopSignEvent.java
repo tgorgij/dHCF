@@ -77,18 +77,23 @@ public class UserShopSignEvent implements Listener {
         return data == null ? null : parse(data.split(";", -1));
     }
 
+    private static boolean isShop(Sign sign) {
+        for (Side side : Side.values()) if (sign.getPersistentDataContainer().has(key(side))) return true;
+        return false;
+    }
+
     private static boolean admin(Player p) { return Permission.has(p, "sign.shop.create", "admin"); }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSignChange(SignChangeEvent e) {
         if (!(e.getBlock().getState() instanceof Sign sign)) return;
-        if (!marker(plain(e.line(0))) && !sign.getPersistentDataContainer().has(key(e.getSide()))) return;
+        if (isShop(sign)) { e.setCancelled(true); return; }
+        if (!marker(plain(e.line(0)))) return;
         if (!admin(e.getPlayer())) {
             e.setCancelled(true);
             e.getPlayer().sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.no-permission")));
             return;
         }
-        if (!marker(plain(e.line(0)))) return;
         Trade trade = parse(e.lines().stream().map(UserShopSignEvent::plain).toArray(String[]::new));
         if (trade == null) {
             e.setCancelled(true);
@@ -107,7 +112,11 @@ public class UserShopSignEvent implements Listener {
         if (!marker(plain(e.line(0))) && !sign.getPersistentDataContainer().has(key(e.getSide()))) return;
         Trade trade = parse(e.lines().stream().map(UserShopSignEvent::plain).toArray(String[]::new));
         if (trade == null) sign.getPersistentDataContainer().remove(key(e.getSide()));
-        else sign.getPersistentDataContainer().set(key(e.getSide()), PersistentDataType.STRING, trade.serialize());
+        else {
+            sign.getPersistentDataContainer().set(key(e.getSide()), PersistentDataType.STRING, trade.serialize());
+            sign.setWaxed(true);
+            sign.setAllowedEditorUniqueId(null);
+        }
         sign.update();
     }
 
@@ -121,7 +130,13 @@ public class UserShopSignEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSignOpen(PlayerOpenSignEvent e) {
-        if (!admin(e.getPlayer()) && e.getSign().getPersistentDataContainer().has(key(e.getSide()))) e.setCancelled(true);
+        if (!isShop(e.getSign())) return;
+        e.setCancelled(true);
+        if (!e.getSign().isWaxed()) {
+            e.getSign().setWaxed(true);
+            e.getSign().setAllowedEditorUniqueId(null);
+            e.getSign().update();
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

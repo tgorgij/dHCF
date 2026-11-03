@@ -3,6 +3,7 @@ package me.Thomas.HCF.Events.Player.Combat;
 import io.papermc.paper.event.entity.EntityEquipmentChangedEvent;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
+import me.Thomas.HCF.Utils.Ability.AbilityItems;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.Bukkit;
@@ -223,6 +224,7 @@ public class UserArcherEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onAbility(PlayerInteractEvent e) {
+        if (AbilityItems.getType(e.getItem()) != null) return;
         if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (e.useItemInHand() == Event.Result.DENY || e.getHand() == null || e.getItem() == null) return;
         Material material = e.getItem().getType();
@@ -261,6 +263,7 @@ public class UserArcherEvent implements Listener {
     public void onBowShot(EntityShootBowEvent e) {
         if (!(e.getEntity() instanceof Player p) || e.getBow() == null || e.getBow().getType() != Material.BOW
                 || e.getForce() < 1.0F || !(e.getProjectile() instanceof AbstractArrow arrow)) return;
+        if (AbilityItems.getType(e.getBow()) == AbilityItems.Type.ARCHER) return;
         ArcherState state = update(p);
         if (state != null && state.active) arrow.getPersistentDataContainer().set(shotKey, PersistentDataType.BYTE, (byte) 1);
     }

@@ -4,7 +4,9 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.KOTH.KOTH;
 import me.Thomas.HCF.IO.Conquest.Conquest;
+import me.Thomas.HCF.IO.DTC.DTC;
 import me.Thomas.HCF.Main.Main;
+import me.Thomas.HCF.Utils.Ability.AbilityItems;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import me.Thomas.HCF.Utils.Timer.ServerTimer;
@@ -119,6 +121,12 @@ public class Board {
                 if (!user.isBardActive()) continue;
                 text = text.replace("<display=%has-bard%>", "").stripTrailing();
             }
+            if (text.contains("%dtc%")) {
+                if (DTC.get() == null || !DTC.get().isRunning()) continue;
+                text = text.replace("%dtc%", Main.getInstance().getScoreboardConfig().getString("boards.dtc", "&cDTC&7: &f%health%/%max-health%")
+                        .replace("%health%", Integer.toString(DTC.get().getHealth()))
+                        .replace("%max-health%", Integer.toString(DTC.get().getMaxHealth())));
+            }
             if (text.contains("%bard-energy%")) {
                 text = text.replace("%bard-energy%", java.math.BigDecimal.valueOf(user.getBardEnergy())
                         .setScale(1, java.math.RoundingMode.DOWN).stripTrailingZeros().toPlainString());
@@ -150,7 +158,24 @@ public class Board {
                 if (timer == null || timer.getRemainingTimeMillis() <= 0) continue;
                 text = text.replace(configured.placeholder(), C.formatTime(timer.getRemainingTimeMillis()));
             }
-            if (text.contains("%conquest%")) {
+            if (text.contains("%ability-cooldowns%")) {
+                if (!user.isAbilityCooldowns()) continue;
+                String format = Main.getInstance().getScoreboardConfig().getString("boards.ability-timer", "%name%&7: &c%time%");
+                for (ServerTimer timer : AbilityItems.timers(player).values()) {
+                    lines.add(text.replace("%ability-cooldowns%", format.replace("%name%", timer.getName())
+                            .replace("%time%", C.formatTime(timer.getRemainingTimeMillis()))));
+                    if (lines.size() == MAX_LINES) break;
+                }
+            } else if (text.contains("%custom-server-timers%") || text.contains("%custom-user-timers%")) {
+                boolean server = text.contains("%custom-server-timers%");
+                String placeholder = server ? "%custom-server-timers%" : "%custom-user-timers%";
+                String format = Main.getInstance().getScoreboardConfig().getString("boards.custom-timer", "%name%&7: &c%time%");
+                for (ServerTimer timer : (server ? Main.getInstance().getCustomServerTimers() : user.getCustomTimers()).values()) {
+                    lines.add(text.replace(placeholder, format.replace("%name%", timer.getName())
+                            .replace("%time%", C.formatTime(timer.getRemainingTimeMillis()))));
+                    if (lines.size() == MAX_LINES) break;
+                }
+            } else if (text.contains("%conquest%")) {
                 if (conquest == null || !conquest.isRunning()) continue;
                 for (String line : conquestLines(conquest, user)) {
                     lines.add(text.replace("%conquest%", line));

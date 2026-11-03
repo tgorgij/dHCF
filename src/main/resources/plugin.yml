@@ -5,6 +5,25 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  ability:
+    description: Give ability items to an online player.
+    usage: /ability <player> <item> [amount]
+  socialspy:
+    aliases: [ss]
+    description: Toggle viewing private messages between other players.
+    usage: /socialspy
+  setend:
+    description: Set End portal arrival and return locations.
+    usage: /setend <entrance|exit>
+  reclaim:
+    description: Redeem your rank rewards or reset all reclaims.
+    usage: /reclaim [reset]
+  dtc:
+    description: Configure and run Destroy the Core.
+    usage: /dtc <setcore|clearcore|sethealth|start|cancel> [health]
+  customtimer:
+    description: Create or cancel session-only user and server timers.
+    usage: /customtimer <create|cancel> <server|user> [arguments]
   rewards:
     description: Open your faction tech tree.
     usage: /rewards [<faction> list]
@@ -57,6 +76,9 @@ commands:
   freeze:
     description: Freeze or unfreeze a player or the server.
     usage: /freeze <player|all>
+  tphere:
+    description: Teleport an online player to you.
+    usage: /tphere <player>
   invsee:
     description: Inspect an online player's inventory.
     usage: /invsee <player>
@@ -102,9 +124,25 @@ commands:
     aliases:
       - eco
 permissions:
+  hcf.command.socialspy:
+    default: op
+  hcf.command.setend:
+    default: op
+  hcf.command.reclaim.reset:
+    default: op
+  hcf.reclaim.diamond:
+    default: false
+  hcf.reclaim.gold:
+    default: false
+  hcf.reclaim.default:
+    default: true
+  hcf.command.dtc:
+    default: op
+  hcf.command.customtimer:
+    default: op
   hcf.command.rewards.list:
     default: op
-  hcf.command.faction.setkothcaptures:
+  hcf.command.faction.seteventcaptures:
     default: op
   hcf.command.faction.setpoints:
     default: op
@@ -151,6 +189,8 @@ permissions:
   hcf.command.staff:
     default: op
   hcf.command.freeze:
+    default: op
+  hcf.command.tphere:
     default: op
   hcf.command.invsee:
     default: op

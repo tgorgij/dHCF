@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 
-public class SetKOTHCapturesCommand implements Subcommand {
+public class SetEventCapturesCommand implements Subcommand {
 
-    @Override public String getName() { return "setkothcaptures"; }
+    @Override public String getName() { return "seteventcaptures"; }
     @Override public List<String> getAliases() { return List.of(); }
 
     private void send(CommandSender sender, String key, String... replacements) {
@@ -48,10 +48,10 @@ public class SetKOTHCapturesCommand implements Subcommand {
                 value = Integer.parseInt(args[1]);
                 if (value < 0) throw new NumberFormatException();
             } catch (NumberFormatException exception) { send(sender, "admin.invalid-amount"); return true; }
-            int previous = faction.getKOTHCaptures();
-            faction.setKOTHCaptures(value);
+            int previous = faction.getEventCaptures();
+            faction.setEventCaptures(value);
             try { faction.save(); }
-            catch (RuntimeException exception) { faction.setKOTHCaptures(previous); throw exception; }
+            catch (RuntimeException exception) { faction.setEventCaptures(previous); throw exception; }
             send(sender, getName() + ".success", "%faction%", faction.getName(), "%amount%", Integer.toString(value));
         } catch (IllegalArgumentException exception) { send(sender, exception.getMessage()); }
         catch (RuntimeException exception) {

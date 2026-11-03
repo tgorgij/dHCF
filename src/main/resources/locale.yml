@@ -26,6 +26,13 @@ primary:
     hq: "&eWarped to &d%faction%&e's HQ."
 
 events:
+  dtc:
+    started: "&6[DTC] Destroy the Core has started with %max-health% health!"
+    remaining: "&6[DTC] The core has %health% health remaining."
+    cancelled: "&6[DTC] Destroy the Core has been cancelled."
+    captured: "&6[DTC] &b%player% &6of %faction% landed the final break and won!"
+    inactive: "&cDTC is not running."
+    cannot-damage: "&cYou must be an eligible faction member without PvP protection to damage the core. Respect the core break cooldown."
   staff:
     joined: "&9[Staff] &b%player% &ejoined the server."
     left: "&9[Staff] &b%player% &eleft the server."
@@ -177,6 +184,55 @@ faction:
     offline: "&4%player% &cis offline"
 
 commands:
+  socialspy:
+    usage: "&cUsage: /%alias%"
+    toggled: "&eSocial spy %state%&e."
+    format: "&9[Social Spy] &b%sender% &7-> &b%recipient%&7: &e%message%"
+  setend:
+    usage: "&cUsage: /%alias% <entrance|exit>"
+    entrance-usage: "&cUsage: /%alias% entrance"
+    exit-usage: "&cUsage: /%alias% exit"
+    entrance-world: "&cSet the End entrance while standing in the End."
+    exit-world: "&cSet the End exit while standing outside the End."
+    invalid-height: "&cStand inside the world's build height to set this location."
+    entrance-set: "&eEnd entrance location set."
+    exit-set: "&eEnd exit location set."
+    failed: "&cThe End location could not be saved. Please try again."
+  reclaim:
+    usage: "&cUsage: /%alias%"
+    unavailable: "&cYou cannot reclaim while dead or in mod mode."
+    already: "&cYou have already redeemed your reclaim."
+    no-rewards: "&cNo rewards are configured for your reclaim."
+    failed: "&cYour reclaim could not be saved. Please try again."
+    reward-failed: "&cYour reclaim was recorded, but a reward command failed. Contact staff."
+    success: "&eYou redeemed your reclaim."
+    reset-usage: "&cUsage: /%alias% reset"
+    reset: "&eReset every player's reclaim."
+    reset-failed: "&cReclaims could not be reset. Please try again."
+  dtc:
+    start-usage: "&cUsage: /%alias% start"
+    cancel-usage: "&cUsage: /%alias% cancel"
+    setcore-usage: "&cUsage: /%alias% setcore"
+    clearcore-usage: "&cUsage: /%alias% clearcore"
+    sethealth-usage: "&cUsage: /%alias% sethealth <breaks>"
+    running: "&cDTC is already running."
+    not-running: "&cDTC is not running."
+    no-core: "&cSet a DTC core in a loaded world first."
+    invalid-core: "&cLook at a solid, breakable block without block entity data, outside player claims, safezones, and mountains."
+    invalid-health: "&cCore health must be a positive whole number."
+    cancel-before-edit: "&cCancel DTC before changing its setup."
+    core-set: "&eDTC core set."
+    core-cleared: "&eDTC core cleared."
+    health-set: "&eDTC core health set to &b%health%&e."
+    failed: "&cDTC could not be updated. Check the console."
+  customtimer:
+    create-usage: "&cUsage: /%alias% create server <name> <seconds> or /%alias% create user <player> <name> <seconds>"
+    cancel-usage: "&cUsage: /%alias% cancel server <name> or /%alias% cancel user <player> <name>"
+    invalid-name: "&cTimer names cannot be empty."
+    already: "&cA custom timer named %name% is already running for this target."
+    not-found: "&cNo custom timer named %name% is running for this target."
+    created: "&eCreated &b%name% &efor &b%target% &ewith &b%time% &eremaining."
+    cancelled: "&eCancelled &b%name% &efor &b%target%&e."
   rewards:
     admin-usage: "&cUsage: /%alias% <faction> list"
     usage: "&cUsage: /rewards"
@@ -191,7 +247,7 @@ commands:
     failed: "&cThis reward could not be unlocked."
     unlocked: "&eUnlocked &b%node% &efor your faction."
   schedule:
-    add-usage: "&cUsage: /%alias% add koth <name> <HH:mm> <capture-seconds> or /%alias% add conquest <HH:mm>"
+    add-usage: "&cUsage: /%alias% add koth <name> <HH:mm> <capture-seconds> or /%alias% add conquest <HH:mm> or /%alias% add dtc <HH:mm>"
     list-usage: "&cUsage: /%alias% list"
     remove-usage: "&cUsage: /%alias% remove <id>"
     invalid: "&cUse a valid 24-hour HH:mm time and positive KOTH capture duration in seconds."
@@ -244,6 +300,10 @@ commands:
     start-usage: "&cUsage: /%alias% start"
     cancel-usage: "&cUsage: /%alias% cancel"
     setinterval-usage: "&cUsage: /%alias% setinterval <zone> <seconds>"
+    setpoints-usage: "&cUsage: /%alias% setpoints <faction> <amount>"
+    invalid-points: "&cConquest points must be a nonnegative whole number."
+    invalid-faction: "&cOnly player factions can have Conquest points."
+    points-set: "&eSet &b%faction%&e's Conquest points to &b%points%&e."
     setpos1-usage: "&cUsage: /%alias% setpos1 <zone>"
     setpos2-usage: "&cUsage: /%alias% setpos2 <zone>"
   bottle:
@@ -255,10 +315,6 @@ commands:
     success: "&eBottled &b%experience% &eexperience."
     redeemed: "&eRecovered &b%experience% &eexperience."
     too-much-experience: "&cYou have too much experience. Your bottle has been returned."
-    item-name: "&bExperience Bottle"
-    item-lore:
-      - "&eContains &b%experience% &eexperience."
-      - "&7Throw to recover the stored experience."
   craft:
     usage: "&cUsage: /%alias%"
   message:
@@ -321,7 +377,8 @@ commands:
     already-exists: "&6[KOTH] A KOTH with this name already exists."
     running: "&6[KOTH] This KOTH is already running."
     not-running: "&6[KOTH] This KOTH is not running."
-    no-area: "&6[KOTH] Set both capture positions in a loaded world first."
+    no-area: "&6[KOTH] Set both capture positions inside the build height of the same loaded world first."
+    no-faction: "&6[KOTH] Link an existing faction with setfaction before starting this KOTH."
     different-world: "&6[KOTH] Both capture positions must be in the same dimension."
     cancel-before-edit: "&6[KOTH] Cancel this KOTH before changing its capture area."
     requires-faction: "&6[KOTH] Set a faction before changing pearlability."
@@ -411,6 +468,12 @@ commands:
       invalid-time: "&cEnter a whole number of seconds, 0 or greater."
       enabled: "&ePublic chat has been slowed to &b%time% seconds &eby &b%player%&e."
       disabled: "&eChat slow mode has been disabled by &b%player%&e."
+  tphere:
+    usage: "&cUsage: /%alias% <player>"
+    self: "&cYou cannot teleport yourself to yourself."
+    failed: "&cCould not teleport %player% to you."
+    success: "&eTeleported &b%player% &eto you."
+    teleported: "&eYou were teleported to &b%player%&e."
   restore:
     usage: "&cUsage: /%alias% <player>"
     offline: "&c%player% is not online."
@@ -499,9 +562,9 @@ commands:
       rank-limit: "&cThat player cannot be moved to that rank. Use /f forcetransfer to change the leader."
       failed: "&cThe faction changes could not be saved."
       target: "&b%admin% &eupdated your membership in &b%faction% &eusing &b/f %action%&e."
-    setkothcaptures:
-      usage: "&cUsage: /%alias% setkothcaptures <faction> <amount>"
-      success: "&eSet &b%faction% &eKOTH captures to &b%amount%&e."
+    seteventcaptures:
+      usage: "&cUsage: /%alias% seteventcaptures <faction> <amount>"
+      success: "&eSet &b%faction% &eevent captures to &b%amount%&e."
     setpoints:
       usage: "&cUsage: /%alias% setpoints <faction> <amount>"
       success: "&eSet &b%faction% &epoints to &b%amount%&e."
@@ -744,12 +807,25 @@ commands:
       usage: "&cUsage: /sotw start <time>"
       success: "&eYou have started the SOTW"
 
-items:
-  crowbar:
-    name: "&eCrowbar"
-    lore:
-      - "&7Breaks spawners only."
-      - "&eUses remaining&7: &f%uses%"
-  spawner:
-    name: "&e%type% Spawner"
-    lore: []
+abilities:
+  usage: '&cUsage: /ability <player> <switcher|bone|rage|ninja|archer|brick|switchstick|secondchance|potioncounter|starvation> [amount]'
+  given: '&eGave &b%player% &e%amount%x %item%&e.'
+  unavailable: '&cAbility items cannot be used here or in your current state.'
+  no-space: '&cThat player does not have enough inventory space.'
+  cooldown: '&cYou must wait %time% before using this ability.'
+  no-attacker: '&cThere is no available player who last damaged you.'
+  ninja-warning: '&b%player% &ewill teleport to you in %time% seconds!'
+  ninja-start: '&eYour Ninja Star is tracking &b%player%&e.'
+  ninja-success: '&eTeleported to &b%player%&e.'
+  teleport-failed: '&cYour ability teleport could not be completed.'
+  too-far: '&cThat player is too far away to switch.'
+  swapped: '&eSwapped positions with &b%player%&e.'
+  hits: '&e%player%&7: &e%hits%/%required% hits.'
+  success: '&eUsed %item% &eon &b%player%&e.'
+  boned: '&cYou have been boned for %time% seconds!'
+  bone-restricted: '&cYou cannot do that while boned.'
+  starved: '&cYour hunger has been drained!'
+  second-chance: '&aYour Second Chance restored you to full health!'
+  potions-header: '&ePotions carried by &b%player%&e:'
+  potion-line: '  &e%potion%&7: &f%amount%'
+  no-potions: '  &7No potions.'

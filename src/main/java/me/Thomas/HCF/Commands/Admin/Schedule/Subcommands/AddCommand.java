@@ -21,7 +21,7 @@ public class AddCommand implements Subcommand {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String @NotNull [] args, @NotNull String alias) {
         boolean koth = args.length > 0 && args[0].equalsIgnoreCase("koth");
-        if (!(koth && args.length == 4 || args.length == 2 && args[0].equalsIgnoreCase("conquest"))) {
+        if (!(koth && args.length == 4 || args.length == 2 && (args[0].equalsIgnoreCase("conquest") || args[0].equalsIgnoreCase("dtc")))) {
             ScheduleCommand.send(sender, "add-usage", "%alias%", alias);
             return true;
         }
@@ -45,8 +45,8 @@ public class AddCommand implements Subcommand {
             return true;
         }
         EventScheduler.Schedule schedule = Main.getInstance().getEventScheduler().add(
-                koth ? EventScheduler.Type.KOTH : EventScheduler.Type.CONQUEST, event == null ? null : event.getUUID(), time, seconds);
-        ScheduleCommand.send(sender, "added", "%id%", Long.toString(schedule.id()), "%event%", event == null ? "Conquest" : event.getName(),
+                EventScheduler.Type.valueOf(args[0].toUpperCase(Locale.ROOT)), event == null ? null : event.getUUID(), time, seconds);
+        ScheduleCommand.send(sender, "added", "%id%", Long.toString(schedule.id()), "%event%", event == null ? args[0].equalsIgnoreCase("dtc") ? "DTC" : "Conquest" : event.getName(),
                 "%time%", time.toString(), "%timezone%", Main.getInstance().getEventScheduler().getTimezone().getId());
         return true;
     }
@@ -54,10 +54,10 @@ public class AddCommand implements Subcommand {
     @Override
     public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String @NotNull [] args) {
         String input = args.length == 0 ? "" : args[args.length - 1].toLowerCase(Locale.ROOT);
-        if (args.length == 1) return List.of("koth", "conquest").stream().filter(value -> value.startsWith(input)).toList();
+        if (args.length == 1) return List.of("koth", "conquest", "dtc").stream().filter(value -> value.startsWith(input)).toList();
         if (args.length == 2 && args[0].equalsIgnoreCase("koth")) return Main.getInstance().getAllKOTHs().values().stream()
                 .map(KOTH::getName).filter(name -> name.toLowerCase(Locale.ROOT).startsWith(input)).sorted().toList();
-        if (args.length == 2 && args[0].equalsIgnoreCase("conquest") || args.length == 3 && args[0].equalsIgnoreCase("koth")) {
+        if (args.length == 2 && (args[0].equalsIgnoreCase("conquest") || args[0].equalsIgnoreCase("dtc")) || args.length == 3 && args[0].equalsIgnoreCase("koth")) {
             return List.of("12:00", "18:00", "20:00").stream().filter(value -> value.startsWith(input)).toList();
         }
         if (args.length == 4 && args[0].equalsIgnoreCase("koth")) return List.of("300", "600", "900").stream().filter(value -> value.startsWith(input)).toList();

@@ -9,6 +9,7 @@ import me.Thomas.HCF.IO.Conquest.Conquest;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Deathban.Deathban;
+import me.Thomas.HCF.Events.Player.Item.UserDeathSignEvent;
 import me.Thomas.HCF.Utils.Combat.CombatLoggerInventory;
 import me.Thomas.HCF.Utils.Combat.DTR;
 import net.kyori.adventure.text.Component;
@@ -37,6 +38,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.inventory.ItemStack;
 
+import java.time.Instant;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedHashSet;
@@ -99,6 +101,7 @@ public class UserDeathEvent implements Listener {
         } catch (IllegalArgumentException exception) {
             return;
         }
+        Instant deathTime = Instant.now();
         ItemStack[] inventory = CombatLoggerInventory.capture(villager);
         try {
             // Commit the clear-on-login marker before making the copied inventory available as drops.
@@ -120,6 +123,7 @@ public class UserDeathEvent implements Listener {
         Deathban.apply(user, duration == null
                 ? Main.getInstance().getConfig().getLong("deathbans.default-duration", 3600L) : duration, villager.getLocation());
         recordDeathStatistics(e, user);
+        addDeathSign(e, user, deathTime);
         String prefix = localeConfig.getString("events.player.death.combat-logger", "&7[Combat-Logger]");
         String victim = prefix + " " + getPlayerName(user);
         Main.getInstance().getServer().broadcast(formatDeathMessage(e, victim));
@@ -127,6 +131,7 @@ public class UserDeathEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDeath(PlayerDeathEvent e) {
+        Instant deathTime = Instant.now();
         State state = new CombatLoggerStateStore(Main.getInstance().getDatabaseManager()).get(e.getEntity().getUniqueId());
         if (state != null && state.died()) {
             // The logger's death was already counted; this death only opens its owner's respawn screen.
@@ -144,6 +149,7 @@ public class UserDeathEvent implements Listener {
         user.setLastExperience(e.getEntity().calculateTotalExperiencePoints());
         Deathban.apply(user, Deathban.getDuration(e.getEntity()), e.getEntity().getLocation());
         recordDeathStatistics(e, user);
+        addDeathSign(e, user, deathTime);
         e.deathMessage(formatDeathMessage(e, getPlayerName(user)));
         // Let the death finish processing drops and statistics before disconnecting the player.
         Main.getInstance().getServer().getScheduler().runTask(Main.getInstance(), () -> {
@@ -154,6 +160,19 @@ public class UserDeathEvent implements Listener {
                     "&cYou are deathbanned. &eYou can log back in in &c%time%&e.");
             player.kick(C.chat(message.replace("%time%", C.formatChatTime(remaining))));
         });
+    }
+
+    private void addDeathSign(EntityDeathEvent e, User victim, Instant deathTime) {
+        Player killer = getKiller(e);
+        EntityDamageEvent damage = e.getEntity().getLastDamageCause();
+        e.getDrops().add(UserDeathSignEvent.create(victim.getName(), killer == null ? null : killer.getName(),
+                damage == null ? null : damage.getCause(), deathTime));
+    }
+
+    private Player getKiller(EntityDeathEvent e) {
+        Player killer = resolvePlayerAttacker(getAttackingEntity(e));
+        // Preserve vanilla attribution when the final damage follows an earlier player hit.
+        return killer == null ? e.getEntity().getKiller() : killer;
     }
 
     private Component formatDeathMessage(EntityDeathEvent e, String victim) {
@@ -185,9 +204,7 @@ public class UserDeathEvent implements Listener {
         victim.setDeaths(victim.getDeaths() + 1);
         Conquest conquest = Conquest.get();
         if (conquest != null) conquest.onDeath(victim);
-        Player killer = resolvePlayerAttacker(getAttackingEntity(e));
-        // Preserve vanilla kill attribution for deaths following earlier player damage (such as a fall).
-        if (killer == null) killer = e.getEntity().getKiller();
+        Player killer = getKiller(e);
         List<SaveSnapshot> snapshots = new ArrayList<>();
         Set<Faction> changedFactions = new LinkedHashSet<>();
         if (killer != null && !killer.getUniqueId().equals(victim.getUUID())) {

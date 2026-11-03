@@ -85,9 +85,10 @@ public class UserSettingsEvent implements Listener {
                 menu.inventory.setItem(row + 6, item(menu, Material.PAPER, "public-chat", user.isPublicChat()));
             }
             case SCOREBOARD -> {
-                menu.inventory.setItem(row + 2, item(menu, Material.PAINTING, "scoreboard", user.isScoreboard()));
-                menu.inventory.setItem(row + 6, item(menu, Material.GLOWSTONE, "mountains", user.isMountainMessages()));
-                menu.inventory.setItem(row + 4, item(menu, Material.CLOCK, "request-report-cooldowns", user.isRequestReportCooldowns()));
+                menu.inventory.setItem(row + 1, item(menu, Material.PAINTING, "scoreboard", user.isScoreboard()));
+                menu.inventory.setItem(row + 5, item(menu, Material.GLOWSTONE, "mountains", user.isMountainMessages()));
+                menu.inventory.setItem(row + 7, item(menu, Material.BLAZE_POWDER, "ability-cooldowns", user.isAbilityCooldowns()));
+                menu.inventory.setItem(row + 3, item(menu, Material.CLOCK, "request-report-cooldowns", user.isRequestReportCooldowns()));
             }
             case MESSAGES -> {
                 menu.inventory.setItem(row + 2, item(menu, Material.WRITABLE_BOOK, "messages", user.isMessages()));
@@ -125,9 +126,10 @@ public class UserSettingsEvent implements Listener {
                 user.setPublicChat(!user.isPublicChat());
             }
             case SCOREBOARD -> {
-                if (slot == row + 2) user.setScoreboard(!user.isScoreboard());
-                else if (slot == row + 6) user.setMountainMessages(!user.isMountainMessages());
-                else if (slot == row + 4) user.setRequestReportCooldowns(!user.isRequestReportCooldowns());
+                if (slot == row + 1) user.setScoreboard(!user.isScoreboard());
+                else if (slot == row + 5) user.setMountainMessages(!user.isMountainMessages());
+                else if (slot == row + 3) user.setRequestReportCooldowns(!user.isRequestReportCooldowns());
+                else if (slot == row + 7) user.setAbilityCooldowns(!user.isAbilityCooldowns());
                 else return;
             }
             case MESSAGES -> {

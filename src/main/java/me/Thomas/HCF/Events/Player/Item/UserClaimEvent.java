@@ -29,8 +29,6 @@ public class UserClaimEvent implements Listener {
         if (!a.equals(Action.LEFT_CLICK_BLOCK)) return;
         if (e.getItem() == null) return;
         if (!e.getItem().hasItemMeta()) return;
-        if (!e.getItem().getItemMeta().hasDisplayName()) return;
-        if (!e.getItem().getItemMeta().hasLore()) return;
         if (user.getClaiming() == null) return;
         ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
@@ -94,8 +92,6 @@ public class UserClaimEvent implements Listener {
         if (!a.equals(Action.RIGHT_CLICK_BLOCK)) return;
         if (e.getItem() == null) return;
         if (!e.getItem().hasItemMeta()) return;
-        if (!e.getItem().getItemMeta().hasDisplayName()) return;
-        if (!e.getItem().getItemMeta().hasLore()) return;
         if (user.getClaiming() == null) return;
         ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
@@ -160,8 +156,6 @@ public class UserClaimEvent implements Listener {
         if (!a.equals(Action.RIGHT_CLICK_AIR) || !p.isSneaking()) return;
         if (e.getItem() == null) return;
         if (!e.getItem().hasItemMeta()) return;
-        if (!e.getItem().getItemMeta().hasDisplayName()) return;
-        if (!e.getItem().getItemMeta().hasLore()) return;
         if (user.getClaiming() == null) return;
         ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
@@ -180,8 +174,6 @@ public class UserClaimEvent implements Listener {
         if (!a.equals(Action.LEFT_CLICK_AIR) || !p.isSneaking()) return;
         if (e.getItem() == null) return;
         if (!e.getItem().hasItemMeta()) return;
-        if (!e.getItem().getItemMeta().hasDisplayName()) return;
-        if (!e.getItem().getItemMeta().hasLore()) return;
         if (user.getClaiming() == null) return;
         ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;

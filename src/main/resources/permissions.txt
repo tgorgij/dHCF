@@ -19,7 +19,7 @@
 - hcf.command.faction.setdeathban
 - hcf.command.faction.setdtr
 - hcf.command.faction.setregen
-- hcf.command.faction.setkothcaptures
+- hcf.command.faction.seteventcaptures
 - hcf.command.faction.setpoints
 - hcf.command.faction.setkills
 - hcf.command.faction.forcejoin
@@ -71,8 +71,10 @@
 - hcf.command.staff
 - hcf.command.freeze
 - hcf.command.invsee
+- hcf.command.tphere
 - hcf.command.invsee.modify
 - hcf.command.vanish
+- hcf.command.socialspy
 - hcf.freeze.bypass
 - hcf.vanish.see
 - worldedit.wand
@@ -103,3 +105,21 @@
 
 19. Faction rewards
 - hcf.command.rewards.list
+
+20. Custom timers
+- hcf.command.customtimer
+
+21. Destroy the Core
+- hcf.command.dtc
+
+22. Reclaims
+- hcf.command.reclaim.reset
+- hcf.reclaim.diamond
+- hcf.reclaim.gold
+- hcf.reclaim.default
+
+23. End portals
+- hcf.command.setend
+
+24. Ability items
+- hcf.command.ability

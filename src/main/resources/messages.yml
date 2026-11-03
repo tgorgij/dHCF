@@ -6,15 +6,28 @@ coords:
   - "&7&m---------------------------"
 
 help:
+  dtc:
+    - "&e/%alias% setcore &7- Select the block you are looking at."
+    - "&e/%alias% clearcore"
+    - "&e/%alias% sethealth <breaks>"
+    - "&e/%alias% start"
+    - "&e/%alias% cancel"
+  customtimer:
+    - "&e/%alias% create server <name> <seconds>"
+    - "&e/%alias% create user <player> <name> <seconds>"
+    - "&e/%alias% cancel server <name>"
+    - "&e/%alias% cancel user <player> <name>"
   schedule:
     - "&e/%alias% add koth <name> <HH:mm> <capture-seconds>"
     - "&e/%alias% add conquest <HH:mm>"
+    - "&e/%alias% add dtc <HH:mm>"
     - "&e/%alias% list"
     - "&e/%alias% remove <id>"
   conquest:
     - "&e/%alias% start"
     - "&e/%alias% cancel"
     - "&e/%alias% setinterval <red|yellow|green|blue> <seconds>"
+    - "&e/%alias% setpoints <faction> <amount>"
     - "&e/%alias% setpos1 <zone>"
     - "&e/%alias% setpos2 <zone>"
   mountain:
@@ -202,7 +215,7 @@ factions:
       - "&eMembers: &9%members%"
       - "&eBalance: &9%balance%"
       - "&ePoints: &9%points%"
-      - "&eKOTH Captures: &9%koth-captures%"
+      - "&eEvent Captures: &9%event-captures%"
       - "&eDeaths until Raidable: &a%dtr%"
       - "&eTime until Regeneration: &b%regeneration-time%" # Member + Staff Only
       - "&eStatus: &9%open%"

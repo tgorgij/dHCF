@@ -3,8 +3,7 @@ package me.Thomas.HCF.Events.Player.Item;
 import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
+import me.Thomas.HCF.Utils.Items.Items;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -20,8 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
 public class UserBottleEvent implements Listener {
 
@@ -35,15 +33,8 @@ public class UserBottleEvent implements Listener {
 
     public static ItemStack createBottle(int experience) {
         if (experience <= 0) throw new IllegalArgumentException("Experience must be positive");
-        ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE);
+        ItemStack item = Items.create("experience-bottle", Material.EXPERIENCE_BOTTLE, Map.of("%experience%", Integer.toString(experience)));
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(C.chat(Main.getInstance().getLocaleConfig().getString("commands.bottle.item-name"))
-                .decoration(TextDecoration.ITALIC, false));
-        List<Component> lore = new ArrayList<>();
-        for (String line : Main.getInstance().getLocaleConfig().getStringList("commands.bottle.item-lore")) {
-            lore.add(C.chat(line.replace("%experience%", Integer.toString(experience))).decoration(TextDecoration.ITALIC, false));
-        }
-        meta.lore(lore);
         meta.getPersistentDataContainer().set(experienceKey(), PersistentDataType.INTEGER, experience);
         item.setItemMeta(meta);
         return item;

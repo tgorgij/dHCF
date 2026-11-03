@@ -3,6 +3,10 @@ boards:
   primary:
     - "&7&m---------------------"
     - "%mod-mode%"
+    - "%custom-server-timers%"
+    - "%custom-user-timers%"
+    - "%ability-cooldowns%"
+    - "%dtc%"
     - "&6&lBard Energy&7: &e%bard-energy% <display=%has-bard%>"
     - "%conquest% <display=%has-server-conquest%>"
     - "%rally% <display=%has-faction-rally%>"
@@ -34,6 +38,9 @@ boards:
     - "&eDimension: &f%dimension%"
     - "&eLocation: &f%location%"
     - "&7&m--------------------- <display=%has-lines-below%>"
+  dtc: "&c&lDTC&7: &f%health%/%max-health%"
+  ability-timer: "%name%&7: &c%time%"
+  custom-timer: "%name%&7: &c%time%"
   koth: "%name% KOTH&7: &c%time%"
 
   conquest:

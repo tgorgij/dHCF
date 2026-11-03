@@ -6,3 +6,12 @@ Configuration Placeholders:
 %map-number% - Map Number
 %server-name% - Server Name
 %map-start-date% - Map Start Date
+
+Custom Timers:
+%custom-server-timers% - Active session-only server timers
+%custom-user-timers% - Active session-only timers for the viewing player
+
+%dtc% - Active Destroy the Core health; omitted when DTC is inactive
+%event-captures% - Faction Event captures in /f show messages
+
+%ability-cooldowns% - Active global and individual ability item cooldowns.

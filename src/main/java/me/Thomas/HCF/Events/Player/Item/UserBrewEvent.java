@@ -36,11 +36,16 @@ public class UserBrewEvent implements Listener {
         if (item == null || !(item.getItemMeta() instanceof PotionMeta meta)) return true;
         PotionType type = meta.getBasePotionType();
         if (type == null) return true;
-        String name = TechTree.potionName(type);
-        String path = "potions." + name;
-        boolean enabled = Main.getInstance().getConfig().getBoolean(path + ".enabled", true) || TechTree.producedPotion(item)
-                || TechTree.get() != null && TechTree.get().hasPotion(faction, name);
-        return enabled && (!type.getKey().getKey().startsWith("long_") || Main.getInstance().getConfig().getBoolean(path + ".extended", true));
+        return allowedByMapKit(type) || TechTree.producedPotion(item)
+                || TechTree.get() != null && TechTree.get().hasPotion(faction, type.getKey().getKey());
+    }
+
+    private boolean allowedByMapKit(PotionType type) {
+        String path = "potions." + TechTree.potionName(type);
+        String variant = type.getKey().getKey();
+        return Main.getInstance().getConfig().getBoolean(path + ".enabled", true)
+                && (!variant.startsWith("long_") || Main.getInstance().getConfig().getBoolean(path + ".extended", true))
+                && (!variant.startsWith("strong_") || Main.getInstance().getConfig().getBoolean(path + ".upgraded", true));
     }
 
     private Faction brewer(BrewEvent e) {
@@ -80,13 +85,13 @@ public class UserBrewEvent implements Listener {
             ItemStack produced = result.clone();
             ItemStack input = e.getContents().getItem(i);
             if (produced.getItemMeta() instanceof PotionMeta meta && meta.getBasePotionType() != null
-                    && input != null && TechTree.producedPotion(input) && input.getItemMeta() instanceof PotionMeta original
-                    && original.getBasePotionType() != null && TechTree.potionName(original.getBasePotionType()).equals(TechTree.potionName(meta.getBasePotionType()))) {
-                TechTree.markPotion(produced);
+                    && input != null && input.getItemMeta() instanceof PotionMeta original && original.getBasePotionType() != null) {
+                if (original.getBasePotionType() != meta.getBasePotionType()) TechTree.clearPotion(produced);
+                else if (TechTree.producedPotion(input)) TechTree.markPotion(produced);
             }
             if (!isAllowed(produced, faction)) { e.setCancelled(true); return; }
             if (produced.getItemMeta() instanceof PotionMeta meta && meta.getBasePotionType() != null
-                    && !Main.getInstance().getConfig().getBoolean("potions." + TechTree.potionName(meta.getBasePotionType()) + ".enabled", true)) {
+                    && !allowedByMapKit(meta.getBasePotionType())) {
                 TechTree.markPotion(produced);
             }
             results.add(produced);

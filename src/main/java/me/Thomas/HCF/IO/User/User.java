@@ -5,6 +5,7 @@ import me.Thomas.HCF.IO.Claims.Claiming;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Timer.Timer;
+import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -30,12 +31,14 @@ public class User {
     private int lives;
     private long deathbanExpiry;
     private boolean pvpProtectionPending;
+    private boolean reclaimed;
     private boolean mountainMessages = true;
     private boolean messages = true;
     private boolean messageSounds = true;
     private boolean scoreboard = true;
     private boolean publicChat = true;
     private boolean requestReportCooldowns = true;
+    private boolean abilityCooldowns = true;
     private byte[] lastInventory;
     private Integer lastExperience;
 
@@ -44,10 +47,14 @@ public class User {
     private Claiming claiming;
     private UUID lastEnteredFaction;
     private UUID lastConversation;
+    private boolean socialSpy;
     private boolean bypass;
     private boolean bardActive;
     private double bardEnergy;
     private ArrayList<Claim> map;
+
+    private final Map<String, ServerTimer> customTimers = new LinkedHashMap<>();
+    private final Map<String, ServerTimer> abilityTimers = new LinkedHashMap<>();
 
     private Map<Timer.Type, Timer> timers =
             new EnumMap<>(Timer.Type.class);
@@ -135,12 +142,14 @@ public class User {
 
         this.deathbanExpiry = resultSet.getLong("deathbanExpiry");
         this.pvpProtectionPending = resultSet.getBoolean("pvpProtectionPending");
+        this.reclaimed = resultSet.getBoolean("reclaimed");
         this.mountainMessages = resultSet.getBoolean("mountainMessages");
         this.messages = resultSet.getBoolean("messages");
         this.messageSounds = resultSet.getBoolean("messageSounds");
         this.scoreboard = resultSet.getBoolean("scoreboard");
         this.publicChat = resultSet.getBoolean("publicChat");
         this.requestReportCooldowns = resultSet.getBoolean("requestReportCooldowns");
+        this.abilityCooldowns = resultSet.getBoolean("abilityCooldowns");
         this.lastInventory = resultSet.getBytes("lastInventory");
         int experience = resultSet.getInt("lastExperience");
         this.lastExperience = resultSet.wasNull() ? null : experience;
@@ -163,12 +172,14 @@ public class User {
         this.timers = new EnumMap<>(Timer.Type.class);
         this.deathbanExpiry = 0;
         this.pvpProtectionPending = false;
+        this.reclaimed = false;
         this.mountainMessages = true;
         this.messages = true;
         this.messageSounds = true;
         this.scoreboard = true;
         this.publicChat = true;
         this.requestReportCooldowns = true;
+        this.abilityCooldowns = true;
         this.lastInventory = null;
         this.lastExperience = null;
         this.revision++;
@@ -186,6 +197,10 @@ public class User {
     public double getBardEnergy() { return bardEnergy; }
 
     public void setBardEnergy(double energy) { bardEnergy = Double.isFinite(energy) ? Math.max(0, energy) : 0; }
+
+    public boolean isSocialSpy() { return socialSpy; }
+
+    public void setSocialSpy(boolean enabled) { socialSpy = enabled; }
 
     public UUID getLastConversation() { return lastConversation; }
 
@@ -231,11 +246,29 @@ public class User {
         revision++;
     }
 
+    public Map<String, ServerTimer> getAbilityTimers() { return abilityTimers; }
+
+    public boolean isAbilityCooldowns() { return abilityCooldowns; }
+
+    public void setAbilityCooldowns(boolean enabled) {
+        if (abilityCooldowns == enabled) return;
+        abilityCooldowns = enabled;
+        revision++;
+    }
+
     public boolean isRequestReportCooldowns() { return requestReportCooldowns; }
 
     public void setRequestReportCooldowns(boolean enabled) {
         if (requestReportCooldowns == enabled) return;
         requestReportCooldowns = enabled;
+        revision++;
+    }
+
+    public boolean hasReclaimed() { return reclaimed; }
+
+    public void setReclaimed(boolean reclaimed) {
+        if (this.reclaimed == reclaimed) return;
+        this.reclaimed = reclaimed;
         revision++;
     }
 
@@ -250,8 +283,8 @@ public class User {
         String sql =
                 "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
-                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns, reclaimed, abilityCooldowns) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
                         + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
                         + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry, "
@@ -259,13 +292,13 @@ public class User {
                         + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience, mountainMessages=excluded.mountainMessages, "
                         + "messages=excluded.messages, messageSounds=excluded.messageSounds, "
                         + "scoreboard=excluded.scoreboard, publicChat=excluded.publicChat, "
-                        + "requestReportCooldowns=excluded.requestReportCooldowns";
+                        + "requestReportCooldowns=excluded.requestReportCooldowns, reclaimed=excluded.reclaimed, abilityCooldowns=excluded.abilityCooldowns";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), name, faction == null ? null : faction.toString(),
                 balance, kills, deaths, lives, serializeTimers(), deathbanExpiry, pvpProtectionPending ? 1 : 0,
                 getLastInventory(), lastExperience, mountainMessages ? 1 : 0,
-                messages ? 1 : 0, messageSounds ? 1 : 0, scoreboard ? 1 : 0, publicChat ? 1 : 0, requestReportCooldowns ? 1 : 0);
+                messages ? 1 : 0, messageSounds ? 1 : 0, scoreboard ? 1 : 0, publicChat ? 1 : 0, requestReportCooldowns ? 1 : 0, reclaimed ? 1 : 0, abilityCooldowns ? 1 : 0);
     }
 
     public byte[] getLastInventory() {
@@ -567,6 +600,11 @@ public class User {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) updateProtectionTimers(player.getLocation());
         }
+    }
+
+    public Map<String, ServerTimer> getCustomTimers() {
+        customTimers.values().removeIf(timer -> timer.getRemainingTimeMillis() <= 0);
+        return customTimers;
     }
 
     public boolean hasTimer(Timer.Type type) {

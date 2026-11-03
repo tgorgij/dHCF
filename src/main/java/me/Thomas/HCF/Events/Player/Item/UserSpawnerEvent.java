@@ -2,8 +2,7 @@ package me.Thomas.HCF.Events.Player.Item;
 
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
+import me.Thomas.HCF.Utils.Items.Items;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.CreatureSpawner;
@@ -20,9 +19,8 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class UserSpawnerEvent implements Listener {
 
@@ -44,7 +42,7 @@ public class UserSpawnerEvent implements Listener {
 
     public static ItemStack createCrowbar(int uses) {
         if (uses <= 0) throw new IllegalArgumentException("Uses must be positive");
-        ItemStack item = new ItemStack(Material.GOLDEN_HOE);
+        ItemStack item = Items.create("crowbar", Material.GOLDEN_HOE, Map.of("%uses%", Integer.toString(uses)));
         updateCrowbar(item, uses);
         return item;
     }
@@ -54,31 +52,19 @@ public class UserSpawnerEvent implements Listener {
         meta.setUnbreakable(true);
         meta.setMaxStackSize(1);
         meta.getPersistentDataContainer().set(usesKey(), PersistentDataType.INTEGER, uses);
-        decorate(meta, "crowbar", "%uses%", Integer.toString(uses));
+        Items.decorate(meta, "crowbar", Map.of("%uses%", Integer.toString(uses)));
         item.setItemMeta(meta);
     }
 
     public static ItemStack createSpawner(EntityType type) {
         if (type == null || getType(type.name()) == null) throw new IllegalArgumentException("Invalid spawner type");
-        ItemStack item = new ItemStack(Material.SPAWNER);
+        ItemStack item = Items.create("spawner", Material.SPAWNER, Map.of("%type%", type.name().toLowerCase(Locale.ROOT).replace('_', ' ')));
         BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
         CreatureSpawner spawner = (CreatureSpawner) meta.getBlockState();
         spawner.setSpawnedType(type);
         meta.setBlockState(spawner);
-        decorate(meta, "spawner", "%type%", type.name().toLowerCase(Locale.ROOT).replace('_', ' '));
         item.setItemMeta(meta);
         return item;
-    }
-
-    private static void decorate(ItemMeta meta, String item, String placeholder, String value) {
-        String path = "items." + item;
-        meta.displayName(C.chat(Main.getInstance().getLocaleConfig().getString(path + ".name")
-                .replace(placeholder, value)).decoration(TextDecoration.ITALIC, false));
-        List<Component> lore = new ArrayList<>();
-        for (String line : Main.getInstance().getLocaleConfig().getStringList(path + ".lore")) {
-            lore.add(C.chat(line.replace(placeholder, value)).decoration(TextDecoration.ITALIC, false));
-        }
-        meta.lore(lore);
     }
 
     public static boolean give(Player p, ItemStack item, int amount) {

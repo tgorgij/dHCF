@@ -23,7 +23,7 @@ public class ListCommand implements Subcommand {
         for (EventScheduler.Schedule schedule : scheduler.getSchedules()) {
             KOTH koth = schedule.koth() == null ? null : KOTH.get(schedule.koth());
             ScheduleCommand.send(sender, "entry", "%id%", Long.toString(schedule.id()), "%type%", schedule.type().name(),
-                    "%event%", koth == null ? "Conquest" : koth.getName(), "%time%", schedule.time().toString(),
+                    "%event%", koth == null ? schedule.type() == EventScheduler.Type.DTC ? "DTC" : "Conquest" : koth.getName(), "%time%", schedule.time().toString(),
                     "%duration%", Integer.toString(schedule.seconds()));
         }
         return true;

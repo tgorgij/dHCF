@@ -27,6 +27,12 @@ settings:
         name: '&eScoreboard&7: %state%'
         lore:
         - '&7Click to toggle.'
+      ability-cooldowns:
+        material: BLAZE_POWDER
+        name: '&eAbility Item Cooldowns&7: %state%'
+        lore:
+        - '&7Show global and item cooldowns.'
+        - '&7Click to toggle.'
       request-report-cooldowns:
         material: CLOCK
         name: '&eRequest / Report Cooldowns&7: %state%'
@@ -150,7 +156,7 @@ rewards:
     locked: '&cLocked'
   requirements:
     kills: Faction Kills
-    captures: KOTH Captures
+    captures: Event Captures
     points: Faction Points
   trees:
     potions:
@@ -186,34 +192,73 @@ rewards:
           lore: []
         nodes:
           regeneration:
-            label: Regeneration Potions
+            label: Regeneration Potions I
+            material: POTION
+          long_regeneration:
+            label: Regeneration Potions (Extended)
+            material: POTION
+          strong_regeneration:
+            label: Regeneration Potions II
             material: POTION
           strength:
-            label: Strength Potions
+            label: Strength Potions I
+            material: POTION
+          long_strength:
+            label: Strength Potions (Extended)
+            material: POTION
+          strong_strength:
+            label: Strength Potions II
             material: POTION
           harming:
-            label: Harming Potions
+            label: Harming Potions I
+            material: POTION
+          strong_harming:
+            label: Harming Potions II
             material: POTION
           slow_falling:
-            label: Slow Falling Potions
+            label: Slow Falling Potions I
+            material: POTION
+          long_slow_falling:
+            label: Slow Falling Potions (Extended)
             material: POTION
           night_vision:
-            label: Night Vision Potions
+            label: Night Vision Potions I
+            material: POTION
+          long_night_vision:
+            label: Night Vision Potions (Extended)
             material: POTION
           water_breathing:
-            label: Water Breathing Potions
+            label: Water Breathing Potions I
+            material: POTION
+          long_water_breathing:
+            label: Water Breathing Potions (Extended)
             material: POTION
           weakness:
-            label: Weakness Potions
+            label: Weakness Potions I
+            material: POTION
+          long_weakness:
+            label: Weakness Potions (Extended)
             material: POTION
           leaping:
-            label: Leaping Potions
+            label: Leaping Potions I
+            material: POTION
+          long_leaping:
+            label: Leaping Potions (Extended)
+            material: POTION
+          strong_leaping:
+            label: Leaping Potions II
             material: POTION
           turtle_master:
-            label: Turtle Master Potions
+            label: Turtle Master Potions I
+            material: POTION
+          long_turtle_master:
+            label: Turtle Master Potions (Extended)
+            material: POTION
+          strong_turtle_master:
+            label: Turtle Master Potions II
             material: POTION
           wind_charged:
-            label: Wind Charged Potions
+            label: Wind Charged Potions I
             material: POTION
     enchantments:
       title: '&e%tree% Tech Tree'
@@ -248,34 +293,97 @@ rewards:
           lore: []
         nodes:
           fire_protection:
-            label: Fire Protection
+            label: Fire Protection I
+            material: BOOK
+          fire_protection_2:
+            label: Fire Protection II
+            material: BOOK
+          fire_protection_3:
+            label: Fire Protection III
+            material: BOOK
+          fire_protection_4:
+            label: Fire Protection IV
             material: BOOK
           fire_aspect:
-            label: Fire Aspect
+            label: Fire Aspect I
+            material: BOOK
+          fire_aspect_2:
+            label: Fire Aspect II
             material: BOOK
           blast_protection:
-            label: Blast Protection
+            label: Blast Protection I
+            material: BOOK
+          blast_protection_2:
+            label: Blast Protection II
+            material: BOOK
+          blast_protection_3:
+            label: Blast Protection III
+            material: BOOK
+          blast_protection_4:
+            label: Blast Protection IV
             material: BOOK
           projectile_protection:
-            label: Projectile Protection
+            label: Projectile Protection I
+            material: BOOK
+          projectile_protection_2:
+            label: Projectile Protection II
+            material: BOOK
+          projectile_protection_3:
+            label: Projectile Protection III
+            material: BOOK
+          projectile_protection_4:
+            label: Projectile Protection IV
             material: BOOK
           respiration:
-            label: Respiration
+            label: Respiration I
+            material: BOOK
+          respiration_2:
+            label: Respiration II
+            material: BOOK
+          respiration_3:
+            label: Respiration III
             material: BOOK
           aqua_affinity:
-            label: Aqua Affinity
+            label: Aqua Affinity I
             material: BOOK
           thorns:
-            label: Thorns
+            label: Thorns I
+            material: BOOK
+          thorns_2:
+            label: Thorns II
+            material: BOOK
+          thorns_3:
+            label: Thorns III
             material: BOOK
           depth_strider:
-            label: Depth Strider
+            label: Depth Strider I
+            material: BOOK
+          depth_strider_2:
+            label: Depth Strider II
+            material: BOOK
+          depth_strider_3:
+            label: Depth Strider III
             material: BOOK
           knockback:
-            label: Knockback
+            label: Knockback I
+            material: BOOK
+          knockback_2:
+            label: Knockback II
             material: BOOK
           punch:
-            label: Punch
+            label: Punch I
+            material: BOOK
+          punch_2:
+            label: Punch II
+            material: BOOK
+          protection_3:
+            label: Protection III
+            material: BOOK
+          protection_4:
+            label: Protection IV
+            material: BOOK
+          protection_5:
+            label: Protection V
             material: BOOK
     commands:
       title: '&e%tree% Tech Tree'

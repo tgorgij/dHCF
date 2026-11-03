@@ -9,6 +9,7 @@ import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.sql.ResultSet;
@@ -124,8 +125,13 @@ public class KOTH {
     }
 
     public boolean hasCaptureArea() {
-        return pos1 != null && pos2 != null && pos1.world().equals(pos2.world()) && Bukkit.getWorld(pos1.world()) != null;
+        if (pos1 == null || pos2 == null || !pos1.world().equals(pos2.world())) return false;
+        World world = Bukkit.getWorld(pos1.world());
+        return world != null && pos1.y() >= world.getMinHeight() && pos1.y() < world.getMaxHeight()
+                && pos2.y() >= world.getMinHeight() && pos2.y() < world.getMaxHeight();
     }
+
+    public boolean isConfigured() { return hasCaptureArea() && faction != null && Faction.get(faction) != null; }
 
     public boolean contains(Location location) {
         if (pos1 == null || pos2 == null || location == null || location.getWorld() == null
@@ -153,7 +159,7 @@ public class KOTH {
     }
 
     public void start(long seconds) {
-        if (isRunning() || !hasCaptureArea() || seconds <= 0 || seconds > Integer.MAX_VALUE) {
+        if (isRunning() || !isConfigured() || seconds <= 0 || seconds > Integer.MAX_VALUE) {
             throw new IllegalStateException("KOTH cannot start");
         }
         duration = seconds;
@@ -237,7 +243,7 @@ public class KOTH {
         User user = User.get(p);
         Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
         if (faction != null && faction.getType() == Faction.Type.PLAYER && faction.hasMember(p.getUniqueId())) {
-            faction.setKOTHCaptures((int) Math.min(Integer.MAX_VALUE, (long) faction.getKOTHCaptures() + 1));
+            faction.setEventCaptures((int) Math.min(Integer.MAX_VALUE, (long) faction.getEventCaptures() + 1));
             faction.addPoints(Math.max(0, Main.getInstance().getConfig().getInt("factions.points.koth", 50)));
             faction.saveAsync();
         }

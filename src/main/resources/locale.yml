@@ -58,8 +58,6 @@ events:
     elevator:
       invalid-direction: "&cWrite Up or Down on the second line of an [Elevator] sign."
       no-destination: "&cThere is no safe elevator destination through this column."
-    spawner:
-      crowbar-required: "&cUse a crowbar to break spawners."
     potion-disabled: "&cThis potion is disabled by the map kit."
     miner:
       activated: "&eMiner class activated."
@@ -184,6 +182,14 @@ faction:
     offline: "&4%player% &cis offline"
 
 commands:
+  timer:
+    add-usage: "&cUsage: /%alias% add <player> <timer> [seconds]"
+    remove-usage: "&cUsage: /%alias% remove <player> <timer>"
+    invalid-timer: "&cUnknown player timer. Use tab completion to see available timers."
+    managed-timer: "&cStart home, stuck, and logout timers using their own commands. They can still be removed here."
+    not-active: "&c%player% has no %timer% timer to remove."
+    added: "&eSet &b%player%&e's &b%timer% &etimer to &b%time%&e."
+    removed: "&eRemoved &b%player%&e's &b%timer% &etimer."
   socialspy:
     usage: "&cUsage: /%alias%"
     toggled: "&eSocial spy %state%&e."
@@ -358,20 +364,23 @@ commands:
     unavailable: "&cYou cannot enter mod mode while dead or frozen."
     not-enabled: "&cEnable mod mode first."
     bypass: "&eMod mode interaction bypass %state%."
-    vanish: "&eVanish %state%."
-    freeze: "&e%player% has been %state%."
-    freeze-all: "&eAll non-staff players have been %state%."
-    freeze-bypass: "&cThat player bypasses freeze."
-    freeze-all-active: "&cUse /freeze all to end the server freeze first."
+    no-targets: "&cThere are no players available to teleport to."
+    usage: "&cUsage: /%alias% [bypass]"
+  freeze:
+    success: "&e%player% has been %state%."
+    all: "&eAll non-staff players have been %state%."
+    bypass: "&cThat player bypasses freeze."
+    all-active: "&cUse /freeze all to end the server freeze first."
     frozen: "&cYou are frozen. You may still send chat messages."
     unfrozen: "&aYou are no longer frozen."
+    usage: "&cUsage: /%alias% <player|all>"
+  vanish:
+    success: "&eVanish %state%."
+    usage: "&cUsage: /%alias%"
+  invsee:
     target-in-mode: "&cThat player is in mod mode."
-    self-inspect: "&cYou cannot inspect yourself."
-    no-targets: "&cThere are no players available to teleport to."
-    staff-usage: "&cUsage: /%alias% [bypass]"
-    freeze-usage: "&cUsage: /%alias% <player|all>"
-    invsee-usage: "&cUsage: /%alias% <player>"
-    vanish-usage: "&cUsage: /%alias%"
+    self: "&cYou cannot inspect yourself."
+    usage: "&cUsage: /%alias% <player>"
   koth:
     not-found: "&6[KOTH] %koth% does not exist."
     already-exists: "&6[KOTH] A KOTH with this name already exists."
@@ -812,7 +821,7 @@ abilities:
   given: '&eGave &b%player% &e%amount%x %item%&e.'
   unavailable: '&cAbility items cannot be used here or in your current state.'
   no-space: '&cThat player does not have enough inventory space.'
-  cooldown: '&cYou must wait %time% before using this ability.'
+  cooldown: '%item% &cis on cooldown for %time%.'
   no-attacker: '&cThere is no available player who last damaged you.'
   ninja-warning: '&b%player% &ewill teleport to you in %time% seconds!'
   ninja-start: '&eYour Ninja Star is tracking &b%player%&e.'

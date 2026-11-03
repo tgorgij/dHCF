@@ -24,7 +24,7 @@ public class FreezeCommand implements TabExecutor {
             return true;
         }
 
-        if (args.length != 1) { Main.getInstance().getStaffMode().message(sender, "freeze-usage", "%alias%", alias); return true; }
+        if (args.length != 1) { Main.getInstance().getStaffMode().message(sender, "freeze.usage", "%alias%", alias); return true; }
         if (args[0].equalsIgnoreCase("all")) { Main.getInstance().getStaffMode().toggleFreezeAll(sender); return true; }
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null || !target.isOnline()) { sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.no-player"))); return true; }

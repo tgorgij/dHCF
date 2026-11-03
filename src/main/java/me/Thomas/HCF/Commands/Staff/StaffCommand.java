@@ -28,7 +28,7 @@ public class StaffCommand implements TabExecutor {
         }
         if (args.length == 1 && args[0].equalsIgnoreCase("bypass")) Main.getInstance().getStaffMode().toggleBypass(p);
         else if (args.length == 0) Main.getInstance().getStaffMode().toggle(p);
-        else Main.getInstance().getStaffMode().message(sender, "staff-usage", "%alias%", alias);
+        else Main.getInstance().getStaffMode().message(sender, "staff.usage", "%alias%", alias);
         return true;
     }
 

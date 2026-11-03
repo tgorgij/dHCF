@@ -27,6 +27,7 @@ import me.Thomas.HCF.Commands.User.RequestCommand;
 import me.Thomas.HCF.Commands.User.ReportCommand;
 import me.Thomas.HCF.Commands.Admin.Schedule.ScheduleCommand;
 import me.Thomas.HCF.Commands.Admin.CustomTimer.CustomTimerCommand;
+import me.Thomas.HCF.Commands.Admin.Timer.TimerCommand;
 import me.Thomas.HCF.Utils.Events.EventScheduler;
 import me.Thomas.HCF.Utils.Rewards.TechTree;
 import me.Thomas.HCF.Commands.Admin.CrowbarCommand;
@@ -235,6 +236,7 @@ public class Main extends JavaPlugin {
         // Admin
         Objects.requireNonNull(getCommand("schedule")).setExecutor(new ScheduleCommand());
         Objects.requireNonNull(getCommand("customtimer")).setExecutor(new CustomTimerCommand());
+        Objects.requireNonNull(getCommand("timer")).setExecutor(new TimerCommand());
         Objects.requireNonNull(getCommand("crowbar")).setExecutor(new CrowbarCommand());
         Objects.requireNonNull(getCommand("ability")).setExecutor(new AbilityCommand());
         Objects.requireNonNull(getCommand("spawner")).setExecutor(new SpawnerCommand());

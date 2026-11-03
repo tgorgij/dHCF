@@ -1,7 +1,6 @@
 package me.Thomas.HCF.Events.Player.Item;
 
 import me.Thomas.HCF.Main.Main;
-import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Items.Items;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -92,11 +91,7 @@ public class UserSpawnerEvent implements Listener {
             if (uses > 0) e.setCancelled(true);
             return;
         }
-        if (uses == 0) {
-            e.setCancelled(true);
-            e.getPlayer().sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("events.player.spawner.crowbar-required")));
-            return;
-        }
+        if (uses == 0) return;
         if (!(e.getBlock().getState() instanceof CreatureSpawner spawner) || spawner.getSpawnedType() == null
                 || getType(spawner.getSpawnedType().name()) == null) {
             e.setCancelled(true);

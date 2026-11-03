@@ -27,10 +27,10 @@ public class InvseeCommand implements TabExecutor {
             sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.not-player")));
             return true;
         }
-        if (args.length != 1) { Main.getInstance().getStaffMode().message(sender, "invsee-usage", "%alias%", alias); return true; }
+        if (args.length != 1) { Main.getInstance().getStaffMode().message(sender, "invsee.usage", "%alias%", alias); return true; }
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null || !target.isOnline()) { sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.no-player"))); return true; }
-        if (target.equals(p)) { Main.getInstance().getStaffMode().message(p, "self-inspect"); return true; }
+        if (target.equals(p)) { Main.getInstance().getStaffMode().message(p, "invsee.self"); return true; }
         Main.getInstance().getStaffMode().inspect(p, target);
         return true;
     }

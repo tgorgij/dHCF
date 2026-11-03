@@ -95,3 +95,46 @@ abilities:
     material: ROTTEN_FLESH
     name: '&dStarvation Flesh'
     lore: []
+
+# Inventory slots use 0-35; the hotbar is 0-8.
+staff:
+  compass:
+    slot: 0
+    material: COMPASS
+    name: '&eTeleport Compass'
+    lore: []
+  random:
+    slot: 1
+    material: CLOCK
+    name: '&eRandom Teleport'
+    lore: []
+  inspect:
+    slot: 2
+    material: BOOK
+    name: '&eInspect Inventory'
+    lore: []
+  freeze:
+    slot: 3
+    material: BLUE_ICE
+    name: '&bFreeze Player'
+    lore: []
+  staff:
+    slot: 4
+    material: PLAYER_HEAD
+    name: '&eOnline Staff'
+    lore: []
+  wand:
+    slot: 5
+    material: WOODEN_AXE
+    name: '&eWorldEdit Wand'
+    lore: []
+  show:
+    slot: 8
+    material: LIME_DYE
+    name: '&aUnvanish'
+    lore: []
+  hide:
+    slot: 8
+    material: GRAY_DYE
+    name: '&7Vanish'
+    lore: []

@@ -6,6 +6,10 @@ coords:
   - "&7&m---------------------------"
 
 help:
+  timer:
+    - "&e/%alias% add <player> <timer> [seconds]"
+    - "&e/%alias% remove <player> <timer>"
+    - "&7Omit seconds to use the configured duration. Use ability for the global ability cooldown."
   dtc:
     - "&e/%alias% setcore &7- Select the block you are looking at."
     - "&e/%alias% clearcore"

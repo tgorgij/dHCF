@@ -149,8 +149,8 @@ public class UserAbilityEvent implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBowShot(EntityShootBowEvent e) {
         if (!(e.getEntity() instanceof Player p) || !(e.getProjectile() instanceof AbstractArrow arrow)
-                || AbilityItems.getType(e.getBow()) != Type.ARCHER || e.getForce() < 1.0F) return;
-        if (!available(p) || !AbilityItems.ready(p, Type.ARCHER, false)) return;
+                || AbilityItems.getType(e.getBow()) != Type.ARCHER) return;
+        if (!available(p) || !AbilityItems.ready(p, Type.ARCHER, true) || e.getForce() < 1.0F) return;
         String identity = e.getBow().getItemMeta().getPersistentDataContainer().get(AbilityItems.key("identity"), PersistentDataType.STRING);
         if (identity != null) arrow.getPersistentDataContainer().set(AbilityItems.key("bow"), PersistentDataType.STRING, identity);
     }
@@ -221,7 +221,7 @@ public class UserAbilityEvent implements Listener {
         }
         if (hit.getDamager() instanceof AbstractArrow arrow) {
             String identity = arrow.getPersistentDataContainer().get(AbilityItems.key("bow"), PersistentDataType.STRING);
-            if (identity == null || !AbilityItems.ready(p, Type.ARCHER, false) || Timer.Type.ARCHERTAG.getLength() <= 0) return;
+            if (identity == null || !AbilityItems.ready(p, Type.ARCHER, true) || Timer.Type.ARCHERTAG.getLength() <= 0) return;
             if (!chargeBow(p, identity)) return;
             arrow.getPersistentDataContainer().remove(AbilityItems.key("bow"));
             User.get(victim).addTimer(Timer.Type.ARCHERTAG, new Timer(Timer.Type.ARCHERTAG));
@@ -231,7 +231,8 @@ public class UserAbilityEvent implements Listener {
         }
         if (!(hit.getDamager() instanceof Player) || hit.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) return;
         Type type = AbilityItems.getType(p.getInventory().getItemInMainHand());
-        if (type == null || !AbilityItems.ready(p, type, false)) return;
+        if (type != Type.SWITCHSTICK && type != Type.BONE && type != Type.POTIONCOUNTER && type != Type.STARVATION) return;
+        if (!AbilityItems.ready(p, type, true)) return;
         if (type == Type.SWITCHSTICK) {
             double chance = Main.getInstance().getConfig().getDouble(type.path() + ".chance", 0.5);
             if (!Double.isFinite(chance)) chance = 0.5;

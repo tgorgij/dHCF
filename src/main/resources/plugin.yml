@@ -5,6 +5,9 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  timer:
+    description: Add or remove player timers.
+    usage: /timer <add|remove> <player> <timer> [seconds]
   ability:
     description: Give ability items to an online player.
     usage: /ability <player> <item> [amount]

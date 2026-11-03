@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -88,6 +89,7 @@ public class StaffMode implements Listener {
     private final Map<UUID, Session> sessions = new HashMap<>();
     private final Set<UUID> bypass = new HashSet<>();
     private final Set<UUID> vanished = new HashSet<>();
+    private final Map<UUID, Integer> vanishClicks = new HashMap<>();
     private final Set<UUID> frozen = new HashSet<>();
     private boolean freezeAll;
     private final NamespacedKey inventoryKey = new NamespacedKey(Main.getInstance(), "staff-inventory");
@@ -145,7 +147,7 @@ public class StaffMode implements Listener {
     public boolean isRestricted(Player p) { return isFrozen(p) || isEnabled(p) && !bypass.contains(p.getUniqueId()); }
 
     public void message(CommandSender sender, String key, String... replacements) {
-        String text = Main.getInstance().getLocaleConfig().getString("commands.staff." + key, key);
+        String text = Main.getInstance().getLocaleConfig().getString("commands." + key, key);
         for (int i = 0; i + 1 < replacements.length; i += 2) text = text.replace(replacements[i], replacements[i + 1]);
         sender.sendMessage(C.chat(text));
     }
@@ -158,11 +160,11 @@ public class StaffMode implements Listener {
             sessions.remove(p.getUniqueId());
             bypass.remove(p.getUniqueId());
             setVanished(p, session.vanished());
-            message(p, "disabled");
+            message(p, "staff.disabled");
             return;
         }
         if (p.isDead() || isFrozen(p)) {
-            message(p, "unavailable");
+            message(p, "staff.unavailable");
             return;
         }
         closeInspections(p);
@@ -188,7 +190,7 @@ public class StaffMode implements Listener {
         p.getInventory().setHeldItemSlot(0);
         tools(p);
         setVanished(p, true);
-        message(p, "enabled");
+        message(p, "staff.enabled");
     }
 
     private void restore(Player p) {
@@ -223,10 +225,10 @@ public class StaffMode implements Listener {
     }
 
     public void toggleBypass(Player p) {
-        if (!isEnabled(p)) { message(p, "not-enabled"); return; }
+        if (!isEnabled(p)) { message(p, "staff.not-enabled"); return; }
         boolean enabled = bypass.add(p.getUniqueId());
         if (!enabled) bypass.remove(p.getUniqueId());
-        message(p, "bypass", "%state%", status(enabled));
+        message(p, "staff.bypass", "%state%", status(enabled));
     }
 
     public String status(boolean enabled) {
@@ -237,7 +239,15 @@ public class StaffMode implements Listener {
         if (enabled) vanished.add(p.getUniqueId());
         else vanished.remove(p.getUniqueId());
         for (Player viewer : Bukkit.getOnlinePlayers()) visibility(viewer, p);
-        if (isEnabled(p)) p.getInventory().setItem(8, tool(enabled ? "show" : "hide", enabled ? Material.LIME_DYE : Material.GRAY_DYE));
+        if (isEnabled(p)) {
+            for (int slot = 0; slot < 36; slot++) {
+                ItemStack item = p.getInventory().getItem(slot);
+                if (!isTool(item)) continue;
+                String name = item.getItemMeta().getPersistentDataContainer().get(toolKey, PersistentDataType.STRING);
+                if ("show".equals(name) || "hide".equals(name)) p.getInventory().setItem(slot, null);
+            }
+            placeTool(p, enabled ? "show" : "hide", enabled ? Material.LIME_DYE : Material.GRAY_DYE, 8);
+        }
     }
 
     private void visibility(Player viewer, Player target) {
@@ -246,13 +256,13 @@ public class StaffMode implements Listener {
     }
 
     public void toggleFreeze(CommandSender sender, Player target) {
-        if (canBypassFreeze(target)) { message(sender, "freeze-bypass"); return; }
-        if (freezeAll) { message(sender, "freeze-all-active"); return; }
+        if (canBypassFreeze(target)) { message(sender, "freeze.bypass"); return; }
+        if (freezeAll) { message(sender, "freeze.all-active"); return; }
         boolean enabled = frozen.add(target.getUniqueId());
         if (!enabled) frozen.remove(target.getUniqueId());
         if (enabled) stop(target);
-        message(target, enabled ? "frozen" : "unfrozen");
-        message(sender, "freeze", "%player%", target.getName(), "%state%", enabled ? "frozen" : "unfrozen");
+        message(target, enabled ? "freeze.frozen" : "freeze.unfrozen");
+        message(sender, "freeze.success", "%player%", target.getName(), "%state%", enabled ? "frozen" : "unfrozen");
     }
 
     public void toggleFreezeAll(CommandSender sender) {
@@ -261,9 +271,9 @@ public class StaffMode implements Listener {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (canBypassFreeze(p)) continue;
             if (freezeAll) stop(p);
-            message(p, freezeAll ? "frozen" : "unfrozen");
+            message(p, freezeAll ? "freeze.frozen" : "freeze.unfrozen");
         }
-        message(sender, "freeze-all", "%state%", freezeAll ? "frozen" : "unfrozen");
+        message(sender, "freeze.all", "%state%", freezeAll ? "frozen" : "unfrozen");
     }
 
     private void stop(Player p) {
@@ -281,14 +291,16 @@ public class StaffMode implements Listener {
     }
 
     private ItemStack tool(String name, Material fallback, String player) {
-        String path = (name.equals("player") || name.equals("previous") || name.equals("next") ? "staff.online.items." : "staff.items.") + name;
-        Material configured = Material.matchMaterial(Main.getInstance().getGuiConfig().getString(path + ".material", fallback.name()));
+        boolean gui = name.equals("player") || name.equals("previous") || name.equals("next");
+        FileConfiguration config = gui ? Main.getInstance().getGuiConfig() : Main.getInstance().getItemsConfig();
+        String path = (gui ? "staff.online.items." : "staff.") + name;
+        Material configured = Material.matchMaterial(config.getString(path + ".material", fallback.name()));
         ItemStack item = new ItemStack(configured == null || configured.isAir() || !configured.isItem() ? fallback : configured);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(C.chat(Main.getInstance().getGuiConfig().getString(path + ".name", name)
+        meta.displayName(C.chat(config.getString(path + ".name", name)
                 .replace("%player%", player)).decoration(TextDecoration.ITALIC, false));
         List<Component> lore = new ArrayList<>();
-        for (String line : Main.getInstance().getGuiConfig().getStringList(path + ".lore")) {
+        for (String line : config.getStringList(path + ".lore")) {
             lore.add(C.chat(line.replace("%player%", player)).decoration(TextDecoration.ITALIC, false));
         }
         meta.lore(lore);
@@ -301,17 +313,24 @@ public class StaffMode implements Listener {
         return item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(toolKey);
     }
 
+    private void placeTool(Player p, String name, Material material, int fallbackSlot) {
+        int slot = Math.clamp(Main.getInstance().getItemsConfig().getInt("staff." + name + ".slot", fallbackSlot), 0, 35);
+        ItemStack current = p.getInventory().getItem(slot);
+        if (current != null && !current.isEmpty()) slot = p.getInventory().firstEmpty();
+        if (slot >= 0 && slot < 36) p.getInventory().setItem(slot, tool(name, material));
+    }
+
     private void tools(Player p) {
-        p.getInventory().setItem(0, tool("compass", Material.COMPASS));
-        p.getInventory().setItem(1, tool("random", Material.CLOCK));
-        p.getInventory().setItem(2, tool("inspect", Material.BOOK));
-        p.getInventory().setItem(3, tool("freeze", Material.BLUE_ICE));
-        p.getInventory().setItem(4, tool("staff", Material.PLAYER_HEAD));
-        if (p.hasPermission("worldedit.wand")) p.getInventory().setItem(5, tool("wand", Material.WOODEN_AXE));
+        placeTool(p, "compass", Material.COMPASS, 0);
+        placeTool(p, "random", Material.CLOCK, 1);
+        placeTool(p, "inspect", Material.BOOK, 2);
+        placeTool(p, "freeze", Material.BLUE_ICE, 3);
+        placeTool(p, "staff", Material.PLAYER_HEAD, 4);
+        if (p.hasPermission("worldedit.wand")) placeTool(p, "wand", Material.WOODEN_AXE, 5);
     }
 
     public void inspect(Player viewer, Player target) {
-        if (isEnabled(target)) { message(viewer, "target-in-mode"); return; }
+        if (isEnabled(target)) { message(viewer, "invsee.target-in-mode"); return; }
         Menu menu = new Menu(target.getUniqueId(), 0);
         int rows = Math.clamp(Main.getInstance().getGuiConfig().getInt("staff.inventory.rows", 6), 5, 6);
         menu.inventory = Bukkit.createInventory(menu, rows * 9, C.chat(Main.getInstance().getGuiConfig()
@@ -379,11 +398,15 @@ public class StaffMode implements Listener {
             case "random" -> {
                 List<? extends Player> players = Bukkit.getOnlinePlayers().stream().filter(target -> !target.equals(p))
                         .filter(p::canSee).filter(target -> !isEnabled(target)).toList();
-                if (players.isEmpty()) message(p, "no-targets");
+                if (players.isEmpty()) message(p, "staff.no-targets");
                 else p.teleport(players.get(ThreadLocalRandom.current().nextInt(players.size())).getLocation());
             }
             case "staff" -> staffMenu(p, 0);
-            case "show", "hide" -> setVanished(p, !isVanished(p));
+            case "show", "hide" -> {
+                // A block interaction can also send an air interaction in the same tick.
+                Integer previous = vanishClicks.put(p.getUniqueId(), p.getTicksLived());
+                if (previous == null || previous != p.getTicksLived()) setVanished(p, !isVanished(p));
+            }
             default -> { }
         }
     }
@@ -531,7 +554,7 @@ public class StaffMode implements Listener {
         String canonical = command == null ? root : command.getName();
         for (String blocked : Main.getInstance().getConfig().getStringList("freeze.blocked-commands")) {
             String name = blocked.replaceFirst("^/", "").toLowerCase(Locale.ROOT);
-            if (root.equals(name) || canonical.equalsIgnoreCase(name)) { e.setCancelled(true); message(p, "frozen"); return; }
+            if (root.equals(name) || canonical.equalsIgnoreCase(name)) { e.setCancelled(true); message(p, "freeze.frozen"); return; }
         }
     }
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -622,7 +645,7 @@ public class StaffMode implements Listener {
         Player p = e.getPlayer();
         restore(p);
         for (Player target : Bukkit.getOnlinePlayers()) { visibility(p, target); visibility(target, p); }
-        if (isFrozen(p)) { stop(p); message(p, "frozen"); }
+        if (isFrozen(p)) { stop(p); message(p, "freeze.frozen"); }
     }
     @EventHandler(priority = EventPriority.LOWEST)
     public void onQuit(PlayerQuitEvent e) {
@@ -631,6 +654,7 @@ public class StaffMode implements Listener {
         p.closeInventory();
         if (isEnabled(p)) toggle(p);
         vanished.remove(p.getUniqueId());
+        vanishClicks.remove(p.getUniqueId());
         closeInspections(p);
     }
 

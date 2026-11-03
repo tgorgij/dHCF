@@ -58,7 +58,6 @@ public class MessageCommand implements TabExecutor {
                 .replace("%sender%", p.getName()).replace("%recipient%", target.getName()))
                 .replaceText(builder -> builder.matchLiteral("%message%").replacement(Component.text(message)));
         for (Player staff : Bukkit.getOnlinePlayers()) {
-            if (staff.getUniqueId().equals(p.getUniqueId()) || staff.getUniqueId().equals(target.getUniqueId())) continue;
             if (User.get(staff).isSocialSpy() && Permission.has(staff, "command.socialspy", "staff")) staff.sendMessage(spyMessage);
         }
         if (recipient.isMessageSounds()) {

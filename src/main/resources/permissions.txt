@@ -108,6 +108,7 @@
 
 20. Custom timers
 - hcf.command.customtimer
+- hcf.command.timer
 
 21. Destroy the Core
 - hcf.command.dtc

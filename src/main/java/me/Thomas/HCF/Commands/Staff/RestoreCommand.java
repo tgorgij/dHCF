@@ -41,7 +41,7 @@ public class RestoreCommand implements TabExecutor {
             return true;
         }
         if (User.get(p).isInStaffMode()) {
-            Main.getInstance().getStaffMode().message(sender, "target-in-mode");
+            Main.getInstance().getStaffMode().message(sender, "invsee.target-in-mode");
             return true;
         }
         if (p.isDead()) {

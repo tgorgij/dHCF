@@ -15,3 +15,5 @@ Custom Timers:
 %event-captures% - Faction Event captures in /f show messages
 
 %ability-cooldowns% - Active global and individual ability item cooldowns.
+
+%mountains% - Mountain reset countdowns, controlled by the Mountains scoreboard setting.

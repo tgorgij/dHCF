@@ -41,8 +41,9 @@ settings:
         - '&7Click to toggle.'
       mountains:
         material: GLOWSTONE
-        name: '&eMountain Notifications&7: %state%'
+        name: '&eMountain Resets&7: %state%'
         lore:
+        - '&7Show mountain reset countdowns on your scoreboard.'
         - '&7Click to toggle.'
       back:
         material: ARROW
@@ -88,39 +89,6 @@ staff:
         material: ARROW
         name: '&eNext Page'
         lore: []
-  items:
-    compass:
-      material: COMPASS
-      name: '&eTeleport Compass'
-      lore: []
-    random:
-      material: CLOCK
-      name: '&eRandom Teleport'
-      lore: []
-    inspect:
-      material: BOOK
-      name: '&eInspect Inventory'
-      lore: []
-    freeze:
-      material: BLUE_ICE
-      name: '&bFreeze Player'
-      lore: []
-    staff:
-      material: PLAYER_HEAD
-      name: '&eOnline Staff'
-      lore: []
-    wand:
-      material: WOODEN_AXE
-      name: '&eWorldEdit Wand'
-      lore: []
-    show:
-      material: LIME_DYE
-      name: '&aUnvanish'
-      lore: []
-    hide:
-      material: GRAY_DYE
-      name: '&7Vanish'
-      lore: []
 rewards:
   main:
     title: '&eRewards'

@@ -79,7 +79,7 @@ public class AbilityItems {
         ServerTimer local = timers.get(type.id);
         if (local != null && (timer == null || local.getRemainingTimeMillis() > timer.getRemainingTimeMillis())) timer = local;
         if (timer == null) return true;
-        if (notify) message(p, "cooldown", "%time%", C.formatChatTime((timer.getRemainingTimeMillis() + 999) / 1000));
+        if (notify) message(p, "cooldown", "%item%", type.getName(), "%time%", C.formatChatTime((timer.getRemainingTimeMillis() + 999) / 1000));
         return false;
     }
 

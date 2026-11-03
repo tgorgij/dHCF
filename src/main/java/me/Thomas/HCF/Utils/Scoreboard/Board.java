@@ -3,6 +3,7 @@ package me.Thomas.HCF.Utils.Scoreboard;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.KOTH.KOTH;
+import me.Thomas.HCF.IO.Mountain.Mountain;
 import me.Thomas.HCF.IO.Conquest.Conquest;
 import me.Thomas.HCF.IO.DTC.DTC;
 import me.Thomas.HCF.Main.Main;
@@ -158,7 +159,22 @@ public class Board {
                 if (timer == null || timer.getRemainingTimeMillis() <= 0) continue;
                 text = text.replace(configured.placeholder(), C.formatTime(timer.getRemainingTimeMillis()));
             }
-            if (text.contains("%ability-cooldowns%")) {
+            if (text.contains("%mountains%")) {
+                if (!user.isMountainMessages()) continue;
+                String format = Main.getInstance().getScoreboardConfig().getString("boards.mountain", "&e%name% Mountain&7: &c%time%");
+                List<Mountain> mountains = Main.getInstance().getAllMountains().values().stream()
+                        .filter(mountain -> mountain.getNextRegeneration() > 0)
+                        .filter(mountain -> Faction.get(mountain.getUUID()) != null
+                                && Faction.get(mountain.getUUID()).getType() == Faction.Type.MOUNTAIN)
+                        .sorted(java.util.Comparator.comparing(Mountain::getName, String.CASE_INSENSITIVE_ORDER)).toList();
+                for (Mountain mountain : mountains) {
+                    String time = mountain.isRegenerating()
+                            ? Main.getInstance().getScoreboardConfig().getString("boards.mountain-resetting", "&aResetting")
+                            : C.formatTime(Math.max(0L, mountain.getNextRegeneration() - System.currentTimeMillis()));
+                    lines.add(text.replace("%mountains%", format.replace("%name%", mountain.getName()).replace("%time%", time)));
+                    if (lines.size() == MAX_LINES) break;
+                }
+            } else if (text.contains("%ability-cooldowns%")) {
                 if (!user.isAbilityCooldowns()) continue;
                 String format = Main.getInstance().getScoreboardConfig().getString("boards.ability-timer", "%name%&7: &c%time%");
                 for (ServerTimer timer : AbilityItems.timers(player).values()) {

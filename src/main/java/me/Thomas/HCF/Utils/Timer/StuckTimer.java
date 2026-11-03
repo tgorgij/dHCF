@@ -53,7 +53,11 @@ public final class StuckTimer extends Timer {
     private final List<Location> cached = new ArrayList<>(CACHE_SIZE);
 
     public StuckTimer(Location origin, Claim claim) {
-        super(Type.STUCK);
+        this(origin, claim, Math.max(0, Type.STUCK.getLength()));
+    }
+
+    public StuckTimer(Location origin, Claim claim, long seconds) {
+        super(Type.STUCK, Math.addExact(System.currentTimeMillis(), Math.multiplyExact(seconds, 1000L)), 0L, false);
         this.origin = origin.clone();
         world = origin.getWorld();
         this.claim = claim;
@@ -76,7 +80,7 @@ public final class StuckTimer extends Timer {
             if (!isActive()) return;
             warmingUp = false;
             enqueue(this);
-        }, Type.STUCK.getLength() * 20L);
+        }, (getRemainingTimeMillis() + 49L) / 50L);
     }
 
     private boolean isActive() {

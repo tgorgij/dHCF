@@ -42,10 +42,9 @@ public class TimerCommand implements TabExecutor {
         }
     }
 
-    public static List<String> getTimerNames(boolean adding) {
+    public static List<String> getTimerNames() {
         List<String> names = new ArrayList<>();
         for (Timer.Type type : Timer.Type.values()) {
-            if (adding && (type == Timer.Type.HOME || type == Timer.Type.STUCK || type == Timer.Type.LOGOUT)) continue;
             names.add(type.name().toLowerCase(Locale.ROOT));
         }
         names.add("ability");

@@ -182,11 +182,18 @@ faction:
     offline: "&4%player% &cis offline"
 
 commands:
+  stats:
+    usage: "&cUsage: /%alias% [player]"
+  playtime:
+    usage: "&cUsage: /%alias% [player]"
+    self: "&eYour playtime is &b%time%&e."
+    other: "&b%player%&e's playtime is &b%time%&e."
   timer:
     add-usage: "&cUsage: /%alias% add <player> <timer> [seconds]"
     remove-usage: "&cUsage: /%alias% remove <player> <timer>"
     invalid-timer: "&cUnknown player timer. Use tab completion to see available timers."
-    managed-timer: "&cStart home, stuck, and logout timers using their own commands. They can still be removed here."
+    unavailable: "&cThat player must be online and alive to start a home, stuck, or logout timer."
+    no-home: "&c%player% does not have a faction home to teleport to."
     not-active: "&c%player% has no %timer% timer to remove."
     added: "&eSet &b%player%&e's &b%timer% &etimer to &b%time%&e."
     removed: "&eRemoved &b%player%&e's &b%timer% &etimer."

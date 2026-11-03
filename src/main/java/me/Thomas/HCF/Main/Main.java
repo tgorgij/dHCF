@@ -20,6 +20,9 @@ import me.Thomas.HCF.Commands.Donator.Reclaim.ReclaimCommand;
 import me.Thomas.HCF.Commands.User.MessageCommand;
 import me.Thomas.HCF.Commands.User.ReplyCommand;
 import me.Thomas.HCF.Commands.User.SettingsCommand;
+import me.Thomas.HCF.Commands.User.StatsCommand;
+import me.Thomas.HCF.Commands.User.PlaytimeCommand;
+import me.Thomas.HCF.Events.Player.Interact.UserStatsEvent;
 import me.Thomas.HCF.Commands.User.CoordsCommand;
 import me.Thomas.HCF.Commands.User.RewardsCommand;
 import me.Thomas.HCF.Events.Player.Interact.UserRewardsEvent;
@@ -220,6 +223,8 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("message")).setExecutor(new MessageCommand());
         Objects.requireNonNull(getCommand("reply")).setExecutor(new ReplyCommand());
         Objects.requireNonNull(getCommand("settings")).setExecutor(new SettingsCommand());
+        Objects.requireNonNull(getCommand("stats")).setExecutor(new StatsCommand());
+        Objects.requireNonNull(getCommand("playtime")).setExecutor(new PlaytimeCommand());
         Objects.requireNonNull(getCommand("coords")).setExecutor(new CoordsCommand());
         Objects.requireNonNull(getCommand("rewards")).setExecutor(new RewardsCommand());
         Objects.requireNonNull(getCommand("request")).setExecutor(new RequestCommand());
@@ -272,6 +277,7 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserJoinEvent(), this);
         pm.registerEvents(new UserChatEvent(), this);
         pm.registerEvents(new UserSettingsEvent(), this);
+        pm.registerEvents(new UserStatsEvent(), this);
         pm.registerEvents(new UserRewardsEvent(), this);
         pm.registerEvents(new UserCommandEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);

@@ -49,13 +49,16 @@ public class StuckCommand implements Subcommand {
             player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.teleport.already"))));
             return true;
         }
-        StuckTimer timer = new StuckTimer(player.getLocation(),
-                Main.getInstance().getClaimAt(player.getLocation()));
-        user.addTimer(Timer.Type.STUCK, timer);
-        player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.stuck.success"))
-                .replace("%time%", C.formatChatTime(Timer.Type.STUCK.getLength()))));
-
-        timer.start(player);
+        start(player, Math.max(0, Timer.Type.STUCK.getLength()));
         return true;
+    }
+
+    public static void start(Player player, long seconds) {
+        StuckTimer timer = new StuckTimer(player.getLocation(), Main.getInstance().getClaimAt(player.getLocation()), seconds);
+        User.get(player).addTimer(Timer.Type.STUCK, timer);
+        player.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig()
+                        .getString("commands.faction.stuck.success"))
+                .replace("%time%", C.formatChatTime(seconds))));
+        timer.start(player);
     }
 }

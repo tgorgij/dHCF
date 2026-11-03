@@ -2,6 +2,10 @@ package me.Thomas.HCF.Commands.Admin.Timer.Subcommands;
 
 import me.Thomas.HCF.Commands.Admin.Timer.TimerCommand;
 import me.Thomas.HCF.Commands.Subcommand;
+import me.Thomas.HCF.Commands.User.LogoutCommand;
+import me.Thomas.HCF.Commands.User.Faction.Subcommands.HomeCommand;
+import me.Thomas.HCF.Commands.User.Faction.Subcommands.StuckCommand;
+import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Ability.AbilityItems;
@@ -11,6 +15,7 @@ import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -38,11 +43,6 @@ public class AddCommand implements Subcommand {
         AbilityItems.Type ability = AbilityItems.getType(args[1]);
         boolean global = args[1].equalsIgnoreCase("ability");
         if (type == null && ability == null && !global) { TimerCommand.send(sender, "invalid-timer"); return true; }
-        // These timers require a destination or a scheduled logout, rather than just an expiry.
-        if (type == Timer.Type.HOME || type == Timer.Type.LOGOUT || type == Timer.Type.STUCK) {
-            TimerCommand.send(sender, "managed-timer");
-            return true;
-        }
         long seconds;
         long now = System.currentTimeMillis();
         long expires;
@@ -55,7 +55,26 @@ public class AddCommand implements Subcommand {
             sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.invalid-time")));
             return true;
         }
-        if (type != null) {
+        if (type == Timer.Type.HOME || type == Timer.Type.LOGOUT || type == Timer.Type.STUCK) {
+            Player player = Bukkit.getPlayer(user.getUUID());
+            if (player == null || !player.isOnline() || player.isDead()) {
+                TimerCommand.send(sender, "unavailable");
+                return true;
+            }
+            if (type == Timer.Type.HOME) {
+                Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
+                if (faction == null || faction.getHome() == null) {
+                    TimerCommand.send(sender, "no-home", "%player%", user.getName());
+                    return true;
+                }
+                user.removeTimer(Timer.Type.STUCK);
+                HomeCommand.start(player, seconds);
+            } else if (type == Timer.Type.STUCK) {
+                user.removeTimer(Timer.Type.HOME);
+                StuckCommand.start(player, seconds);
+            } else LogoutCommand.start(player, seconds);
+            user.saveAsync();
+        } else if (type != null) {
             boolean pauseOnLogout = switch (type) {
                 case COMBAT, CHAT, REQUEST, REPORT, ARCHERTAG -> false;
                 default -> true;
@@ -81,7 +100,7 @@ public class AddCommand implements Subcommand {
         if (!Permission.has(sender, "command.timer", "admin")) return List.of();
         if (args.length == 1) return Main.getInstance().getAllUsers().values().stream().map(User::getName)
                 .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))).sorted(String.CASE_INSENSITIVE_ORDER).toList();
-        if (args.length == 2) return TimerCommand.getTimerNames(true).stream()
+        if (args.length == 2) return TimerCommand.getTimerNames().stream()
                 .filter(name -> name.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
         return List.of();
     }

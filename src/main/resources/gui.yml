@@ -391,3 +391,35 @@ rewards:
           bottle:
             label: /bottle
             material: EXPERIENCE_BOTTLE
+
+stats:
+  title: '&eStats: %player%'
+  rows: 3
+  items:
+    kills:
+      material: DIAMOND_SWORD
+      name: '&eKills'
+      lore:
+        - '&7Kills: &f%kills%'
+    deaths:
+      material: SKELETON_SKULL
+      name: '&eDeaths'
+      lore:
+        - '&7Deaths: &f%deaths%'
+    ores:
+      material: DIAMOND_PICKAXE
+      name: '&eOres Mined'
+      lore:
+        - '&7Coal: &f%coal%'
+        - '&7Copper: &f%copper%'
+        - '&7Iron: &f%iron%'
+        - '&7Gold: &f%gold%'
+        - '&7Redstone: &f%redstone%'
+        - '&7Lapis: &f%lapis%'
+        - '&7Diamond: &f%diamond%'
+        - '&7Emerald: &f%emerald%'
+        - '&7Nether Quartz: &f%nether-quartz%'
+        - '&7Nether Gold: &f%nether-gold%'
+        - '&7Ancient Debris: &f%ancient-debris%'
+        - ''
+        - '&eTotal&7: &f%total-ores%'

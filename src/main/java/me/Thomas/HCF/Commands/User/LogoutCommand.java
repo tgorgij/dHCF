@@ -40,10 +40,16 @@ public class LogoutCommand implements TabExecutor {
             sender.sendMessage(C.chat(localeConfig.getString("commands.logout.already")));
             return true;
         }
-        int seconds = Math.max(0, Timer.Type.LOGOUT.getLength());
-        Timer timer = new Timer(Timer.Type.LOGOUT);
+        start(player, Math.max(0, Timer.Type.LOGOUT.getLength()));
+        return true;
+    }
+
+    public static void start(Player player, long seconds) {
+        User user = User.get(player);
+        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+        Timer timer = new Timer(Timer.Type.LOGOUT, System.currentTimeMillis() + seconds * 1000L, 0L, false);
         user.addTimer(Timer.Type.LOGOUT, timer);
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.logout.started"))
+        player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.logout.started"))
                 .replace("%time%", C.formatChatTime(seconds))));
 
         new BukkitRunnable() {
@@ -59,7 +65,6 @@ public class LogoutCommand implements TabExecutor {
                 player.kick(C.chat(localeConfig.getString("commands.logout.completed")));
             }
         }.runTaskLater(Main.getInstance(), seconds * 20L);
-        return true;
     }
 
     @Override

@@ -54,7 +54,7 @@ public class RemoveCommand implements Subcommand {
         if (!Permission.has(sender, "command.timer", "admin")) return List.of();
         if (args.length == 1) return Main.getInstance().getAllUsers().values().stream().map(User::getName)
                 .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))).sorted(String.CASE_INSENSITIVE_ORDER).toList();
-        if (args.length == 2) return TimerCommand.getTimerNames(false).stream()
+        if (args.length == 2) return TimerCommand.getTimerNames().stream()
                 .filter(name -> name.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
         return List.of();
     }

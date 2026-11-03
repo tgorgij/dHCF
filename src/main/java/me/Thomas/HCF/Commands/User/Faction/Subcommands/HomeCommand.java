@@ -66,34 +66,30 @@ public class HomeCommand implements Subcommand {
             return true;
         }
 
-        Timer timer = new Timer(Timer.Type.HOME);
+        start(p, Math.max(0, Timer.Type.HOME.getLength()));
+        return true;
+    }
+
+    public static void start(Player p, long seconds) {
+        User user = User.get(p);
+        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+        Timer timer = new Timer(Timer.Type.HOME, System.currentTimeMillis() + seconds * 1000L, 0L, false);
         user.addTimer(Timer.Type.HOME, timer);
         p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.home.success"))
-                .replace("%time%", C.formatChatTime(Timer.Type.HOME.getLength()))));
+                .replace("%time%", C.formatChatTime(seconds))));
 
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (user.getTimer(Timer.Type.HOME) != timer) {
-                    return;
-                }
-
+                if (user.getTimer(Timer.Type.HOME) != timer) return;
                 user.removeTimer(Timer.Type.HOME);
-
-                if (!p.isOnline() || !user.hasFaction()) {
-                    return;
-                }
-
+                if (!p.isOnline() || User.get(p) != user || !user.hasFaction()) return;
                 Faction currentFaction = Faction.get(user.getFaction());
-                if (currentFaction == null || currentFaction.getHome() == null) {
-                    return;
-                }
-
+                if (currentFaction == null || currentFaction.getHome() == null) return;
                 p.teleportAsync(currentFaction.getHome());
-                p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.teleport.hq")).replace("%faction%", currentFaction.getName())));
+                p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.teleport.hq"))
+                        .replace("%faction%", currentFaction.getName())));
             }
-        }.runTaskLater(Main.getInstance(), Timer.Type.HOME.getLength() * 20L);
-
-        return true;
+        }.runTaskLater(Main.getInstance(), seconds * 20L);
     }
 }

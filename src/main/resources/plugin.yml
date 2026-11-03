@@ -5,6 +5,12 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  stats:
+    description: View a player's kills, deaths, and ore mining statistics.
+    usage: /stats [player]
+  playtime:
+    description: View a player's time played on the server.
+    usage: /playtime [player]
   timer:
     description: Add or remove player timers.
     usage: /timer <add|remove> <player> <timer> [seconds]

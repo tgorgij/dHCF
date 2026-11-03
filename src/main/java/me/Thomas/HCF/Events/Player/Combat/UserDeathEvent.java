@@ -8,6 +8,7 @@ import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.Conquest.Conquest;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
+import me.Thomas.HCF.Utils.Items.SwordStats;
 import me.Thomas.HCF.Utils.Deathban.Deathban;
 import me.Thomas.HCF.Events.Player.Item.UserDeathSignEvent;
 import me.Thomas.HCF.Utils.Combat.CombatLoggerInventory;
@@ -126,7 +127,9 @@ public class UserDeathEvent implements Listener {
         addDeathSign(e, user, deathTime);
         String prefix = localeConfig.getString("events.player.death.combat-logger", "&7[Combat-Logger]");
         String victim = prefix + " " + getPlayerName(user);
-        Main.getInstance().getServer().broadcast(formatDeathMessage(e, victim));
+        Component message = formatDeathMessage(e, victim);
+        trackSwordKill(e, user, message);
+        Main.getInstance().getServer().broadcast(message);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -150,7 +153,9 @@ public class UserDeathEvent implements Listener {
         Deathban.apply(user, Deathban.getDuration(e.getEntity()), e.getEntity().getLocation());
         recordDeathStatistics(e, user);
         addDeathSign(e, user, deathTime);
-        e.deathMessage(formatDeathMessage(e, getPlayerName(user)));
+        Component deathMessage = formatDeathMessage(e, getPlayerName(user));
+        trackSwordKill(e, user, deathMessage);
+        e.deathMessage(deathMessage);
         // Let the death finish processing drops and statistics before disconnecting the player.
         Main.getInstance().getServer().getScheduler().runTask(Main.getInstance(), () -> {
             if (!Main.getInstance().isFeatureEnabled("deathbans")) return;
@@ -161,6 +166,11 @@ public class UserDeathEvent implements Listener {
                     "&cYou are deathbanned. &eYou can log back in in &c%time%&e.");
             player.kick(C.chat(message.replace("%time%", C.formatChatTime(remaining))));
         });
+    }
+
+    private void trackSwordKill(EntityDeathEvent e, User victim, Component message) {
+        Player killer = getKiller(e);
+        if (killer != null && !killer.getUniqueId().equals(victim.getUUID())) SwordStats.record(killer, message);
     }
 
     private void addDeathSign(EntityDeathEvent e, User victim, Instant deathTime) {

@@ -31,6 +31,8 @@ public class EventScheduler {
     public enum Type { KOTH, CONQUEST, DTC }
     public record Schedule(long id, Type type, UUID koth, LocalTime time, int seconds, LocalDate lastRun) {}
 
+    public record Upcoming(Schedule schedule, Instant start) {}
+
     private final Map<Long, Schedule> schedules = new HashMap<>();
     private final ZoneId timezone;
     private final BukkitTask task;
@@ -66,6 +68,37 @@ public class EventScheduler {
 
     public List<Schedule> getSchedules() {
         return schedules.values().stream().sorted(Comparator.comparing(Schedule::time).thenComparingLong(Schedule::id)).toList();
+    }
+
+    public Upcoming getNext(Instant instant) {
+        ZonedDateTime now = instant.atZone(timezone);
+        Upcoming next = null;
+        for (Schedule schedule : schedules.values()) {
+            if (!Main.getInstance().isFeatureEnabled(schedule.type().name().toLowerCase(java.util.Locale.ROOT))) continue;
+            if (schedule.type() == Type.KOTH) {
+                KOTH koth = KOTH.get(schedule.koth());
+                if (koth == null) continue;
+            } else if (schedule.type() == Type.CONQUEST) {
+                if (Conquest.get() == null) continue;
+            } else if (DTC.get() == null) continue;
+            LocalDate date = now.toLocalDate();
+            if (schedule.lastRun() != null && !date.isAfter(schedule.lastRun())) date = schedule.lastRun().plusDays(1);
+            Instant start = null;
+            // Match the scheduler's local clock: skip missing DST minutes and consider both repeated minutes.
+            for (int day = 0; day < 3 && start == null; day++, date = date.plusDays(1)) {
+                java.time.LocalDateTime local = date.atTime(schedule.time());
+                for (java.time.ZoneOffset offset : timezone.getRules().getValidOffsets(local)) {
+                    Instant candidate = local.toInstant(offset);
+                    if (candidate.isBefore(instant) && candidate.plusSeconds(60).isAfter(instant)) candidate = instant;
+                    if (!candidate.isBefore(instant) && (start == null || candidate.isBefore(start))) start = candidate;
+                }
+            }
+            if (start == null) continue;
+            if (next == null || start.isBefore(next.start()) || start.equals(next.start()) && schedule.id() < next.schedule().id()) {
+                next = new Upcoming(schedule, start);
+            }
+        }
+        return next;
     }
 
     public Schedule add(Type type, UUID koth, LocalTime time, int seconds) {

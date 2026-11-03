@@ -7,6 +7,7 @@ public class ServerTimer {
         KOTH,
         CONQUEST,
         EOTW,
+        RESTART,
         SALE,
         KEYSALE,
         CUSTOM

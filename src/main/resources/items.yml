@@ -138,3 +138,7 @@ staff:
     material: GRAY_DYE
     name: '&7Vanish'
     lore: []
+
+sword-stats:
+  kills: "&eKills: &c%kills%"
+  death: "&7%message%"

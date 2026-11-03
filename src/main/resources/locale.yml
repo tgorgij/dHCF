@@ -60,6 +60,7 @@ events:
     extended: "&6[KOTH] %koth% has been extended and has %time% remaining."
     pearl-blocked: "&6[KOTH] Enderpearls are disabled in %koth%'s territory."
   player:
+    world-border: "&cYou cannot cross the world border."
     found-diamonds: "&7[&bFD&7] &b%player% &7found &b%amount% %ore%&7."
     shop:
       invalid: "&cUse [Buy] or [Sell], a valid item, a positive amount, and a positive price with at most two decimal places."
@@ -193,6 +194,58 @@ faction:
     offline: "&4%player% &cis offline"
 
 commands:
+  border:
+    usage: "&cUsage: /%alias% <overworld|nether> <radius>"
+    success: "&eSet the &b%dimension% &eborder to &b+/-%radius% &eblocks."
+  restart:
+    usage: "&cUsage: /%alias% <seconds>"
+    running: "&cA restart is already scheduled."
+    scheduled: "&cThe server will restart in %time%."
+    restarting: "&cThe server is restarting."
+  heal:
+    usage: "&cUsage: /%alias% [player]"
+    dead: "&cYou cannot heal a dead player."
+    received: "&eYour health has been restored."
+    success: "&eRestored &b%player%&e's health."
+  feed:
+    usage: "&cUsage: /%alias% [player]"
+    received: "&eYour hunger has been restored."
+    success: "&eRestored &b%player%&e's hunger."
+  more:
+    usage: "&cUsage: /%alias%"
+    empty: "&cHold an item first."
+    staff-mode: "&cYou cannot modify mod mode items."
+    success: "&eYour held item is now a full stack."
+  ping:
+    usage: "&cUsage: /%alias% [player]"
+    success: "&b%player%&e's ping is &b%ping%ms&e."
+  mapkit:
+    usage: "&cUsage: /%alias%"
+  ignore:
+    usage: "&cUsage: /%alias% <player>"
+    self: "&cYou cannot ignore yourself."
+    added: "&eYou are now ignoring messages from &b%player%&e."
+    removed: "&eYou are no longer ignoring messages from &b%player%&e."
+  tl:
+    usage: "&cUsage: /%alias%"
+    location: "%world%: %x%, %y%, %z%"
+  seen:
+    usage: "&cUsage: /%alias% <player>"
+    online: "&b%player% &eis currently online."
+    offline: "&b%player% &ewas last online &b%time% &eago."
+    unknown: "&cNo last-seen time is available for %player%."
+  notes:
+    usage: "&cUsage: /%alias% <player> <add|remove|list> [text|id]"
+    add-usage: "&cUsage: /%alias% <player> add <note>"
+    remove-usage: "&cUsage: /%alias% <player> remove <id>"
+    list-usage: "&cUsage: /%alias% <player> list"
+    invalid-text: "&cA note must contain between 1 and 1024 characters."
+    added: "&eAdded note &b#%id% &efor &b%player%&e."
+    removed: "&eRemoved note &b#%id% &efor &b%player%&e."
+    not-found: "&cThere is no note with that ID."
+    header: "&9[Notes] &b%player%"
+    empty: "&eThis player has no notes."
+    entry: "&9#%id% &b%author% &7(%time% ago)&7: &e%note%"
   lff:
     in-faction: "&cYou are already in a faction."
     too-long: "&cYour LFF message may contain at most %length% characters."
@@ -369,6 +422,7 @@ commands:
   craft:
     usage: "&cUsage: /%alias%"
   message:
+    ignored: "&c%player% is ignoring your messages."
     usage: "&cUsage: /%alias% <player> <message>"
     self: "&cYou cannot message yourself."
     disabled: "&c%player% has private messages disabled."

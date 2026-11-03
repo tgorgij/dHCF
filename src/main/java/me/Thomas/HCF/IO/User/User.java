@@ -11,6 +11,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.InvalidConfigurationException;
 
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
 import java.sql.Connection;
@@ -43,6 +45,11 @@ public class User {
     private byte[] lastInventory;
     private Integer lastExperience;
     private final Set<Material> filteredItems = EnumSet.noneOf(Material.class);
+
+    private final Set<UUID> ignoredPlayers = new HashSet<>();
+    public record Note(int id, String author, String text, long createdAt) {}
+    private final Map<Integer, Note> notes = new LinkedHashMap<>();
+    private int nextNoteId = 1;
 
     private long revision;
     private volatile long savedRevision;
@@ -158,6 +165,13 @@ public class User {
             Material material = Material.matchMaterial(item);
             if (material != null && !material.isLegacy() && material.isItem() && !material.isAir()) filteredItems.add(material);
         }
+        ignoredPlayers.clear();
+        String ignored = resultSet.getString("ignoredPlayers");
+        if (ignored != null && !ignored.isEmpty()) for (String player : ignored.split(",")) {
+            try { ignoredPlayers.add(UUID.fromString(player)); }
+            catch (IllegalArgumentException exception) { Main.getInstance().getLogger().warning("Invalid ignored player for " + uuid); }
+        }
+        readNotes(resultSet.getString("notes"));
         this.lastInventory = resultSet.getBytes("lastInventory");
         int experience = resultSet.getInt("lastExperience");
         this.lastExperience = resultSet.wasNull() ? null : experience;
@@ -189,6 +203,9 @@ public class User {
         this.requestReportCooldowns = true;
         this.abilityCooldowns = true;
         filteredItems.clear();
+        ignoredPlayers.clear();
+        notes.clear();
+        nextNoteId = 1;
         this.lastInventory = null;
         this.lastExperience = null;
         this.revision++;
@@ -309,8 +326,8 @@ public class User {
         String sql =
                 "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
-                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns, reclaimed, abilityCooldowns, filteredItems) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns, reclaimed, abilityCooldowns, filteredItems, ignoredPlayers, notes) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
                         + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
                         + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry, "
@@ -318,14 +335,65 @@ public class User {
                         + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience, mountainMessages=excluded.mountainMessages, "
                         + "messages=excluded.messages, messageSounds=excluded.messageSounds, "
                         + "scoreboard=excluded.scoreboard, publicChat=excluded.publicChat, "
-                        + "requestReportCooldowns=excluded.requestReportCooldowns, reclaimed=excluded.reclaimed, abilityCooldowns=excluded.abilityCooldowns, filteredItems=excluded.filteredItems";
+                        + "requestReportCooldowns=excluded.requestReportCooldowns, reclaimed=excluded.reclaimed, abilityCooldowns=excluded.abilityCooldowns, filteredItems=excluded.filteredItems, ignoredPlayers=excluded.ignoredPlayers, notes=excluded.notes";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), name, faction == null ? null : faction.toString(),
                 balance, kills, deaths, lives, serializeTimers(), deathbanExpiry, pvpProtectionPending ? 1 : 0,
                 getLastInventory(), lastExperience, mountainMessages ? 1 : 0,
                 messages ? 1 : 0, messageSounds ? 1 : 0, scoreboard ? 1 : 0, publicChat ? 1 : 0, requestReportCooldowns ? 1 : 0, reclaimed ? 1 : 0, abilityCooldowns ? 1 : 0,
-                filteredItems.stream().map(Material::name).sorted().collect(java.util.stream.Collectors.joining(",")));
+                filteredItems.stream().map(Material::name).sorted().collect(java.util.stream.Collectors.joining(",")),
+                ignoredPlayers.stream().map(UUID::toString).sorted().collect(java.util.stream.Collectors.joining(",")), serializeNotes());
+    }
+
+    public boolean isIgnoring(UUID player) { return ignoredPlayers.contains(player); }
+
+    public boolean toggleIgnoredPlayer(UUID player) {
+        boolean ignored = ignoredPlayers.add(player);
+        if (!ignored) ignoredPlayers.remove(player);
+        revision++;
+        return ignored;
+    }
+
+    public Collection<Note> getNotes() { return List.copyOf(notes.values()); }
+
+    public Note addNote(String author, String text) {
+        Note note = new Note(nextNoteId++, author, text, System.currentTimeMillis());
+        notes.put(note.id(), note);
+        revision++;
+        return note;
+    }
+
+    public boolean removeNote(int id) {
+        if (notes.remove(id) == null) return false;
+        revision++;
+        return true;
+    }
+
+    private String serializeNotes() {
+        YamlConfiguration data = new YamlConfiguration();
+        data.set("next-id", nextNoteId);
+        data.set("notes", notes.values().stream().map(note -> Map.of("id", note.id(), "author", note.author(),
+                "text", note.text(), "created-at", note.createdAt())).toList());
+        return data.saveToString();
+    }
+
+    private void readNotes(String stored) throws SQLException {
+        notes.clear();
+        nextNoteId = 1;
+        if (stored == null || stored.isBlank()) return;
+        YamlConfiguration data = new YamlConfiguration();
+        try { data.loadFromString(stored); }
+        catch (InvalidConfigurationException exception) { throw new SQLException("Invalid notes for " + uuid, exception); }
+        nextNoteId = Math.max(1, data.getInt("next-id", 1));
+        for (Map<?, ?> entry : data.getMapList("notes")) {
+            if (!(entry.get("id") instanceof Number id) || !(entry.get("created-at") instanceof Number time)
+                    || !(entry.get("author") instanceof String author) || !(entry.get("text") instanceof String text)) continue;
+            if (id.intValue() < 1) continue;
+            Note note = new Note(id.intValue(), author, text, time.longValue());
+            notes.put(note.id(), note);
+            nextNoteId = Math.max(nextNoteId, note.id() + 1);
+        }
     }
 
     public byte[] getLastInventory() {

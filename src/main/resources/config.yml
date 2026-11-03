@@ -2,6 +2,7 @@
 settings:
   features:
     scoreboard: true
+    tablist: true
     koth: true
     conquest: true
     dtc: true
@@ -705,3 +706,15 @@ found-diamonds:
 
 lff:
   max-message-length: 120
+
+processing:
+  furnace-speed-multiplier: 1.0
+  brewing-speed-multiplier: 1.0
+
+sword-stats:
+  enabled: true
+  max-history: 10
+
+borders:
+  overworld: 3000
+  nether: 2000

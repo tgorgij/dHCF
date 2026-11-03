@@ -423,3 +423,78 @@ stats:
         - '&7Ancient Debris: &f%ancient-debris%'
         - ''
         - '&eTotal&7: &f%total-ores%'
+
+mapkit:
+  title: '&eMapkit'
+  rows: 3
+  enchantment: '&e%enchantment% &7%level%'
+  background:
+    material: GRAY_STAINED_GLASS_PANE
+    name: ' '
+    lore: []
+  items:
+    sword:
+      material: DIAMOND_SWORD
+      slot: 10
+      name: '&eSword'
+      lore: []
+    helmet:
+      material: DIAMOND_HELMET
+      slot: 12
+      name: '&eHelmet'
+      lore: []
+    chestplate:
+      material: DIAMOND_CHESTPLATE
+      slot: 13
+      name: '&eChestplate'
+      lore: []
+    leggings:
+      material: DIAMOND_LEGGINGS
+      slot: 14
+      name: '&eLeggings'
+      lore: []
+    boots:
+      material: DIAMOND_BOOTS
+      slot: 15
+      name: '&eBoots'
+      lore: []
+    bow:
+      material: BOW
+      slot: 16
+      name: '&eBow'
+      lore: []
+    fishing-rod:
+      material: FISHING_ROD
+      slot: 19
+      name: '&eFishing Rod'
+      lore: []
+    mace:
+      material: MACE
+      slot: 20
+      name: '&eMace'
+      lore: []
+    axe:
+      material: DIAMOND_AXE
+      slot: 21
+      name: '&eAxe'
+      lore: []
+    pickaxe:
+      material: DIAMOND_PICKAXE
+      slot: 22
+      name: '&ePickaxe'
+      lore: []
+    trident:
+      material: TRIDENT
+      slot: 23
+      name: '&eTrident'
+      lore: []
+    crossbow:
+      material: CROSSBOW
+      slot: 24
+      name: '&eCrossbow'
+      lore: []
+    shears:
+      material: SHEARS
+      slot: 25
+      name: '&eShears'
+      lore: []

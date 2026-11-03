@@ -1,5 +1,21 @@
 package me.Thomas.HCF.Main;
 
+import com.github.retrooper.packetevents.PacketEvents;
+import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+import me.Thomas.HCF.Utils.Tab.TabList;
+import me.Thomas.HCF.Commands.Admin.BorderCommand;
+import me.Thomas.HCF.Events.Player.Movement.UserWorldBorderEvent;
+
+import me.Thomas.HCF.Commands.Admin.RestartCommand;
+import me.Thomas.HCF.Commands.Admin.MoreCommand;
+import me.Thomas.HCF.Commands.Staff.HealCommand;
+import me.Thomas.HCF.Commands.Staff.FeedCommand;
+import me.Thomas.HCF.Commands.User.PingCommand;
+import me.Thomas.HCF.Commands.User.MapKitCommand;
+import me.Thomas.HCF.Commands.User.IgnoreCommand;
+import me.Thomas.HCF.Commands.User.TLCommand;
+import me.Thomas.HCF.Commands.User.SeenCommand;
+import me.Thomas.HCF.Commands.Staff.Notes.NotesCommand;
 import me.Thomas.HCF.Commands.Staff.ReviveCommand;
 import me.Thomas.HCF.Commands.Staff.StaffCommand;
 import me.Thomas.HCF.Commands.Staff.FreezeCommand;
@@ -26,6 +42,8 @@ import me.Thomas.HCF.Events.Player.Item.UserFilterEvent;
 import me.Thomas.HCF.Commands.User.StatsCommand;
 import me.Thomas.HCF.Commands.User.PlaytimeCommand;
 import me.Thomas.HCF.Events.Player.Interact.UserStatsEvent;
+import me.Thomas.HCF.Events.Player.Interact.UserMapKitEvent;
+import me.Thomas.HCF.Events.Player.Item.UserProcessingEvent;
 import me.Thomas.HCF.Commands.User.CoordsCommand;
 import me.Thomas.HCF.Commands.User.RewardsCommand;
 import me.Thomas.HCF.Events.Player.Interact.UserRewardsEvent;
@@ -115,6 +133,8 @@ public class Main extends JavaPlugin {
 
     public static Main instance;
     private DatabaseManager databaseManager;
+    private FileConfiguration tabConfig;
+    private TabList tabList;
     private FileConfiguration localeConfig;
     private FileConfiguration guiConfig;
     private FileConfiguration itemsConfig;
@@ -170,7 +190,15 @@ public class Main extends JavaPlugin {
     }
 
     @Override
+    public void onLoad() {
+        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+        PacketEvents.getAPI().getSettings().checkForUpdates(false).bStats(false);
+        PacketEvents.getAPI().load();
+    }
+
+    @Override
     public void onEnable() {
+        PacketEvents.getAPI().init();
         databaseManager = new DatabaseManager(this, "storage");
         databaseManager.load();
 
@@ -178,6 +206,7 @@ public class Main extends JavaPlugin {
         loadLocale();
         loadGui();
         loadItems();
+        loadTab();
         loadScoreboard();
         loadMessages();
 
@@ -193,6 +222,7 @@ public class Main extends JavaPlugin {
         dataLoaded = true;
         staffMode = new StaffMode();
         boardHandler = new BoardHandler();
+        if (isFeatureEnabled("tablist")) tabList = new TabList();
 
         getLogger().info("dHCF has been enabled with SQLite support!");
         events();
@@ -201,6 +231,7 @@ public class Main extends JavaPlugin {
         Bukkit.getScheduler().runTaskTimer(this, this::saveAll, 20 * 60 * 5, 20 * 60 * 5);
         Bukkit.getScheduler().runTaskTimer(this, this::updateDTR, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, () -> {
+            tickRestart();
             tickEOTW();
             for (KOTH koth : List.copyOf(koths.values())) koth.tick();
             if (conquest != null) conquest.tick();
@@ -209,6 +240,7 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (tabList != null) tabList.close();
         if (eventScheduler != null) eventScheduler.close();
         if (dtc != null) dtc.restoreCore();
         if (staffMode != null) staffMode.shutdown();
@@ -229,6 +261,7 @@ public class Main extends JavaPlugin {
         }
 
         getLogger().info("dHCF has been disabled.");
+        if (PacketEvents.getAPI() != null) PacketEvents.getAPI().terminate();
     }
 
     private void commands() {
@@ -249,12 +282,19 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand());
         Objects.requireNonNull(getCommand("pay")).setExecutor(new PayCommand());
 
+        Objects.requireNonNull(getCommand("ping")).setExecutor(new PingCommand());
+        Objects.requireNonNull(getCommand("mapkit")).setExecutor(new MapKitCommand());
+        Objects.requireNonNull(getCommand("ignore")).setExecutor(new IgnoreCommand());
+        Objects.requireNonNull(getCommand("tl")).setExecutor(new TLCommand());
+        Objects.requireNonNull(getCommand("seen")).setExecutor(new SeenCommand());
+
         // Donator
         Objects.requireNonNull(getCommand("craft")).setExecutor(new CraftCommand());
         Objects.requireNonNull(getCommand("bottle")).setExecutor(new BottleCommand());
         Objects.requireNonNull(getCommand("reclaim")).setExecutor(new ReclaimCommand());
 
         // Admin
+        Objects.requireNonNull(getCommand("border")).setExecutor(new BorderCommand());
         Objects.requireNonNull(getCommand("schedule")).setExecutor(new ScheduleCommand());
         Objects.requireNonNull(getCommand("customtimer")).setExecutor(new CustomTimerCommand());
         Objects.requireNonNull(getCommand("timer")).setExecutor(new TimerCommand());
@@ -272,7 +312,13 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("dtc")).setExecutor(new DTCCommand());
         Objects.requireNonNull(getCommand("mountain")).setExecutor(new MountainCommand());
 
+        Objects.requireNonNull(getCommand("restart")).setExecutor(new RestartCommand());
+        Objects.requireNonNull(getCommand("more")).setExecutor(new MoreCommand());
+
         // Staff
+        Objects.requireNonNull(getCommand("heal")).setExecutor(new HealCommand());
+        Objects.requireNonNull(getCommand("feed")).setExecutor(new FeedCommand());
+
         Objects.requireNonNull(getCommand("staff")).setExecutor(new StaffCommand());
         Objects.requireNonNull(getCommand("freeze")).setExecutor(new FreezeCommand());
         Objects.requireNonNull(getCommand("invsee")).setExecutor(new InvseeCommand());
@@ -282,6 +328,7 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("revive")).setExecutor(new ReviveCommand());
         Objects.requireNonNull(getCommand("restore")).setExecutor(new RestoreCommand());
         Objects.requireNonNull(getCommand("chat")).setExecutor(new ChatCommand());
+        Objects.requireNonNull(getCommand("notes")).setExecutor(new NotesCommand());
     }
 
     private void events() {
@@ -295,6 +342,8 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserChatEvent(), this);
         pm.registerEvents(new UserSettingsEvent(), this);
         pm.registerEvents(new UserStatsEvent(), this);
+        pm.registerEvents(new UserMapKitEvent(), this);
+        pm.registerEvents(new UserProcessingEvent(), this);
         if (isFeatureEnabled("rewards")) pm.registerEvents(new UserRewardsEvent(), this);
         pm.registerEvents(new UserCommandEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
@@ -324,6 +373,7 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserFilterEvent(), this);
         pm.registerEvents(new UserDeathSignEvent(), this);
         pm.registerEvents(new UserEndPortalEvent(), this);
+        pm.registerEvents(new UserWorldBorderEvent(), this);
         if (isFeatureEnabled("dtc")) pm.registerEvents(new UserDTCEvent(), this);
         if (isFeatureEnabled("elevators")) pm.registerEvents(new UserElevatorEvent(), this);
         if (isFeatureEnabled("shops")) pm.registerEvents(new UserShopSignEvent(), this);
@@ -620,6 +670,7 @@ public class Main extends JavaPlugin {
         saveResource("locale.yml", false);
         saveResource("gui.yml", false);
         saveResource("items.yml", false);
+        saveResource("tab.yml", false);
         saveResource("scoreboard.yml", false);
         saveResource("messages.yml", false);
     }
@@ -643,6 +694,18 @@ public class Main extends JavaPlugin {
             guiConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not load GUI defaults", exception);
+        }
+    }
+
+    public FileConfiguration getTabConfig() { return tabConfig; }
+
+    private void loadTab() {
+        tabConfig = YamlConfiguration.loadConfiguration(new java.io.File(getDataFolder(), "tab.yml"));
+        try (java.io.InputStream resource = Objects.requireNonNull(getResource("tab.yml"));
+             java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
+            tabConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not load tab defaults", exception);
         }
     }
 
@@ -1085,6 +1148,14 @@ public class Main extends JavaPlugin {
         Bukkit.broadcast(C.chat(getLocaleConfig().getString("events.eotw.scheduled")
                 .replace("%time%", C.formatChatTime(seconds))));
         if (seconds == 0) tickEOTW();
+    }
+
+    private void tickRestart() {
+        ServerTimer timer = getServerTimer(ServerTimer.Type.RESTART);
+        if (timer == null || timer.getRemainingTimeMillis() > 0) return;
+        removeServerTimer(ServerTimer.Type.RESTART);
+        Bukkit.broadcast(C.chat(getLocaleConfig().getString("commands.restart.restarting")));
+        Bukkit.getServer().restart();
     }
 
     private void tickEOTW() {

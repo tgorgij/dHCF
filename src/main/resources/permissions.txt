@@ -124,3 +124,13 @@
 
 24. Ability items
 - hcf.command.ability
+
+25. Server and staff utilities
+- hcf.command.restart
+- hcf.command.heal
+- hcf.command.feed
+- hcf.command.more
+- hcf.command.notes
+
+26. World borders
+- hcf.command.border

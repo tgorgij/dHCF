@@ -4,7 +4,41 @@ author: Thomas Gorgij
 description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
+softdepend: [ProtocolLib, ProtocolSupport, ViaVersion, ViaBackwards, ViaRewind, Geyser-Spigot]
 commands:
+  border:
+    description: Set dimension border radius from zero.
+    usage: /border <overworld|nether> <radius>
+  restart:
+    description: Schedule a server restart.
+    usage: /restart <seconds>
+  heal:
+    description: Restore health.
+    usage: /heal [player]
+  feed:
+    description: Restore hunger.
+    usage: /feed [player]
+  more:
+    description: Fill the held stack.
+    usage: /more
+  ping:
+    description: View player latency.
+    usage: /ping [player]
+  mapkit:
+    description: View the default enchantment mapkit.
+    usage: /mapkit
+  ignore:
+    description: Toggle ignoring private messages from a player.
+    usage: /ignore <player>
+  tl:
+    description: Share your location in faction chat.
+    usage: /tl
+  notes:
+    description: Manage staff notes on a player.
+    usage: /notes <player> <add|remove|list> [text|id]
+  seen:
+    description: View when a player was last online.
+    usage: /seen <player>
   lff:
     description: Announce that you are looking for a faction.
     usage: /lff [message]

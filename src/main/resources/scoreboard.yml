@@ -2,6 +2,7 @@ title: "%primary%&l%server-name% &7| %secondary%&lMap %map-number%"
 boards:
   primary:
     - "&7&m---------------------"
+    - "&c&lRestart&7: &c%server-restart-timer% <display=%has-server-restart-timer%>"
     - "%mod-mode%"
     - "%custom-server-timers%"
     - "%custom-user-timers%"

@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 /** Versioned, transactional upgrades shared by fresh installs and existing databases. */
 public final class DatabaseSchema {
-    private static final int VERSION = 20;
+    private static final int VERSION = 21;
 
     private DatabaseSchema() {}
 
@@ -232,6 +232,11 @@ public final class DatabaseSchema {
             if (version < 20) {
                 statement.executeUpdate("ALTER TABLE players ADD COLUMN filteredItems TEXT NOT NULL DEFAULT ''");
                 statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (20)");
+            }
+            if (version < 21) {
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN ignoredPlayers TEXT NOT NULL DEFAULT ''");
+                statement.executeUpdate("ALTER TABLE players ADD COLUMN notes TEXT NOT NULL DEFAULT ''");
+                statement.executeUpdate("INSERT INTO schemaMigrations(version) VALUES (21)");
             }
             connection.commit();
         } catch (SQLException exception) {

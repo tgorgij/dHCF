@@ -45,6 +45,11 @@ public class MessageCommand implements TabExecutor {
             return;
         }
         User recipient = User.get(target);
+        if (recipient.isIgnoring(p.getUniqueId())) {
+            p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.message.ignored")
+                    .replace("%player%", target.getName())));
+            return;
+        }
         if (!recipient.isMessages()) {
             p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.message.disabled")
                     .replace("%player%", target.getName())));

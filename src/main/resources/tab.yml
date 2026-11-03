@@ -1,0 +1,111 @@
+update-ticks: 20
+header: '&d&l%server-name% &7| &fHCF'
+footer: '&eThere are currently &d%online%/%max-players% &eplayers.'
+store: 'store.example.com'
+unset: '-'
+no-event: 'None'
+end-portal-location: 1000
+member: '&a%rank%%player%'
+faction-entry: '%faction-name% &7[&a%online-members%&7]'
+ranks:
+  leader: '***'
+  coleader: '**'
+  captain: '*'
+  member: ''
+time:
+  days-hours: '%days%d, %hours%h'
+  hours-minutes: '%hours%h, %minutes%m'
+event-names:
+  conquest: 'Conquest'
+  dtc: 'DTC'
+skins:
+  blank:
+    value: 'ewogICJ0aW1lc3RhbXAiIDogMTc1NDQ4NzEwMTI3NCwKICAicHJvZmlsZUlkIiA6ICIzNmU5MTE1YzBjYzc0ZjhkOTdmOGFjNjA1ZGMxNGVkYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJEYXJnaVYiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzMyOGRjZGUxNzNiZWZmOWYzZjQxYjkyMzIxM2ZjMWJiNzY3ODk2N2NjYjJlZGU3YTdjZjQwYjE4MzZiMWE3MyIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9'
+    signature: 'vUPTZChLdeo7das4xwOhMqF4OeugTgxP+rs+C4L32GJTi2+00APpUR1zHWYrsj+FHUPtUbPR4+qXAY0/spTmYYiXrHw1ZOvJxYIsNnL3zmJV0SlffpKLMNk7uuXPJ+aWiIsVT2KTNrNapyY98KgG1vFyO78Bukpn85FHnEUhJG6ueQwFcZC69tGLqbf15BLXhYYHDv3+Fqmn6hjXj8gPotm3GHVeTyeomHJUt+WqtjjbryfY4bXQZVsrClho/VOQMa320fDaAr6WjlpS6AKDzsVeVrmklX+iJ3Pv5NDFr4z0Hb2Vbb3fXqALPHKX2zXpWfF3hhdTkuRH2qXxdSxmoO7FqSlZ25wAWuqdIaCW2Y8FlDzeWpDVLosWSoXhbABrSXb53K+AGZtrzgWD63WNdQFYwpVosH2huDhXxUFF2oZAVDc04RvoJnQ1ZXbpe/mSCvA1IP5ZQclm7qLliPifaXjCnp1LxO7dgZGSqrGieramBe9jbmZ548N4trVyXVbtZQbGCSzH2xSNS58w1qGI0Jr24rB2WmRqRkewh+tDJqFqWRA8INiPxBNlAMm+SHKUPDgkUJxPIOnMow3S930vSU5WqZFNLfHSRPjXeMJ4oyLPgTz+Mr2ELzDLdik2Li8Mx6W88/PFkCaYGC0d/aBTBPnUHSfV1bCf3Q25QsPkvXI='
+  team-info:
+    value: 'ewogICJ0aW1lc3RhbXAiIDogMTcwNjYzNTI0Njg5MywKICAicHJvZmlsZUlkIiA6ICIxOWY1YzkwMWEzMjQ0YzVmYTM4NThjZGVhNDk5ZWMwYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzb2RpdW16aXAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmUzZGEzNWQzNmFjODc5MmNmZGZmYzVkNzdlMmM4YjM4NGRlODQ4NzA4MDFhZmIxNDNmNGJlNmYxYjNjMmU5OCIKICAgIH0KICB9Cn0='
+    signature: 'gmzFSFH+JJ6fLUxavlUjakPtddthZ4wFphlLnBqLe/Ei8tbFHFI8eNRBwOo+CZZhfP0bk7DQNoUWXfjxitYEpLl0tt78GFkWLbyowzbA9tc+PlIuuMjf75OPZpdVNsqv5n/7jRulaGki/FZb3vv3tJcwY6NzKmQh9b3IDqTA6CwZzJUrITx59PtGMebVVumUoH0rq/sahHOVDT5ACCLCbk5NySVT4BWjgFM5yoGGXNqcKsegbneg9bJFHRfA+UZVkJb5wovkpl4b/+Z9csA9xPm/o3g8Cq8AUQBeknErGYR9DPgTPc/JHRiPhcKombgaKTzniFhTfRtt7f8Va2tP2zXyV8PPH3itSQdtzJVIesKb7kPDWtYoi/YrpIwWyYMSyvCV7D0TDw51ahpUKBocoVBXDPg6MYZRCY8kOfdobBwfU3fstZksi9Dz7U3U/gr/uL6sV0hKHVAGX9sRGEsuEeuQD0k32kID1GVj4UhHSvuCuEKxYuUrVsstLAl3dJ9mp/BGxJ6Y54a1dGuNVU9m4jdNUsk77TiMk11mYOk4Qdml/ZKjk3sM7VwSptsFHXM/SYLdS/LFzxSh4BA0I4GCsDN4GZc8y/aR9ZtRHGZalEVv9T4YB27t0zGmI1h56CkWTYb2J1PlyCvdPptvk4vXoBWwdEX+kwm2x9c6mqciLIE='
+  player-info:
+    value: 'ewogICJ0aW1lc3RhbXAiIDogMTYyMjk3ODgxMTUwMSwKICAicHJvZmlsZUlkIiA6ICJiMGQ0YjI4YmMxZDc0ODg5YWYwZTg2NjFjZWU5NmFhYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl9vcmciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5M2M5YmEzNTY1YTE0Nzc5OWU1ODc1YjQzZWE5ZDBhZmY3MDUzMjE2MDk3YTQxODI3N2YwNzVlNTkwYTU4NiIKICAgIH0KICB9Cn0='
+    signature: 'O7WqUEHpSQ9C3OJVN2x4mlRKchThIAWejR31jiC8tie5dcszGpUV9/LCSYk45Oa7ckW0PrkCLaKgftCnmd4q5qzvZ4yHHwOAbz52vL0BJVwqo6kGRGMDDH1yqCryfrYn3AyCMV2wv+N9YzrNl+jNx634yjQfE3ly4poiJl4x3XAogdpP4ct2nUw8d+jonIofWN6Iu3kyqL4BBz0CUojXLUGg/cQhlJO98u7fsidHfy1VGQryNqIl5JSbStLBIe51xUPTlMyS0f/xawVjG6TqpF2a1tt9sTEpVWBvjBtZuNl7dPOmx4luVo1cQP2spn/c8MbweyGNYo66Bx2RX/pGZiVHAt7OZgnBU1AfOJlkUy71NUEPpnKjQKO8Jkf7GpGA5w/7AbPE+IadqEHQ7U1tBL2LE4cqGImJAfBnIGkgPNw5KpU00GttnoDTYHgLMhlq0NZkiIoT3GXKCI20zRS4+yGgMHK3xPbt4uKAlnAjEqXJOSBuwJRXQ0VM1B29f+QIqj+FiI5XsKJ8rH/yoOMDFryGI16QuiWnTWQDzdabRxR7jDDLHfuh1Wlgk8MfGdjoeFNKM0F0X9xOq1wCWcStzP0L3X0vb4S4HC5NRD8r4DG1FXgexAf2QzvzT1WSlPRNpvGDJpHKDT5ubnxt4QZ6eIziwxsTxtGSPOzitB2nMV8='
+  location:
+    value: 'ewogICJ0aW1lc3RhbXAiIDogMTYyMDE3MjI4ODg2OCwKICAicHJvZmlsZUlkIiA6ICJkZTE0MGFmM2NmMjM0ZmM0OTJiZTE3M2Y2NjA3MzViYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTUlRlYW0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTA4OWNhYmNlMzFkZmEyNGY4ZDk4YjEyMTAxOTRkY2MzZjI3MDJlYTc5NDMyZGMwMGE5MTRmNmJiNTk2YTYyNyIKICAgIH0KICB9Cn0='
+    signature: 'XOeXUo7W46rXRlnHt5EOtJXVdr3sqCT7h5p53RIojCMpEY1HD6PLGnmaTWj86Wcheg+AqgF8CXXaddt1ssl8Xz5fO994hGBALIhMuopeXjo55iOla2yOrMKRXaVsw9lEDrQvomgzkoF78dmUJCnOIFuT5WpD5W0E3ZIKcV/B8h09rnEVi63iLhjA/sYO+dqLuKmD4shFh9O81Za6Dn3cxTCih+t5gciXa5CfHaY8OseRNFca8F5JVF74/EmvxthqqRjVAE9j9D77/q2e1SZHv4gpXXbxQdnMVyMYv7DnYYvBxexQstrZPYAIUTp+AULaRRq4lctiCBGLT+A356Eo9bozlIuelKh/+t5lT8Yd+LTv6CbUAtWHomKIl7pvqtZEIntN/oNsyblbhs4Yos8H9axCgfUO1++2M2p/NnAAJvonUnJdl/LH6iDyT1S3BzAYh092wrtahaRIhTHGs6I8MXqvKa9V4YLceGiraqWTPn9ITfZdhrsBukv9phDWNqu9Ng1KPY2tkvLyyWC7cyARQ6xh/mwD8bnyr9n/j92uKAIO3IW2kEUrxmvzZ45wvUYq07LLH0f8G4skrCcJKyKzEUS3Ed0A7eAtIaDeD3iNiQcqgGOJUXkFTDwhMJBhcyD/Nsx7i7ZYv1ywSIP0g55gZU3trTa+BCYcR/qC+bJoL4g='
+  server:
+    value: 'ewogICJ0aW1lc3RhbXAiIDogMTYyNTI1OTU1NjczNCwKICAicHJvZmlsZUlkIiA6ICI3ZGEyYWIzYTkzY2E0OGVlODMwNDhhZmMzYjgwZTY4ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJHb2xkYXBmZWwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDc2Mjg1MTQ4MDhiZTAxOWUxZWFlNzA3ZDczMzhhNjMxNmVhZTc0ZmFjMGU2YjQxZmM4MDlkNTA2YWIxNTg0NSIKICAgIH0KICB9Cn0='
+    signature: 'skBj70ZM+9zYUgZgih6SwIcB3eAZatTAIilPvZXRmsCw01BvtRvKFW7qu+jKV/M7LG8JElU0pj0XUO5nD74abXyafw7jvCKhLQCDnFB15g5BGI/Aqy2elSk8WBgRxPEKi6ImsVcSg8xRsyX1yP6yS0ifDEg8MhPcg8qLi81Xv5mH1580evOk14+kagux880qgbBW4xqartsB3gp4Oz67PIzzorUt0YRLMW0hYs3zmIxzXipP3cqsiv1J+ii0LblCjNm02Tc6cxqXaMMtPPy7HvBxPfJwBU0ysO23YVl4GmrZaJe38dsbF9IG9o1siwgTDlVoWF7QAtyhrCZqeA/2mMIM9aeZ+aIkNViMnd0TfRcoOf+6j32XEEE1i0yZsw7NrccrgNSqFEAOInOHQ1kVALE/fteeTfJnABQT+/Te3yuR1lAP4prkiS3HKynMufloNPnjPuG0NCPJ0YfjMJhz+fw3CQG2zxbljizNHzpr/hMpvVBpz1Rl/EWfEMyH4MJrMEfa6bBxOrnPTXHvX2qKz4h+PF53KD5WyAQKsJ2t4f9QjJoDwe2G+urkdRpfvgjjzhgj4P9QYOLsmJzrkiF4XQP+UuQ8yHW3moGCwnGMge5hFbNi1D+YkE/vY6zsEpLR5bU6HWWmbbvh9KP6aFZcP2ip4+DUYZFw2tM/Z6Ohg5I='
+  borders:
+    value: 'ewogICJ0aW1lc3RhbXAiIDogMTc0MTgxMzg0MTExNiwKICAicHJvZmlsZUlkIiA6ICIxN2I5ZDBmOWYxYzE0OTE5ODRkY2Y5ZGM2YzczZDYzYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJuYWJlNDk3NSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xMmU5NTM4ZDZiZWFhYTRhOGNjZDc4NTMyZDIzZjIyNjc3YWVlYjMwNDhiMDU4OWIyMzhmODUyNGYwOTY0MWM0IgogICAgfQogIH0KfQ=='
+    signature: 'Mftk1B5jbL1Y741azkZlNVNaXzzqbomCexukWKK+y6wUyO7qgE/3ruvkP6KPxJ490C11+3K/XRffGBNhgBLS04Dm1MyKZmK16oovBEcP2AAmwp+52+Y+2LY3ED4vhh7sLVqtzukBJi8bcS6e+il5yQ1lD7bLvdITHlrBuyihPtIKWvolslmEbLK8BF3ICE/nvezg1AgXznaIIFvln0rktC+NMQyBq+jyxMNFJbgDKJ2wlCndHADXduKHSQUnEJP5wTIKLoBTGv+2VaSL3qcjIaa67gueP37MEyX2m3Ilv/x5Ty817iYxIbUDRSv+PxjIKSGJAsgvdX/RTcjgMztu0syeNYcak43TfOjwtQebSWDTS/Dp3IEiznzsAqLemKwndBL6NmhRK6WR3P/arWnqGzSwDGXzaxCARfDOBkf9xlG6worv62iRkJTUfTtuwKPipd6b03vRWNCJuWZ7iXDw8Q5ruL01d6s+Sj7tUBTL484uFRjBs/jKlEAMFmWLHeuk+5k+ubU4p+sMn3BkGUnmhFUsKuz69vwQSfn/vKEqEAJ2Iv07qSA7B774vnErphykc9AZsPVazadR5TYiw7HpzFCYzjgggWXbonaqrcGbYWuuLK8KDtdfr4JsoMUSQV0SNHKz7/O9UyaKRUrvGtQdLtsXmBr4KBmU8cykSVuBRzk='
+  end-portals:
+    value: 'ewogICJ0aW1lc3RhbXAiIDogMTcxNjEzNzIwNjk2NiwKICAicHJvZmlsZUlkIiA6ICJlZGY2MDczMTA2M2U0YzMyOTA0MWExNmI5MzJiZDE5MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaWtlbGNyYWZ0NjMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjE3ZjQ3NDZjNDNiZGExMDcyYWQxNWE4NTFjMDZlNzI3NDc4YzBjMzY3ODFjZjkzMmM3YTA0NmNhM2EwZmMzNyIKICAgIH0KICB9Cn0='
+    signature: 'xx0QCLZPMWd0eZqVIA78YQjMyu3YpaXBWGGIYEywtKcjmKGIlcsGP8Q8vc0uuN0BAo8cYaF0p9XqUMR44Kcnug7O3nou9R3Mcy+qX18LH6l/LYjZv5op5vsmnO5dnj7Zh8nD2Mga2YKeMq2Mu+6WuINRtaUjKK31zXfcH79bMhRArXo92UMNpwvYaPivLUb0QTE3ka5UhmMvQJuQ9lKnlxuwkN2aTV85gWHo1iz9WHJObITWlzSAQTIx+6hZATFCfOXXbwfOW1UnJ/9BvPEoP+tWVX4509Fm9dP84m54IL+jBlO2RbFWIQ4tm6Wmc2GvNyCI+uguwDmO5oZtLNtGxXtCTbJ27tDopW0ptgytJ/jLJ8XrkScXmHcgF/WoPt0KmJ31tJ00SMauv8y9ZNC4pPoCui8k1+xEC1nUMKNrAwviDBOZKK5tjv4znrgTWQWEzC8VwAUQioAGAajrqGlYfxShnSn3MoPtcXoOi3sYoHICd+uNYS7D+5O/OhY3rDxqn5bMDhcAW7nKKRKDhAm/po8Ff5aO7pMo6nO8v1gsAtw7Um9e6csRT60Er7kAdM5X7u5M+nmOAdZlJArYWlmdUBZ+zZvFpr25EJoNvPFywA0qkuDi0odrt/53Av0+DAGu8v3rBt6CvouXy/WNkmjD4LoSYjp0finjO3FKWSJ0M7A='
+  next-event:
+    value: 'ewogICJ0aW1lc3RhbXAiIDogMTc2ODc3MTAzNDM2MCwKICAicHJvZmlsZUlkIiA6ICJjNGY1NDZmNjJkY2Q0YzY4YWZjNTQyNTQ0NGYzMTE1ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJyY21sIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2I4YTM3MTA0ZDI3MzFlMTM0ZjM1MWY1MGFlZjFiNzE2NjBhZDQzZTIxYTRiNDE4ODkwZmFiYTFjYzAwNTYyMTIiLAogICAgICAibWV0YWRhdGEiIDogewogICAgICAgICJtb2RlbCIgOiAic2xpbSIKICAgICAgfQogICAgfQogIH0KfQ=='
+    signature: 'ONNJ2pTqqh8wny26DujzEbdY38sQrC/p3GujoXf34r6xmr3CFyJn5/TxHt8zLsEnpvW9fNxwU785b8r5O1YsYQC3d08t+oHI+VaWoFtqYUDP6BadE1KvAPeaKdAuSbo6Ju8NGX0yzs6Snfqw9JLyWyFNGa2xrbQvmaTqVVrfYti5EIbOghdomTCaFbRu2OnFmfpyAHkF/bDRr2NPAK2vHDsFVcZThcyv+Bls1rZbZMVVr8Z5/vUV5nUvoyLf6fTRgm4anHanSctemHYLTxtbTSacsU3qr6kwyt+7wOzqPOYEtosWpL5MBNbcuZ3PBHbLmf0859MwU8qLUucv+b8IlGk124gAHFvANJrppc2AQHQz6vbaDDZOFZriBzuWqa0yM6Bf7jvUjocE/Hnco+HYeNnhJPj+3x3wzViCZsrG2c469FHO5i4K7zRRfehRKuFerMAULNvUBx7veVmoEw7chfyJqdulcDDUvPgvMtm3mb6OYfVu5OGG1/CsZaC7/rh0+9qi0ASPo6gCY5KUPAYM/eUJTxAP6K0RbTeyHTsa+dfhQuTwcRhVRo85o9rT6ihe2gvLmuyMpHlmz2UAUu0p/5Tf7auTW6ohXs1UCleTP4JH2zHkxoLEomFf1BCSgOgDAIuIjVQv0uZHrv8z7n35WL+BT4ByjtR1Cq8msUOE30A='
+  team-list:
+    value: 'ewogICJ0aW1lc3RhbXAiIDogMTc5Mzc0MjI4ODY5OCwKICAicHJvZmlsZUlkIiA6ICJiMTM1MDRmMjMxOGI0OWNjYWFkZDcyYWVhYmMyNTQ1MCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUeXBrZW4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzFjMzI2ZmIxZDkyNmZiMzk5OGYyMzQ3OTllZjM3OGJjYzIwOTU1ZDdiZDgzZWVjMGVjYTUyYWE3ZTEzOGQxMiIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9'
+    signature: 'jRtuluNNbILBuM9WLNCU6AcOm9ZPoaJ7vCXEyueMvY2CbxKP94reLUaehoAAVSBPMhmw1CYQwUdfZGXWfnnFMhJj89GBim+RkfCAe5sZpSKuJsbZa2NTBMbLTEOi1d4DWryH9pi5qS35nElUIlTIZfiB1FJpEmFDcGx1naiXqy0ZnfEYInwP4S4KuoalzFc5RUiArGyeepqBNZrnt8zx8nyBWxdiDycyu4GQ7XYgvzP+Ecxc9kdLZEV73zMQPZqmZM3glHqA3MAbRqtK4IN+bKUUFBH6vvxYb/Js3yosWl0lik+jpk7qRggYF0y67MkaDwlAxN4VZ2gZ5OYM09TeGHNKXuhtItkbS/LoDETmKlCEpduKXLTOdPXhjuILepQeMeKu7701SmP1VPKRT13QM6F4kDdzUZPdS7OjkIa/IlVtZJMVMJaTZOQjfXE8wu0syu73Ph2onwWBlVnUa6GmQNzwOmLPYCvnb844ufxkRhyZRrYCQ7TxipayKsXWZfMtD9w5Xe2HHhZVUnXLhTRiGZzccNJ01NW7/7U3k2u8eHlEAEho1yPicpe0EQOGEr0mrN7FdfQl9pEbkhtu1neqRBDCpRMTNqEiXDYerz2DSggDUi0wMARx57gCF4KMgXZkT546GE6dQGUPBdHP5cfkQ0+nJB3bqMqkGR26jOIggFo='
+columns:
+  left:
+    '1':
+      text: '&d&lTeam Info'
+      skin: team-info
+    '2':
+      text: '&7DTR: %dtr%'
+    '3':
+      text: '&7HQ: &f%hq%'
+    '6':
+      text: '&d&lPlayer Info'
+      skin: player-info
+    '7':
+      text: '&7Kills: &f%kills%'
+    '8':
+      text: '&7Deaths: &f%deaths%'
+    '9':
+      text: '&7Lives: &f%lives%'
+    '12':
+      text: '&d&lLocation'
+      skin: location
+    '13':
+      text: '%territory%'
+    '14':
+      text: '&f%x%, %z% &7[&c%direction%&7]'
+  left-middle:
+    '1':
+      text: '&d&l%server-name%'
+      skin: server
+    '2':
+      text: '&7%store%'
+    '5':
+      text: '%faction%'
+    '6':
+      text: '%faction-members%'
+  right-middle:
+    '1':
+      text: '&d&lBorders'
+      skin: borders
+    '2':
+      text: '&7Nether: &f%nether-border%'
+    '3':
+      text: '&7Overworld: &f%overworld-border%'
+    '6':
+      text: '&d&lEnd Portals'
+      skin: end-portals
+    '7':
+      text: '&7Location: &f%end-portals%'
+    '8':
+      text: '&7All quadrants'
+    '11':
+      text: '&d&lNext Event'
+      skin: next-event
+    '12':
+      text: '&c%next-event%'
+    '13':
+      text: '&7%next-event-time%'
+  right:
+    '1':
+      text: '&d&lTeam List'
+      skin: team-list
+    '2':
+      text: '%factions%'

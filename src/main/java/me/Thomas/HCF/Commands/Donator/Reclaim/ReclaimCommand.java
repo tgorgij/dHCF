@@ -40,6 +40,10 @@ public class ReclaimCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String alias, @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("reclaim")) {
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
+            return true;
+        }
         if (args.length > 0) {
             Subcommand subcommand = subcommands.get(args[0].toLowerCase(Locale.ROOT));
             if (subcommand != null) return subcommand.execute(sender, Arrays.copyOfRange(args, 1, args.length), alias);
@@ -97,6 +101,7 @@ public class ReclaimCommand implements TabExecutor {
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                               @NotNull String alias, @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("reclaim")) return List.of();
         if (!Permission.has(sender, "command.reclaim.reset", "admin") || args.length == 0) return List.of();
         if (args.length == 1) return subcommands.keySet().stream().filter(name -> name.startsWith(args[0].toLowerCase(Locale.ROOT))).sorted().toList();
         Subcommand subcommand = subcommands.get(args[0].toLowerCase(Locale.ROOT));

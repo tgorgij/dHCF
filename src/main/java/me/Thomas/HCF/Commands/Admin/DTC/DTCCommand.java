@@ -35,6 +35,10 @@ public class DTCCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String alias, @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("dtc")) {
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
+            return true;
+        }
         if (!Permission.has(sender, "command.dtc", "admin")) {
             sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.no-permission")));
             return true;
@@ -64,6 +68,7 @@ public class DTCCommand implements TabExecutor {
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                               @NotNull String alias, @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("dtc")) return List.of();
         if (!Permission.has(sender, "command.dtc", "admin") || args.length == 0) return List.of();
         if (args.length == 1) {
             String input = args[0].toLowerCase(Locale.ROOT);

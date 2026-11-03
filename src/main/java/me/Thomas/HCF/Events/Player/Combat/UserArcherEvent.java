@@ -60,9 +60,9 @@ public class UserArcherEvent implements Listener {
     private boolean changingEffects;
 
     public UserArcherEvent() {
-        task = Bukkit.getScheduler().runTaskTimer(Main.getInstance(), () -> {
+        task = Main.getInstance().isFeatureEnabled("classes") ? Bukkit.getScheduler().runTaskTimer(Main.getInstance(), () -> {
             for (Player p : Bukkit.getOnlinePlayers()) update(p);
-        }, 1L, 1L);
+        }, 1L, 1L) : null;
     }
 
     private boolean isLeather(ItemStack item, Material material) {
@@ -78,7 +78,7 @@ public class UserArcherEvent implements Listener {
     }
 
     private ArcherState update(Player p) {
-        if (!p.isOnline() || p.isDead() || !hasLeather(p)) {
+        if (!Main.getInstance().isFeatureEnabled("classes") || !p.isOnline() || p.isDead() || !hasLeather(p)) {
             deactivate(p, p.isOnline() && !p.isDead());
             return null;
         }
@@ -217,7 +217,7 @@ public class UserArcherEvent implements Listener {
     @EventHandler
     public void onDisable(PluginDisableEvent e) {
         if (e.getPlugin() != Main.getInstance()) return;
-        task.cancel();
+        if (task != null) task.cancel();
         for (Player p : Bukkit.getOnlinePlayers()) deactivate(p, false);
         archers.clear();
     }

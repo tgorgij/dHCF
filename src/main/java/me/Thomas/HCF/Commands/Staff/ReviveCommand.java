@@ -20,6 +20,10 @@ public class ReviveCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String alias, @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("deathbans")) {
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
+            return true;
+        }
         if (!Permission.has(sender, "command.revive", "staff")) {
             sender.sendMessage(C.chat(localeConfig.getString("primary.no-permission")));
             return true;
@@ -49,6 +53,7 @@ public class ReviveCommand implements TabExecutor {
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                @NotNull String alias, @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("deathbans")) return List.of();
         if (!Permission.has(sender, "command.revive", "staff") || args.length != 1) return List.of();
         String input = args[0].toUpperCase(Locale.ROOT);
         long now = System.currentTimeMillis();

@@ -5,6 +5,15 @@ description: A HCF plugin for the modern day
 main: me.Thomas.HCF.Main.Main
 api-version: 26.2
 commands:
+  lff:
+    description: Announce that you are looking for a faction.
+    usage: /lff [message]
+  filter:
+    description: Choose which item types you do not pick up.
+    usage: /filter [item|list|clear]
+  eotw:
+    description: Start or cancel End of the World from console.
+    usage: /eotw <start <seconds>|cancel>
   stats:
     description: View a player's kills, deaths, and ore mining statistics.
     usage: /stats [player]

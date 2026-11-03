@@ -155,6 +155,7 @@ public class Conquest {
     }
 
     public void start() {
+        if (!Main.getInstance().isFeatureEnabled("conquest")) throw new IllegalArgumentException("feature-disabled");
         if (running) throw new IllegalArgumentException("running");
         for (Map.Entry<Color, Zone> entry : zones.entrySet()) {
             Zone zone = entry.getValue();

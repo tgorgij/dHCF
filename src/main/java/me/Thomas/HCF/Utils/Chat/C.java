@@ -1,6 +1,8 @@
 package me.Thomas.HCF.Utils.Chat;
 
 import me.Thomas.HCF.Main.Main;
+import me.Thomas.HCF.IO.Faction.Faction;
+import me.Thomas.HCF.IO.User.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
@@ -36,6 +38,32 @@ public class C {
             case "white" -> "&f";
             default -> "";
         };
+    }
+
+    public static String getPlayerColor(User viewer, User target) {
+        String relation = "enemy";
+        if (viewer != null) {
+            if (viewer.getUUID().equals(target.getUUID())
+                    || viewer.hasFaction() && viewer.getFaction().equals(target.getFaction())) relation = "team";
+            else if (viewer.hasFaction()) {
+                Main.Focus focus = Main.getInstance().getFocus(viewer.getFaction());
+                if (focus != null && (focus.faction() ? focus.target().equals(target.getFaction())
+                        : focus.target().equals(target.getUUID()))) relation = "focus";
+            }
+        }
+        String fallback = switch (relation) {
+            case "team" -> "GREEN";
+            case "focus" -> "PINK";
+            default -> "RED";
+        };
+        String color = getColorCode(Main.getInstance().getConfig().getString("factions.colors." + relation, fallback));
+        return color.isEmpty() ? getColorCode(fallback) : color;
+    }
+
+    public static String getFactionName(User viewer, User target) {
+        Faction faction = target.hasFaction() ? Faction.get(target.getFaction()) : null;
+        return faction == null ? Main.getInstance().getLocaleConfig().getString("events.player.chat.no-faction", "&6*")
+                : getPlayerColor(viewer, target) + faction.getName();
     }
 
     public static String replacePlaceholders(String s) {

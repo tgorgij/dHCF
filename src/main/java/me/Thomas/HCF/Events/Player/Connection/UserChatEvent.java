@@ -10,6 +10,8 @@ import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -18,6 +20,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,6 +78,20 @@ public class UserChatEvent implements Listener {
         Player p = e.getPlayer();
         if (factionChat.containsKey(p.getUniqueId())) return;
         e.viewers().removeIf(viewer -> viewer instanceof Player recipient && !User.get(recipient).isPublicChat());
+        User source = User.get(p);
+        String format = Main.getInstance().getLocaleConfig().getString("events.player.chat.format", "&e[%faction%&e] %player%&7: &f%message%");
+        Map<UUID, Component> formats = new HashMap<>();
+        for (Audience viewer : e.viewers()) {
+            if (viewer instanceof Player recipient) formats.put(recipient.getUniqueId(), publicFormat(format, User.get(recipient), source));
+        }
+        Map<UUID, Component> viewerFormats = Map.copyOf(formats);
+        Component consoleFormat = publicFormat(format, null, source);
+        // Capture relations on the server thread; rendering only uses immutable components.
+        e.renderer((sender, displayName, message, viewer) -> {
+            Component prefix = viewer instanceof Player recipient ? viewerFormats.getOrDefault(recipient.getUniqueId(), consoleFormat) : consoleFormat;
+            Component body = Component.text(PlainTextComponentSerializer.plainText().serialize(message), NamedTextColor.WHITE);
+            return prefix.replaceText(builder -> builder.matchLiteral("%message%").replacement(body));
+        });
         if (Permission.has(p, "chat.bypass")) return;
         if (ChatCommand.isPaused()) {
             e.setCancelled(true);
@@ -88,6 +105,11 @@ public class UserChatEvent implements Listener {
         long seconds = (user.getTimer(Timer.Type.CHAT).getRemainingTimeMillis() + 999L) / 1000L;
         p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("events.player.chat.slow")
                 .replace("%time%", Long.toString(seconds))));
+    }
+
+    private static Component publicFormat(String format, User viewer, User source) {
+        return C.chat(format.replace("%faction%", C.getFactionName(viewer, source))
+                .replace("%player%", C.getPlayerColor(viewer, source) + source.getName()));
     }
 
     @SuppressWarnings("deprecation")

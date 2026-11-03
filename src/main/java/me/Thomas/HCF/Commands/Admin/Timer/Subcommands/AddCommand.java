@@ -76,7 +76,7 @@ public class AddCommand implements Subcommand {
             user.saveAsync();
         } else if (type != null) {
             boolean pauseOnLogout = switch (type) {
-                case COMBAT, CHAT, REQUEST, REPORT, ARCHERTAG -> false;
+                case COMBAT, CHAT, REQUEST, REPORT, LFF, ARCHERTAG -> false;
                 default -> true;
             };
             Timer timer = new Timer(type, expires, pauseOnLogout && Bukkit.getPlayer(user.getUUID()) == null ? now : 0L, pauseOnLogout);

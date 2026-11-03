@@ -39,6 +39,10 @@ public class MountainCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias,
                              @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("mountain")) {
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
+            return true;
+        }
         if (!Permission.has(sender, "command.mountain", "admin")) {
             sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.no-permission")));
             return true;
@@ -79,6 +83,7 @@ public class MountainCommand implements TabExecutor {
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                               @NotNull String alias, @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("mountain")) return List.of();
         if (!Permission.has(sender, "command.mountain", "admin") || args.length == 0) return List.of();
         String input = args[args.length - 1].toLowerCase(Locale.ROOT);
         if (args.length == 1) {

@@ -247,7 +247,7 @@ public class ShowCommand implements Subcommand {
 
         if (onlineLeader != null) {
             color = Main.getInstance().getConfig().getString("settings.colors.online");
-        } else if (user.getDeathbanExpiry() != 0) {
+        } else if (Main.getInstance().isFeatureEnabled("deathbans") && user.getDeathbanExpiry() != 0) {
             color = Main.getInstance().getConfig().getString("settings.colors.deathban");
         }
 

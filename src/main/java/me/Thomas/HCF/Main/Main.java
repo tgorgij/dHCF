@@ -20,6 +20,9 @@ import me.Thomas.HCF.Commands.Donator.Reclaim.ReclaimCommand;
 import me.Thomas.HCF.Commands.User.MessageCommand;
 import me.Thomas.HCF.Commands.User.ReplyCommand;
 import me.Thomas.HCF.Commands.User.SettingsCommand;
+import me.Thomas.HCF.Commands.User.FilterCommand;
+import me.Thomas.HCF.Commands.User.LFFCommand;
+import me.Thomas.HCF.Events.Player.Item.UserFilterEvent;
 import me.Thomas.HCF.Commands.User.StatsCommand;
 import me.Thomas.HCF.Commands.User.PlaytimeCommand;
 import me.Thomas.HCF.Events.Player.Interact.UserStatsEvent;
@@ -40,6 +43,7 @@ import me.Thomas.HCF.Commands.Admin.SpawnerCommand;
 import me.Thomas.HCF.Commands.Admin.SetEnd.SetEndCommand;
 import me.Thomas.HCF.Events.Player.Movement.UserEndPortalEvent;
 import me.Thomas.HCF.Commands.Admin.SOTW.SOTWCommand;
+import me.Thomas.HCF.Commands.Admin.EOTW.EOTWCommand;
 import me.Thomas.HCF.Commands.Admin.PvP.PvPCommand;
 import me.Thomas.HCF.Commands.Admin.Economy.EconomyCommand;
 import me.Thomas.HCF.Commands.User.Faction.FactionCommand;
@@ -60,6 +64,7 @@ import me.Thomas.HCF.Events.Player.Item.UserPearlEvent;
 import me.Thomas.HCF.Events.Player.Item.UserAppleEvent;
 import me.Thomas.HCF.Events.Player.Item.UserBottleEvent;
 import me.Thomas.HCF.Events.Player.Item.UserSpawnerEvent;
+import me.Thomas.HCF.Events.Player.Item.UserFoundDiamondsEvent;
 import me.Thomas.HCF.Events.Player.Item.UserDeathSignEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserElevatorEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserShopSignEvent;
@@ -145,7 +150,10 @@ public class Main extends JavaPlugin {
     private final Map<ServerTimer.Type, ServerTimer> serverTimers = new HashMap<>();
     private final Map<String, ServerTimer> customServerTimers = new LinkedHashMap<>();
     private final Set<UUID> sotwEnabled = new HashSet<>();
+    private boolean eotw;
+    private UUID eotwKoth;
     private final Set<UUID> friendlyFire = new HashSet<>();
+    private final Set<UUID> lockedClaims = new HashSet<>();
     public record Focus(UUID target, boolean faction) {}
     private final Map<UUID, Focus> factionFocus = new HashMap<>();
 
@@ -155,6 +163,10 @@ public class Main extends JavaPlugin {
 
     public static Main getInstance() {
         return instance;
+    }
+
+    public boolean isFeatureEnabled(String feature) {
+        return getConfig().getBoolean("settings.features." + feature, true);
     }
 
     @Override
@@ -189,6 +201,7 @@ public class Main extends JavaPlugin {
         Bukkit.getScheduler().runTaskTimer(this, this::saveAll, 20 * 60 * 5, 20 * 60 * 5);
         Bukkit.getScheduler().runTaskTimer(this, this::updateDTR, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, () -> {
+            tickEOTW();
             for (KOTH koth : List.copyOf(koths.values())) koth.tick();
             if (conquest != null) conquest.tick();
         }, 1L, 1L);
@@ -201,6 +214,7 @@ public class Main extends JavaPlugin {
         if (staffMode != null) staffMode.shutdown();
         StuckTimer.shutdownSearches();
         friendlyFire.clear();
+        lockedClaims.clear();
         factionFocus.clear();
         if (boardHandler != null) boardHandler.close();
         if (databaseManager != null) {
@@ -223,6 +237,8 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("message")).setExecutor(new MessageCommand());
         Objects.requireNonNull(getCommand("reply")).setExecutor(new ReplyCommand());
         Objects.requireNonNull(getCommand("settings")).setExecutor(new SettingsCommand());
+        Objects.requireNonNull(getCommand("filter")).setExecutor(new FilterCommand());
+        Objects.requireNonNull(getCommand("lff")).setExecutor(new LFFCommand());
         Objects.requireNonNull(getCommand("stats")).setExecutor(new StatsCommand());
         Objects.requireNonNull(getCommand("playtime")).setExecutor(new PlaytimeCommand());
         Objects.requireNonNull(getCommand("coords")).setExecutor(new CoordsCommand());
@@ -249,6 +265,7 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("pvp")).setExecutor(new PvPCommand());
         Objects.requireNonNull(getCommand("lives")).setExecutor(new LivesCommand());
         Objects.requireNonNull(getCommand("sotw")).setExecutor(new SOTWCommand());
+        Objects.requireNonNull(getCommand("eotw")).setExecutor(new EOTWCommand());
         Objects.requireNonNull(getCommand("economy")).setExecutor(new EconomyCommand());
         Objects.requireNonNull(getCommand("koth")).setExecutor(new KOTHCommand());
         Objects.requireNonNull(getCommand("conquest")).setExecutor(new ConquestCommand());
@@ -271,21 +288,23 @@ public class Main extends JavaPlugin {
         PluginManager pm = getServer().getPluginManager();
 
         pm.registerEvents(staffMode, this);
-        pm.registerEvents(new MountainEvent(), this);
+        if (isFeatureEnabled("mountain")) pm.registerEvents(new MountainEvent(), this);
 
         // User
         pm.registerEvents(new UserJoinEvent(), this);
         pm.registerEvents(new UserChatEvent(), this);
         pm.registerEvents(new UserSettingsEvent(), this);
         pm.registerEvents(new UserStatsEvent(), this);
-        pm.registerEvents(new UserRewardsEvent(), this);
+        if (isFeatureEnabled("rewards")) pm.registerEvents(new UserRewardsEvent(), this);
         pm.registerEvents(new UserCommandEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
         pm.registerEvents(new UserMobProtectionEvent(), this);
         pm.registerEvents(new UserArcherEvent(), this);
-        pm.registerEvents(new UserBardEvent(), this);
-        pm.registerEvents(new UserRogueEvent(), this);
-        pm.registerEvents(new UserMinerEvent(), this);
+        if (isFeatureEnabled("classes")) {
+            pm.registerEvents(new UserBardEvent(), this);
+            pm.registerEvents(new UserRogueEvent(), this);
+            pm.registerEvents(new UserMinerEvent(), this);
+        }
         pm.registerEvents(new UserCombatLogoutEvent(), this);
         pm.registerEvents(new UserDeathEvent(), this);
         pm.registerEvents(new UserPearlEvent(), this);
@@ -301,11 +320,13 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserInteractInFactionEvent(), this);
         pm.registerEvents(new UserSubclaimEvent(), this);
         pm.registerEvents(new UserSpawnerEvent(), this);
+        pm.registerEvents(new UserFoundDiamondsEvent(), this);
+        pm.registerEvents(new UserFilterEvent(), this);
         pm.registerEvents(new UserDeathSignEvent(), this);
         pm.registerEvents(new UserEndPortalEvent(), this);
-        pm.registerEvents(new UserDTCEvent(), this);
-        pm.registerEvents(new UserElevatorEvent(), this);
-        pm.registerEvents(new UserShopSignEvent(), this);
+        if (isFeatureEnabled("dtc")) pm.registerEvents(new UserDTCEvent(), this);
+        if (isFeatureEnabled("elevators")) pm.registerEvents(new UserElevatorEvent(), this);
+        if (isFeatureEnabled("shops")) pm.registerEvents(new UserShopSignEvent(), this);
         // Check lethal damage after the protection and class damage handlers.
         pm.registerEvents(new UserAbilityEvent(), this);
     }
@@ -804,6 +825,7 @@ public class Main extends JavaPlugin {
             koth.saveAsync();
         }
         friendlyFire.remove(uuid);
+        lockedClaims.remove(uuid);
         factionFocus.remove(uuid);
         factionFocus.values().removeIf(focus -> focus.faction() && focus.target().equals(uuid));
         Set<UUID> invitedUsers = factionInvites.remove(uuid);
@@ -1016,13 +1038,88 @@ public class Main extends JavaPlugin {
     }
 
     public void addServerTimer(ServerTimer timer) {
-        if (timer.getType() == ServerTimer.Type.SOTW) sotwEnabled.clear();
+        if (timer.getType() == ServerTimer.Type.SOTW) {
+            sotwEnabled.clear();
+            lockedClaims.clear();
+        }
         serverTimers.put(timer.getType(), timer);
     }
 
     public void removeServerTimer(ServerTimer.Type type) {
         serverTimers.remove(type);
-        if (type == ServerTimer.Type.SOTW) sotwEnabled.clear();
+        if (type == ServerTimer.Type.SOTW) {
+            sotwEnabled.clear();
+            lockedClaims.clear();
+        }
+    }
+
+    public boolean isClaimLocked(UUID faction) {
+        return isSOTWOngoing() && lockedClaims.contains(faction);
+    }
+
+    public boolean hasLockedClaims() {
+        return isSOTWOngoing() && !lockedClaims.isEmpty();
+    }
+
+    public boolean toggleClaimLock(UUID faction) {
+        if (!isSOTWOngoing()) return false;
+        boolean locked = lockedClaims.add(faction);
+        if (!locked) lockedClaims.remove(faction);
+        return locked;
+    }
+
+    public boolean isEOTWOngoing() { return eotw; }
+    public UUID getEOTWKoth() { return eotwKoth; }
+
+    public void startEOTW(long seconds) {
+        if (!isFeatureEnabled("koth")) throw new IllegalArgumentException("feature-disabled");
+        if (eotw || hasServerTimer(ServerTimer.Type.EOTW)) throw new IllegalArgumentException("running");
+        if (seconds < 0 || seconds > Integer.MAX_VALUE) throw new IllegalArgumentException("invalid-time");
+        KOTH koth = KOTH.get("EOTW");
+        if (koth == null || !koth.isConfigured()) throw new IllegalArgumentException("no-koth");
+        if (koth.isRunning()) throw new IllegalArgumentException("koth-running");
+        long capture = getConfig().getLong("eotw.capture-duration", 600L);
+        if (capture <= 0 || capture > Integer.MAX_VALUE) throw new IllegalArgumentException("invalid-capture-time");
+        eotwKoth = koth.getUUID();
+        addServerTimer(new ServerTimer(ServerTimer.Type.EOTW, seconds));
+        Bukkit.broadcast(C.chat(getLocaleConfig().getString("events.eotw.scheduled")
+                .replace("%time%", C.formatChatTime(seconds))));
+        if (seconds == 0) tickEOTW();
+    }
+
+    private void tickEOTW() {
+        ServerTimer timer = getServerTimer(ServerTimer.Type.EOTW);
+        if (timer == null || timer.getRemainingTimeMillis() > 0L) return;
+        removeServerTimer(ServerTimer.Type.EOTW);
+        KOTH koth = eotwKoth == null ? null : KOTH.get(eotwKoth);
+        long capture = getConfig().getLong("eotw.capture-duration", 600L);
+        if (!isFeatureEnabled("koth") || koth == null || !koth.getName().equalsIgnoreCase("EOTW")
+                || !koth.isConfigured() || koth.isRunning() || capture <= 0 || capture > Integer.MAX_VALUE) {
+            eotwKoth = null;
+            Bukkit.broadcast(C.chat(getLocaleConfig().getString("events.eotw.failed")));
+            return;
+        }
+        try {
+            koth.start(capture);
+        } catch (RuntimeException exception) {
+            eotwKoth = null;
+            getLogger().log(java.util.logging.Level.SEVERE, "Could not start EOTW KOTH", exception);
+            Bukkit.broadcast(C.chat(getLocaleConfig().getString("events.eotw.failed")));
+            return;
+        }
+        eotw = true;
+        Bukkit.broadcast(C.chat(getLocaleConfig().getString("events.eotw.started")));
+    }
+
+    public boolean cancelEOTW() {
+        if (!eotw && !hasServerTimer(ServerTimer.Type.EOTW)) return false;
+        removeServerTimer(ServerTimer.Type.EOTW);
+        KOTH koth = eotwKoth == null ? null : KOTH.get(eotwKoth);
+        if (eotw && koth != null && koth.isRunning()) koth.cancel();
+        eotw = false;
+        eotwKoth = null;
+        Bukkit.broadcast(C.chat(getLocaleConfig().getString("events.eotw.cancelled")));
+        return true;
     }
 
     public boolean isSOTWOngoing() {

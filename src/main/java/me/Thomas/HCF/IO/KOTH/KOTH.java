@@ -159,6 +159,7 @@ public class KOTH {
     }
 
     public void start(long seconds) {
+        if (!Main.getInstance().isFeatureEnabled("koth")) throw new IllegalArgumentException("feature-disabled");
         if (isRunning() || !isConfigured() || seconds <= 0 || seconds > Integer.MAX_VALUE) {
             throw new IllegalStateException("KOTH cannot start");
         }
@@ -240,6 +241,10 @@ public class KOTH {
         capturingPlayer = null;
         capturingName = null;
         broadcast("captured", p.getName());
+        if (Main.getInstance().isEOTWOngoing() && uuid.equals(Main.getInstance().getEOTWKoth())) {
+            Bukkit.broadcast(C.chat(Main.getInstance().getLocaleConfig().getString("events.eotw.winner")
+                    .replace("%player%", p.getName())));
+        }
         User user = User.get(p);
         Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
         if (faction != null && faction.getType() == Faction.Type.PLAYER && faction.hasMember(p.getUniqueId())) {

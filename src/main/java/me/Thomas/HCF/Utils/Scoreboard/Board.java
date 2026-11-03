@@ -25,11 +25,12 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,8 +56,9 @@ public class Board {
     private final String conquestLeader;
     private final List<String> previousLines = new ArrayList<>();
     private boolean visible;
-    private Team focusTeam;
-    private Team archerTagTeam;
+    private record NameStyle(String prefix, NamedTextColor color) { }
+    private final Map<NameStyle, Team> nameTeams = new HashMap<>();
+    private int nextNameTeam;
 
     public Board(Player player) {
         this(player, Bukkit.getScoreboardManager().getNewScoreboard(),
@@ -160,7 +162,7 @@ public class Board {
                 text = text.replace(configured.placeholder(), C.formatTime(timer.getRemainingTimeMillis()));
             }
             if (text.contains("%mountains%")) {
-                if (!user.isMountainMessages()) continue;
+                if (!Main.getInstance().isFeatureEnabled("mountain") || !user.isMountainMessages()) continue;
                 String format = Main.getInstance().getScoreboardConfig().getString("boards.mountain", "&e%name% Mountain&7: &c%time%");
                 List<Mountain> mountains = Main.getInstance().getAllMountains().values().stream()
                         .filter(mountain -> mountain.getNextRegeneration() > 0)
@@ -232,7 +234,7 @@ public class Board {
             String plain = PlainTextComponentSerializer.plainText().serialize(C.chat(text));
             if (!DIVIDER.matcher(plain).matches()) contentBelow = true;
         }
-        boolean show = user.isScoreboard() && lines.size() > 2;
+        boolean show = Main.getInstance().isFeatureEnabled("scoreboard") && user.isScoreboard() && lines.size() > 2;
         if (visible != show) {
             objective.setDisplaySlot(show ? DisplaySlot.SIDEBAR : null);
             visible = show;
@@ -285,38 +287,35 @@ public class Board {
     }
 
     void updateFocus(Set<String> taggedNames) {
-        UUID own = User.get(player).getFaction();
-        Main.Focus focus = own == null ? null : Main.getInstance().getFocus(own);
-        Set<String> names = new HashSet<>();
-        if (focus != null) {
-            Set<UUID> targets = Set.of(focus.target());
-            if (focus.faction()) {
-                Faction targetFaction = Faction.get(focus.target());
-                targets = targetFaction == null ? Set.of() : targetFaction.getMembers().keySet();
-            }
-            for (UUID uuid : targets) {
-                Player target = Bukkit.getPlayer(uuid);
-                if (target != null && !own.equals(User.get(target).getFaction())) names.add(target.getName());
-            }
+        User viewer = User.get(player);
+        String format = Main.getInstance().getScoreboardConfig().getString("name-tag", "&e[%faction%&e] ");
+        Map<NameStyle, Set<String>> styles = new HashMap<>();
+        for (Player target : Bukkit.getOnlinePlayers()) {
+            User user = User.get(target);
+            boolean tagged = taggedNames.contains(target.getName());
+            String color = tagged ? C.getColorCode(Main.getInstance().getConfig().getString("factions.colors.archer-tag", "YELLOW"))
+                    : C.getPlayerColor(viewer, user);
+            TextColor configured = C.chat(color + "x").color();
+            NamedTextColor nameColor = configured == null ? (tagged ? NamedTextColor.YELLOW : NamedTextColor.RED)
+                    : NamedTextColor.nearestTo(configured);
+            NameStyle style = new NameStyle(format.replace("%faction%", C.getFactionName(viewer, user)), nameColor);
+            styles.computeIfAbsent(style, ignored -> new HashSet<>()).add(target.getName());
         }
-        names.removeAll(taggedNames);
-        if (focusTeam == null && !names.isEmpty()) {
-            focusTeam = createNameTeam("dhcf_focus", "factions.colors.focus", "PINK", NamedTextColor.LIGHT_PURPLE);
+        nameTeams.entrySet().removeIf(entry -> {
+            if (styles.containsKey(entry.getKey())) return false;
+            entry.getValue().unregister();
+            return true;
+        });
+        for (Map.Entry<NameStyle, Set<String>> entry : styles.entrySet()) {
+            Team team = nameTeams.computeIfAbsent(entry.getKey(), style -> {
+                Team created = scoreboard.registerNewTeam("dhcf_name" + nextNameTeam++);
+                created.prefix(C.chat(style.prefix()));
+                created.color(style.color());
+                created.setCanSeeFriendlyInvisibles(false);
+                return created;
+            });
+            updateNameTeam(team, entry.getValue());
         }
-        if (archerTagTeam == null && !taggedNames.isEmpty()) {
-            archerTagTeam = createNameTeam("dhcf_archer", "factions.colors.archer-tag", "YELLOW", NamedTextColor.YELLOW);
-        }
-        updateNameTeam(focusTeam, names);
-        updateNameTeam(archerTagTeam, taggedNames);
-    }
-
-    private Team createNameTeam(String name, String path, String defaultColor, NamedTextColor fallback) {
-        Team team = scoreboard.registerNewTeam(name);
-        String code = C.getColorCode(Main.getInstance().getConfig().getString(path, defaultColor));
-        TextColor color = C.chat(code + "x").color();
-        team.color(color == null ? fallback : NamedTextColor.nearestTo(color));
-        team.setCanSeeFriendlyInvisibles(false);
-        return team;
     }
 
     private void updateNameTeam(Team team, Set<String> names) {
@@ -330,8 +329,8 @@ public class Board {
     }
 
     public void remove() {
-        if (focusTeam != null) focusTeam.unregister();
-        if (archerTagTeam != null) archerTagTeam.unregister();
+        for (Team team : nameTeams.values()) team.unregister();
+        nameTeams.clear();
         for (int i = 0; i < previousLines.size(); i++) scoreboard.resetScores("dhcf_line_" + i);
         previousLines.clear();
         if (player.isOnline() && player.getScoreboard() == scoreboard) {

@@ -1,4 +1,5 @@
 primary:
+  feature-disabled: "&cThis feature is disabled"
   name:
     blocked: "&cThis name is blocked."
     invalid-length: "&cNames must be between %min% and %max% characters."
@@ -26,6 +27,12 @@ primary:
     hq: "&eWarped to &d%faction%&e's HQ."
 
 events:
+  eotw:
+    scheduled: "&6[EOTW] EOTW starts in %time%."
+    started: "&6[EOTW] EOTW has started! All player factions can now be raided."
+    cancelled: "&6[EOTW] EOTW has been cancelled."
+    failed: "&6[EOTW] EOTW could not start. Its KOTH must still be configured and available."
+    winner: "&6[EOTW] &b%player% &6has captured EOTW and won the map!"
   dtc:
     started: "&6[DTC] Destroy the Core has started with %max-health% health!"
     remaining: "&6[DTC] The core has %health% health remaining."
@@ -53,6 +60,7 @@ events:
     extended: "&6[KOTH] %koth% has been extended and has %time% remaining."
     pearl-blocked: "&6[KOTH] Enderpearls are disabled in %koth%'s territory."
   player:
+    found-diamonds: "&7[&bFD&7] &b%player% &7found &b%amount% %ore%&7."
     shop:
       invalid: "&cUse [Buy] or [Sell], a valid item, a positive amount, and a positive price with at most two decimal places."
     elevator:
@@ -77,6 +85,8 @@ events:
       deactivated: "&cArcher class deactivated."
       cooldown: "&cArcher %ability% is on cooldown for %time%."
     chat:
+      format: "&e[%faction%&e] %player%&7: &f%message%"
+      no-faction: "&6*"
       paused: "&cPublic chat is currently paused."
       slow: "&cYou must wait %time% seconds before chatting again."
     first-join: "&eSince this is your first time joining, you have been given &b$500&e."
@@ -169,6 +179,7 @@ faction:
   non-deathban: "&e(&aNon-Deathban&e)"
   moving:
     blocked-combat: "&cYou cannot enter %faction%&c while combat tagged."
+    blocked-lock: "&c%faction% &chas locked its claim during SOTW."
     blocked-protection: "&cYou cannot enter %faction%&c with a PvP or starting timer."
     leaving: "&eNow leaving: %faction% %deathban%"
     entering: "&eNow entering: %faction% %deathban%"
@@ -182,6 +193,33 @@ faction:
     offline: "&4%player% &cis offline"
 
 commands:
+  lff:
+    in-faction: "&cYou are already in a faction."
+    too-long: "&cYour LFF message may contain at most %length% characters."
+    cooldown: "&cYou must wait %time% before announcing LFF again."
+    format: "&e[LFF] &b%player% &eis looking for a faction."
+    message-format: "&e[LFF] &b%player%&7: &f%message%"
+  filter:
+    usage: "&cUsage: /%alias% <item|list|clear>"
+    empty: "&eYour pickup filter is empty."
+    list: "&eFiltered items&7: &f%items%"
+    invalid-item: "&cSpecify a valid item type."
+    added: "&eYou will no longer pick up &b%item%&e."
+    removed: "&eYou can pick up &b%item% &eagain."
+    cleared: "&eYour pickup filter has been cleared."
+  eotw:
+    running: "&cEOTW is already running or counting down."
+    not-running: "&cEOTW is not running or counting down."
+    no-koth: "&cCreate a KOTH named EOTW and set its faction and both capture positions first."
+    koth-running: "&cThe EOTW KOTH is already running."
+    invalid-time: "&cThe specified time is invalid."
+    invalid-capture-time: "&cEOTW capture-duration must be between 1 and 2147483647 seconds."
+    start:
+      usage: "&cUsage: /%alias% start <seconds>"
+      success: "&eStarted the EOTW countdown for &b%time%&e."
+    cancel:
+      usage: "&cUsage: /%alias% cancel"
+      success: "&eCancelled EOTW and restored normal faction protection."
   stats:
     usage: "&cUsage: /%alias% [player]"
   playtime:
@@ -719,6 +757,10 @@ commands:
     open:
       usage: "&cUsage: /%alias% open"
       success: "&eYour faction is now &b%status%&e."
+    lockclaim:
+      usage: "&cUsage: /%alias% lockclaim"
+      not-sotw: "&cClaims can only be locked during SOTW."
+      success: "&b%player% &ehas %status% &eSOTW claim locking."
     ff:
       usage: "&cUsage: /%alias% ff"
       success: "&b%player% &ehas set faction friendly fire to %status%&e."

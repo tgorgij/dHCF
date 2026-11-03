@@ -81,11 +81,12 @@ public class UserInteractInFactionEvent implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent e) {
-        if (DTC.get() != null && DTC.get().contains(e.getBlock().getLocation())) return;
+        if (Main.getInstance().isFeatureEnabled("dtc") && DTC.get() != null && DTC.get().contains(e.getBlock().getLocation())) return;
         Player p = e.getPlayer();
         Location location = e.getBlock().getLocation();
         Faction faction = Faction.getAtLocation(location);
-        if (faction != null && faction.getType() == Faction.Type.MOUNTAIN && !User.get(p).isBypass()) {
+        if (Main.getInstance().isFeatureEnabled("mountain") && faction != null
+                && faction.getType() == Faction.Type.MOUNTAIN && !User.get(p).isBypass()) {
             Mountain mountain = Mountain.get(faction.getUUID());
             if (mountain == null || !mountain.contains(location) || User.get(p).hasPvpProtection()) {
                 e.setCancelled(true);
@@ -229,7 +230,8 @@ public class UserInteractInFactionEvent implements Listener {
         boolean disallowed = faction == null
                 ? Faction.isInWarzoneBuildLimit(location)
                 : faction.getType() == Faction.Type.MOUNTAIN || !user.hasFaction() || !user.getFaction().equals(faction.getUUID());
-        if (faction != null && faction.getType().equals(Faction.Type.PLAYER) && faction.getDTR() <= 0) return false;
+        if (faction != null && faction.getType() == Faction.Type.PLAYER
+                && (faction.getDTR() <= 0 || Main.getInstance().isEOTWOngoing())) return false;
         if (disallowed && (!throttleMessage || canSendPressurePlateMessage(p))) {
             String messageFormat = "faction.modify.";
             p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString(messageFormat + message))

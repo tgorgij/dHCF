@@ -113,7 +113,7 @@ public class UserSubclaimEvent implements Listener {
         }
         e.line(0, Component.text(Subclaim.MARKER, NamedTextColor.YELLOW));
         e.line(1, Component.text(owner == null ? name : owner.getName()));
-        if (owner != null && faction.hasMember(owner.getUUID()) && faction.getUUID().equals(owner.getFaction()) && !faction.isRaidable()
+        if (owner != null && faction.hasMember(owner.getUUID()) && faction.getUUID().equals(owner.getFaction()) && !faction.isRaidable() && !Main.getInstance().isEOTWOngoing()
                 && storage.getState() instanceof org.bukkit.inventory.InventoryHolder holder) {
             for (HumanEntity viewer : java.util.List.copyOf(holder.getInventory().getViewers())) {
                 if (viewer instanceof Player other && !other.getUniqueId().equals(owner.getUUID()) && !User.get(other).isBypass()) {

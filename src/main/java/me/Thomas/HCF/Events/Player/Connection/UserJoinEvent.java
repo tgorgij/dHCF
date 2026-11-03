@@ -21,7 +21,7 @@ public class UserJoinEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onValidateLogin(PlayerConnectionValidateLoginEvent e) {
-        if (!e.isAllowed()) return;
+        if (!e.isAllowed() || !Main.getInstance().isFeatureEnabled("deathbans")) return;
         PlayerProfile profile = null;
         if (e.getConnection() instanceof PlayerLoginConnection connection) {
             profile = connection.getAuthenticatedProfile();

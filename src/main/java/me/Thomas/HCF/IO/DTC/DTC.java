@@ -86,6 +86,7 @@ public class DTC {
         if (world != null && blockData != null) world.getBlockAt(x, y, z).setBlockData(Bukkit.createBlockData(blockData), false);
     }
     public void start() {
+        if (!Main.getInstance().isFeatureEnabled("dtc")) throw new IllegalArgumentException("feature-disabled");
         if (running) throw new IllegalArgumentException("running");
         World world = this.world == null ? null : Bukkit.getWorld(this.world);
         if (world == null || blockData == null) throw new IllegalArgumentException("no-core");

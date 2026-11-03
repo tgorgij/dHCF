@@ -102,6 +102,7 @@ public class EventScheduler {
         LocalDate date = now.toLocalDate();
         LocalTime minute = now.toLocalTime().withSecond(0).withNano(0);
         for (Schedule schedule : new ArrayList<>(schedules.values())) {
+            if (!Main.getInstance().isFeatureEnabled(schedule.type().name().toLowerCase(java.util.Locale.ROOT))) continue;
             if (!schedule.time().equals(minute) || schedule.lastRun() != null && !date.isAfter(schedule.lastRun())) continue;
             try {
                 // Record the occurrence before starting so a restart cannot run it twice.

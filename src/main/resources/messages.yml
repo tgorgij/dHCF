@@ -6,6 +6,9 @@ coords:
   - "&7&m---------------------------"
 
 help:
+  eotw:
+    - "&e/%alias% start <seconds>"
+    - "&e/%alias% cancel"
   timer:
     - "&e/%alias% add <player> <timer> [seconds]"
     - "&e/%alias% remove <player> <timer>"
@@ -171,6 +174,7 @@ factions:
       - "&e/%alias% withdraw <amount;all> &7- Withdraw money from the faction"
       - " "
       - "&9Coleader Commands:"
+      - "&e/%alias% lockclaim &7- Toggle SOTW claim entry protection."
       - "&e/%alias% captain &7- Show captain management commands"
       - "&e/%alias% unclaim &7- Remove the faction's claim"
       - "&e/%alias% announcement [message] &7- Set the faction's announcement"

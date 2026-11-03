@@ -22,6 +22,10 @@ public final class ReviveCommand implements Subcommand {
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String @NonNull [] args, @NotNull String alias) {
+        if (!Main.getInstance().isFeatureEnabled("deathbans")) {
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
+            return true;
+        }
         if (!(sender instanceof Player player)) {
             sender.sendMessage(C.chat(localeConfig.getString("primary.not-player")));
             return true;

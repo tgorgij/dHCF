@@ -4,6 +4,7 @@ import me.Thomas.HCF.Commands.Admin.Schedule.ScheduleCommand;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.KOTH.KOTH;
 import me.Thomas.HCF.Main.Main;
+import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Events.EventScheduler;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +24,11 @@ public class AddCommand implements Subcommand {
         boolean koth = args.length > 0 && args[0].equalsIgnoreCase("koth");
         if (!(koth && args.length == 4 || args.length == 2 && (args[0].equalsIgnoreCase("conquest") || args[0].equalsIgnoreCase("dtc")))) {
             ScheduleCommand.send(sender, "add-usage", "%alias%", alias);
+            return true;
+        }
+        String feature = args[0].toLowerCase(Locale.ROOT);
+        if (!Main.getInstance().isFeatureEnabled(feature)) {
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
             return true;
         }
         LocalTime time;

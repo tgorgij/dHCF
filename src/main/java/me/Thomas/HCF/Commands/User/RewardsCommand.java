@@ -21,6 +21,10 @@ public class RewardsCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String alias, @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("rewards")) {
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
+            return true;
+        }
         if (args.length > 0) {
             if (!admin(sender)) { sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.no-permission"))); return true; }
             if (args.length != 2 || !args[1].equalsIgnoreCase("list")) {
@@ -54,6 +58,7 @@ public class RewardsCommand implements TabExecutor {
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                               @NotNull String alias, @NotNull String @NotNull [] args) {
+        if (!Main.getInstance().isFeatureEnabled("rewards")) return List.of();
         if (!admin(sender)) return List.of();
         if (args.length == 1) return Main.getInstance().getAllFactions().values().stream().filter(faction -> faction.getType() == Faction.Type.PLAYER)
                 .map(Faction::getName).filter(name -> name.toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))).sorted(String.CASE_INSENSITIVE_ORDER).toList();

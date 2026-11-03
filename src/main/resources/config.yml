@@ -1,5 +1,17 @@
 
 settings:
+  features:
+    scoreboard: true
+    koth: true
+    conquest: true
+    dtc: true
+    mountain: true
+    classes: true
+    deathbans: true
+    elevators: true
+    shops: true
+    rewards: true
+    reclaim: true
   server-name: "HCF"
   timezone: "America/Los_Angeles"
   colors:
@@ -238,6 +250,7 @@ timers: # seconds
   bard: 10
   request: 300
   report: 300
+  lff: 300
   pvp: 1800
   starting: 3600
   combat: 30
@@ -680,3 +693,15 @@ abilities:
       cooldown: 60
       hits: 3
       hit-window: 10
+
+eotw:
+  capture-duration: 600
+
+found-diamonds:
+  ores:
+    - DIAMOND_ORE
+    - DEEPSLATE_DIAMOND_ORE
+  max-vein-size: 64
+
+lff:
+  max-message-length: 120

@@ -20,6 +20,7 @@ public final class Deathban {
     }
 
     public static long getDuration(ConfigurationSection config, Predicate<String> hasPermission) {
+        if (!config.getBoolean("settings.features.deathbans", true)) return 0L;
         long duration = Long.MAX_VALUE;
         boolean matched = false;
         for (Map<?, ?> entry : config.getMapList("deathbans.permissions")) {
@@ -33,11 +34,13 @@ public final class Deathban {
     }
 
     public static void apply(User user, long seconds) {
+        if (!Main.getInstance().isFeatureEnabled("deathbans")) return;
         user.setDeathbanExpiry(getExpiry(System.currentTimeMillis(), seconds));
         user.saveAsync();
     }
 
     public static void apply(User user, long seconds, Location deathLocation) {
+        if (!Main.getInstance().isFeatureEnabled("deathbans")) return;
         Faction territory = Faction.getAtLocation(deathLocation);
         if (territory == null || territory.isDeathban()) apply(user, seconds);
     }

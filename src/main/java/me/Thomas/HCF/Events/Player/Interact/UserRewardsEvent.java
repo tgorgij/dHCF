@@ -57,7 +57,7 @@ public class UserRewardsEvent implements Listener {
     }
 
     public static void message(Player p, String key) {
-        p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.rewards." + key)));
+        p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString(key.equals("feature-disabled") ? "primary.feature-disabled" : "commands.rewards." + key)));
     }
 
     public static void open(Player p) { open(p, null); }

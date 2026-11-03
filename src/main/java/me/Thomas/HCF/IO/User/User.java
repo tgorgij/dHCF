@@ -9,6 +9,7 @@ import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import me.Thomas.HCF.IO.Database.SaveSnapshot;
@@ -41,6 +42,7 @@ public class User {
     private boolean abilityCooldowns = true;
     private byte[] lastInventory;
     private Integer lastExperience;
+    private final Set<Material> filteredItems = EnumSet.noneOf(Material.class);
 
     private long revision;
     private volatile long savedRevision;
@@ -150,6 +152,12 @@ public class User {
         this.publicChat = resultSet.getBoolean("publicChat");
         this.requestReportCooldowns = resultSet.getBoolean("requestReportCooldowns");
         this.abilityCooldowns = resultSet.getBoolean("abilityCooldowns");
+        filteredItems.clear();
+        String filter = resultSet.getString("filteredItems");
+        if (filter != null && !filter.isEmpty()) for (String item : filter.split(",")) {
+            Material material = Material.matchMaterial(item);
+            if (material != null && !material.isLegacy() && material.isItem() && !material.isAir()) filteredItems.add(material);
+        }
         this.lastInventory = resultSet.getBytes("lastInventory");
         int experience = resultSet.getInt("lastExperience");
         this.lastExperience = resultSet.wasNull() ? null : experience;
@@ -180,6 +188,7 @@ public class User {
         this.publicChat = true;
         this.requestReportCooldowns = true;
         this.abilityCooldowns = true;
+        filteredItems.clear();
         this.lastInventory = null;
         this.lastExperience = null;
         this.revision++;
@@ -246,6 +255,23 @@ public class User {
         revision++;
     }
 
+    public Set<Material> getFilteredItems() { return Collections.unmodifiableSet(filteredItems); }
+
+    public boolean isItemFiltered(Material material) { return filteredItems.contains(material); }
+
+    public boolean toggleFilteredItem(Material material) {
+        boolean added = filteredItems.add(material);
+        if (!added) filteredItems.remove(material);
+        revision++;
+        return added;
+    }
+
+    public void clearFilteredItems() {
+        if (filteredItems.isEmpty()) return;
+        filteredItems.clear();
+        revision++;
+    }
+
     public Map<String, ServerTimer> getAbilityTimers() { return abilityTimers; }
 
     public boolean isAbilityCooldowns() { return abilityCooldowns; }
@@ -283,8 +309,8 @@ public class User {
         String sql =
                 "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
-                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns, reclaimed, abilityCooldowns) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns, reclaimed, abilityCooldowns, filteredItems) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
                         + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
                         + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry, "
@@ -292,13 +318,14 @@ public class User {
                         + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience, mountainMessages=excluded.mountainMessages, "
                         + "messages=excluded.messages, messageSounds=excluded.messageSounds, "
                         + "scoreboard=excluded.scoreboard, publicChat=excluded.publicChat, "
-                        + "requestReportCooldowns=excluded.requestReportCooldowns, reclaimed=excluded.reclaimed, abilityCooldowns=excluded.abilityCooldowns";
+                        + "requestReportCooldowns=excluded.requestReportCooldowns, reclaimed=excluded.reclaimed, abilityCooldowns=excluded.abilityCooldowns, filteredItems=excluded.filteredItems";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), name, faction == null ? null : faction.toString(),
                 balance, kills, deaths, lives, serializeTimers(), deathbanExpiry, pvpProtectionPending ? 1 : 0,
                 getLastInventory(), lastExperience, mountainMessages ? 1 : 0,
-                messages ? 1 : 0, messageSounds ? 1 : 0, scoreboard ? 1 : 0, publicChat ? 1 : 0, requestReportCooldowns ? 1 : 0, reclaimed ? 1 : 0, abilityCooldowns ? 1 : 0);
+                messages ? 1 : 0, messageSounds ? 1 : 0, scoreboard ? 1 : 0, publicChat ? 1 : 0, requestReportCooldowns ? 1 : 0, reclaimed ? 1 : 0, abilityCooldowns ? 1 : 0,
+                filteredItems.stream().map(Material::name).sorted().collect(java.util.stream.Collectors.joining(",")));
     }
 
     public byte[] getLastInventory() {

@@ -11,6 +11,7 @@ public class Timer {
         CHAT("timers.chat"),
         REQUEST("timers.request"),
         REPORT("timers.report"),
+        LFF("timers.lff"),
         HOME("timers.home"),
         LOGOUT("timers.logout"),
         STUCK("timers.stuck"),
@@ -33,7 +34,7 @@ public class Timer {
 
         public int getLength() {
             int defaultLength = switch (this) {
-                case REQUEST, REPORT -> 300;
+                case REQUEST, REPORT, LFF -> 300;
                 case BARD -> 10;
                 case STUCK -> 60;
                 case LOGOUT -> 30;

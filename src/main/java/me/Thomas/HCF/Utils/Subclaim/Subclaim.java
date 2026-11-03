@@ -91,7 +91,7 @@ public final class Subclaim {
         Side side = getSide(sign);
         if (side == null || !isMarker(sign.getSide(side).line(0))) return null;
         Faction faction = Faction.getAtLocation(storage.getLocation());
-        if (faction == null || faction.getType() != Faction.Type.PLAYER || faction.isRaidable()) return null;
+        if (faction == null || faction.getType() != Faction.Type.PLAYER || faction.isRaidable() || Main.getInstance().isEOTWOngoing()) return null;
         String factionId = sign.getPersistentDataContainer().get(factionKey, PersistentDataType.STRING);
         if (!faction.getUUID().toString().equals(factionId)) return null;
         String ownerId = sign.getPersistentDataContainer().get(ownerKey, PersistentDataType.STRING);

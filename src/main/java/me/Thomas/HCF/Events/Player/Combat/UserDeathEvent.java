@@ -153,6 +153,7 @@ public class UserDeathEvent implements Listener {
         e.deathMessage(formatDeathMessage(e, getPlayerName(user)));
         // Let the death finish processing drops and statistics before disconnecting the player.
         Main.getInstance().getServer().getScheduler().runTask(Main.getInstance(), () -> {
+            if (!Main.getInstance().isFeatureEnabled("deathbans")) return;
             Player player = e.getEntity();
             long remaining = Deathban.getRemainingSeconds(user.getDeathbanExpiry(), System.currentTimeMillis());
             if (!player.isOnline() || remaining == 0L) return;

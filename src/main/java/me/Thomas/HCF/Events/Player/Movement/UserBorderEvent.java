@@ -75,6 +75,8 @@ public class UserBorderEvent implements Listener {
         if (faction == null) return null;
         if (faction.getType() == Faction.Type.SAFEZONE) return user.hasTimer(Timer.Type.COMBAT) ? "blocked-combat" : null;
         if (faction.getType() != Faction.Type.ROAD && user.hasPvpProtection()) return "blocked-protection";
+        if (faction.getType() == Faction.Type.PLAYER && Main.getInstance().isClaimLocked(faction.getUUID())
+                && !faction.hasMember(user.getUUID()) && !user.isBypass() && !user.isInStaffMode()) return "blocked-lock";
         return null;
     }
 
@@ -137,7 +139,7 @@ public class UserBorderEvent implements Listener {
     private Set<Position> blocks(Player p, Location at) {
         Set<Position> result = new LinkedHashSet<>();
         User user = User.get(p);
-        if (!user.hasTimer(Timer.Type.COMBAT) && !user.hasPvpProtection()) return result;
+        if (!user.hasTimer(Timer.Type.COMBAT) && !user.hasPvpProtection() && !Main.getInstance().hasLockedClaims()) return result;
         Faction current = Faction.getAtLocation(at);
         World world = at.getWorld();
         for (Claim claim : nearby(at).stream().sorted(Comparator.comparingLong(claim ->

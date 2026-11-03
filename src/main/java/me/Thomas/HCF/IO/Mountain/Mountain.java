@@ -153,6 +153,7 @@ public class Mountain {
     }
 
     public void reset() {
+        if (!Main.getInstance().isFeatureEnabled("mountain")) throw new IllegalArgumentException("feature-disabled");
         if (pos1 == null || pos2 == null) throw new IllegalArgumentException("no-area");
         if (Bukkit.getWorld(pos1.world()) == null) throw new IllegalArgumentException("world-unavailable");
         validate(pos1, pos2, true);
@@ -170,6 +171,7 @@ public class Mountain {
     }
 
     public int tick(int budget) {
+        if (!Main.getInstance().isFeatureEnabled("mountain")) return 0;
         Faction faction = Faction.get(uuid);
         if (faction == null || faction.getType() != Faction.Type.MOUNTAIN || pos1 == null || pos2 == null) {
             cancelRegeneration();

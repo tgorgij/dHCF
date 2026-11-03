@@ -85,8 +85,8 @@ public class UserSettingsEvent implements Listener {
                 menu.inventory.setItem(row + 6, item(menu, Material.PAPER, "public-chat", user.isPublicChat()));
             }
             case SCOREBOARD -> {
-                menu.inventory.setItem(row + 1, item(menu, Material.PAINTING, "scoreboard", user.isScoreboard()));
-                menu.inventory.setItem(row + 5, item(menu, Material.GLOWSTONE, "mountains", user.isMountainMessages()));
+                menu.inventory.setItem(row + 1, item(menu, Material.PAINTING, "scoreboard", user.isScoreboard() && Main.getInstance().isFeatureEnabled("scoreboard")));
+                menu.inventory.setItem(row + 5, item(menu, Material.GLOWSTONE, "mountains", user.isMountainMessages() && Main.getInstance().isFeatureEnabled("mountain")));
                 menu.inventory.setItem(row + 7, item(menu, Material.BLAZE_POWDER, "ability-cooldowns", user.isAbilityCooldowns()));
                 menu.inventory.setItem(row + 3, item(menu, Material.CLOCK, "request-report-cooldowns", user.isRequestReportCooldowns()));
             }
@@ -126,6 +126,11 @@ public class UserSettingsEvent implements Listener {
                 user.setPublicChat(!user.isPublicChat());
             }
             case SCOREBOARD -> {
+                if (slot == row + 1 && !Main.getInstance().isFeatureEnabled("scoreboard")
+                        || slot == row + 5 && !Main.getInstance().isFeatureEnabled("mountain")) {
+                    p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
+                    return;
+                }
                 if (slot == row + 1) user.setScoreboard(!user.isScoreboard());
                 else if (slot == row + 5) user.setMountainMessages(!user.isMountainMessages());
                 else if (slot == row + 3) user.setRequestReportCooldowns(!user.isRequestReportCooldowns());

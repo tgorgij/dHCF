@@ -90,6 +90,7 @@ public class TechTree {
     }
 
     public static String access(Player p) {
+        if (!Main.getInstance().isFeatureEnabled("rewards")) return "feature-disabled";
         if (User.get(p).hasTimer(Timer.Type.COMBAT)) return "combat";
         Faction faction = faction(p);
         if (faction == null) return "no-faction";
@@ -103,7 +104,7 @@ public class TechTree {
     }
 
     public boolean isUnlocked(Faction faction, Tree tree, Node node) {
-        if (faction == null) return false;
+        if (!Main.getInstance().isFeatureEnabled("rewards") || faction == null) return false;
         for (Node previous : tree.nodes()) {
             if (!raw(faction, tree, previous)) return false;
             if (previous.id().equals(node.id())) return true;

@@ -668,11 +668,20 @@ public class Main extends JavaPlugin {
     private void files() {
         saveResource("config.yml", false);
         saveResource("locale.yml", false);
-        saveResource("gui.yml", false);
-        saveResource("items.yml", false);
-        saveResource("tab.yml", false);
-        saveResource("scoreboard.yml", false);
         saveResource("messages.yml", false);
+        for (String name : List.of("items.yml", "gui.yml", "scoreboard.yml", "tab.yml")) {
+            java.nio.file.Path destination = getDataFolder().toPath().resolve("features").resolve(name);
+            java.nio.file.Path legacy = getDataFolder().toPath().resolve(name);
+            try {
+                java.nio.file.Files.createDirectories(destination.getParent());
+                if (!java.nio.file.Files.exists(destination)) {
+                    if (java.nio.file.Files.exists(legacy)) java.nio.file.Files.move(legacy, destination);
+                    else saveResource("features/" + name, false);
+                }
+            } catch (java.io.IOException exception) {
+                throw new IllegalStateException("Could not prepare feature configuration " + name, exception);
+            }
+        }
     }
 
     private void loadLocale() {
@@ -687,9 +696,9 @@ public class Main extends JavaPlugin {
     }
 
     private void loadGui() {
-        java.io.File guiFile = new java.io.File(getDataFolder(), "gui.yml");
+        java.io.File guiFile = new java.io.File(getDataFolder(), "features/gui.yml");
         guiConfig = YamlConfiguration.loadConfiguration(guiFile);
-        try (java.io.InputStream resource = Objects.requireNonNull(getResource("gui.yml"));
+        try (java.io.InputStream resource = Objects.requireNonNull(getResource("features/gui.yml"));
              java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
             guiConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
         } catch (java.io.IOException exception) {
@@ -700,8 +709,8 @@ public class Main extends JavaPlugin {
     public FileConfiguration getTabConfig() { return tabConfig; }
 
     private void loadTab() {
-        tabConfig = YamlConfiguration.loadConfiguration(new java.io.File(getDataFolder(), "tab.yml"));
-        try (java.io.InputStream resource = Objects.requireNonNull(getResource("tab.yml"));
+        tabConfig = YamlConfiguration.loadConfiguration(new java.io.File(getDataFolder(), "features/tab.yml"));
+        try (java.io.InputStream resource = Objects.requireNonNull(getResource("features/tab.yml"));
              java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
             tabConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
         } catch (java.io.IOException exception) {
@@ -710,9 +719,9 @@ public class Main extends JavaPlugin {
     }
 
     private void loadItems() {
-        java.io.File itemsFile = new java.io.File(getDataFolder(), "items.yml");
+        java.io.File itemsFile = new java.io.File(getDataFolder(), "features/items.yml");
         itemsConfig = YamlConfiguration.loadConfiguration(itemsFile);
-        try (java.io.InputStream resource = Objects.requireNonNull(getResource("items.yml"));
+        try (java.io.InputStream resource = Objects.requireNonNull(getResource("features/items.yml"));
              java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
             itemsConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
         } catch (java.io.IOException exception) {
@@ -721,7 +730,7 @@ public class Main extends JavaPlugin {
     }
 
     private void loadScoreboard() {
-        java.io.File scoreboardFile = new java.io.File(getDataFolder(), "scoreboard.yml");
+        java.io.File scoreboardFile = new java.io.File(getDataFolder(), "features/scoreboard.yml");
         scoreboardConfig = YamlConfiguration.loadConfiguration(scoreboardFile);
     }
 

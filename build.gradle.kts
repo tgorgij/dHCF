@@ -29,7 +29,8 @@ java {
 }
 
 tasks.jar {
-    archiveClassifier.set("plain")
+    enabled = false
+    dependsOn(tasks.shadowJar)
 }
 
 tasks.shadowJar {

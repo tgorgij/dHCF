@@ -37,7 +37,9 @@ tasks.shadowJar {
     archiveClassifier.set("")
     relocate("com.github.retrooper.packetevents", "me.Thomas.HCF.Library.PacketEvents.Api")
     relocate("io.github.retrooper.packetevents", "me.Thomas.HCF.Library.PacketEvents.Impl")
-    relocate("net.kyori.adventure.nbt", "me.Thomas.HCF.Library.AdventureNbt")
+    relocate("net.kyori.adventure.nbt", "me.Thomas.HCF.Library.AdventureNbt") {
+        exclude("net.kyori.adventure.nbt.api.**")
+    }
     relocate("net.kyori.examination", "me.Thomas.HCF.Library.Examination")
     filesMatching("META-INF/services/**") { duplicatesStrategy = DuplicatesStrategy.INCLUDE }
     mergeServiceFiles()

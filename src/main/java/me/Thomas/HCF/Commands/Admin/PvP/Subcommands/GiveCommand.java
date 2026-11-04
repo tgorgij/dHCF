@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.Admin.PvP.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
@@ -7,16 +8,14 @@ import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 public class GiveCommand implements Subcommand {
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     @Override
     public String getName() {
         return "give";
@@ -34,7 +33,7 @@ public class GiveCommand implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.pvp.give.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.pvp.give.usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -48,7 +47,7 @@ public class GiveCommand implements Subcommand {
             return true;
         }
         user.saveAsync();
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.pvp.give.success"))
+        sender.sendMessage(C.chat(localeConfig.getString("commands.pvp.give.success")
                 .replace("%player%", user.getName())
                 .replace("%time%", C.formatChatTime(Timer.Type.PVP.getLength()))));
         return true;

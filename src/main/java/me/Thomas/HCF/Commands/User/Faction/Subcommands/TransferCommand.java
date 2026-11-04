@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -7,7 +8,6 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -17,7 +17,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public final class TransferCommand implements Subcommand {
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -46,7 +46,7 @@ public final class TransferCommand implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.transfer.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.transfer.usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -68,11 +68,11 @@ public final class TransferCommand implements Subcommand {
             return true;
         }
         faction.saveAsync();
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.transfer.success"))
+        sender.sendMessage(C.chat(localeConfig.getString("commands.faction.transfer.success")
                 .replace("%player%", target.getName())));
         Player targetPlayer = Bukkit.getPlayer(target.getUUID());
         if (targetPlayer != null) {
-            targetPlayer.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.transfer.target"))
+            targetPlayer.sendMessage(C.chat(localeConfig.getString("commands.faction.transfer.target")
                     .replace("%player%", player.getName())));
         }
         return true;

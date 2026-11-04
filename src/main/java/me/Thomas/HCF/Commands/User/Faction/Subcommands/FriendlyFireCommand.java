@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -8,13 +9,11 @@ import me.Thomas.HCF.Utils.Chat.C;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 public final class FriendlyFireCommand implements Subcommand {
@@ -23,13 +22,13 @@ public final class FriendlyFireCommand implements Subcommand {
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String @NonNull [] args, @NotNull String alias) {
-        FileConfiguration locale = Main.getInstance().getLocaleConfig();
+        LocaleConfig locale = Main.getInstance().getLocaleConfig();
         if (!(sender instanceof Player player)) {
             sender.sendMessage(C.chat(locale.getString("primary.not-player")));
             return true;
         }
         if (args.length != 0) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(locale.getString("commands.faction.ff.usage"))
+            sender.sendMessage(C.chat(locale.getString("commands.faction.ff.usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -40,10 +39,10 @@ public final class FriendlyFireCommand implements Subcommand {
             return true;
         }
         boolean enabled = Main.getInstance().toggleFriendlyFire(faction.getUUID());
-        Component message = C.chat(Objects.requireNonNull(locale.getString("commands.faction.ff.success"))
+        Component message = C.chat(locale.getString("commands.faction.ff.success")
                 .replace("%player%", player.getName())
-                .replace("%status%", Objects.requireNonNull(locale.getString(
-                        "primary.status." + (enabled ? "enabled" : "disabled")))));
+                .replace("%status%", locale.getString(
+                        "primary.status." + (enabled ? "enabled" : "disabled"))));
         player.sendMessage(message);
         for (UUID uuid : faction.getMembers().keySet()) {
             if (uuid.equals(player.getUniqueId())) continue;

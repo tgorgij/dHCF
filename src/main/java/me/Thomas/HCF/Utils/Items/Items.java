@@ -20,9 +20,9 @@ public class Items {
                 || (key.equals("spawner") || key.equals("experience-bottle") || key.equals("abilities.archer")) && material != fallback
                 || key.equals("death-sign") && !material.name().endsWith("_SIGN")) material = fallback;
         ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        decorate(meta, key, placeholders);
-        item.setItemMeta(meta);
+        item.editMeta(meta -> {
+            decorate(meta, key, placeholders);
+        });
         return item;
     }
 

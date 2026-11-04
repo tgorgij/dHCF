@@ -265,7 +265,7 @@ public class KOTH {
     }
 
     private void broadcast(String message, String player) {
-        String text = Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("events.koth." + message))
+        String text = Main.getInstance().getLocaleConfig().getString("events.koth." + message)
                 .replace("%koth%", name).replace("%player%", player);
         if (!message.equals("reset")) {
             long seconds = (getRemainingTimeMillis() + 999L) / 1000L;

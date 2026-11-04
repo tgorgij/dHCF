@@ -104,18 +104,18 @@ public class UserRewardsEvent implements Listener {
         FileConfiguration gui = Main.getInstance().getGuiConfig();
         Material material = Material.matchMaterial(gui.getString(path + ".material", gui.getString(fallbackPath + ".material", fallback.name())));
         ItemStack item = new ItemStack(material == null || material.isAir() || !material.isItem() ? fallback : material);
-        ItemMeta meta = item.getItemMeta();
-        String name = gui.getString(path + ".name", gui.getString(fallbackPath + ".name", ""));
-        for (Map.Entry<String, String> entry : replacements.entrySet()) name = name.replace(entry.getKey(), entry.getValue());
-        meta.displayName(C.chat(name).decoration(TextDecoration.ITALIC, false));
-        List<Component> lore = new ArrayList<>();
-        List<String> configured = gui.isList(path + ".lore") ? gui.getStringList(path + ".lore") : gui.getStringList(fallbackPath + ".lore");
-        for (String line : configured) {
-            for (Map.Entry<String, String> entry : replacements.entrySet()) line = line.replace(entry.getKey(), entry.getValue());
-            lore.add(C.chat(line).decoration(TextDecoration.ITALIC, false));
-        }
-        meta.lore(lore);
-        item.setItemMeta(meta);
+        item.editMeta(meta -> {
+            String name = gui.getString(path + ".name", gui.getString(fallbackPath + ".name", ""));
+            for (Map.Entry<String, String> entry : replacements.entrySet()) name = name.replace(entry.getKey(), entry.getValue());
+            meta.displayName(C.chat(name).decoration(TextDecoration.ITALIC, false));
+            List<Component> lore = new ArrayList<>();
+            List<String> configured = gui.isList(path + ".lore") ? gui.getStringList(path + ".lore") : gui.getStringList(fallbackPath + ".lore");
+            for (String line : configured) {
+                for (Map.Entry<String, String> entry : replacements.entrySet()) line = line.replace(entry.getKey(), entry.getValue());
+                lore.add(C.chat(line).decoration(TextDecoration.ITALIC, false));
+            }
+            meta.lore(lore);
+        });
         return item;
     }
 
@@ -145,13 +145,21 @@ public class UserRewardsEvent implements Listener {
             boolean unlocked = tech.isUnlocked(faction, tree, node);
             String state = unlocked ? "unlocked" : tech.prerequisites(faction, tree, node)
                     && tech.progress(faction, node) >= node.amount() ? "available" : "locked";
-            String requirement = gui.getString("rewards.requirements." + node.requirement().name().toLowerCase(java.util.Locale.ROOT));
+            String requirementDefault = switch (node.requirement()) {
+                case KILLS -> "Faction Kills";
+                case CAPTURES -> "Event Captures";
+                case POINTS -> "Faction Points";
+            };
+            String requirement = gui.getString("rewards.requirements." + node.requirement().name().toLowerCase(java.util.Locale.ROOT), requirementDefault);
+            String stateDefault = unlocked ? "&aUnlocked" : state.equals("available") ? "&eAvailable" : "&cLocked";
             ItemStack reward = item("rewards.trees." + tree.id() + ".items.nodes." + node.id(), path + ".node", Material.PAPER,
-                    Map.of("%node%", label(tree, node), "%state%", gui.getString("rewards.states." + state),
+                    Map.of("%node%", label(tree, node), "%state%", gui.getString("rewards.states." + state, stateDefault),
                             "%requirement%", requirement, "%amount%", Integer.toString(node.amount()), "%progress%", Integer.toString(tech.progress(faction, node))));
             ItemMeta meta = reward.getItemMeta();
-            meta.setEnchantmentGlintOverride(unlocked);
-            reward.setItemMeta(meta);
+            if (meta != null) {
+                meta.setEnchantmentGlintOverride(unlocked);
+                reward.setItemMeta(meta);
+            }
             menu.inventory.setItem(nodeStart(menu.inventory.getSize()) + column, reward);
         }
         if (menu.offset > 0) menu.inventory.setItem(menu.inventory.getSize() - 9, item(path + ".previous", path + ".previous", Material.ARROW, Map.of()));

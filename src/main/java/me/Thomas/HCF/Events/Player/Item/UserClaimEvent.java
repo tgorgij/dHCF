@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Events.Player.Item;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.IO.Claims.Claim;
 import me.Thomas.HCF.IO.Claims.Claiming;
 import me.Thomas.HCF.IO.Faction.Faction;
@@ -7,7 +8,6 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,11 +15,10 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Objects;
 
 public class UserClaimEvent implements Listener {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @EventHandler
     public void onLeftClickBlock(PlayerInteractEvent e) {
@@ -80,7 +79,7 @@ public class UserClaimEvent implements Listener {
         claiming.setOne(e.getClickedBlock().getLocation());
         Claiming.generateClaimPillars(claim, claiming.getPillar(), p);
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.one")));
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("claiming.purchase.cost")).replace("%cost%", C.getFormattedMoney(claim.price())).replace("%size-x%", claim.width() + "").replace("%size-z%", claim.length() + "")));
+        p.sendMessage(C.chat(localeConfig.getString("claiming.purchase.cost").replace("%cost%", C.getFormattedMoney(claim.price())).replace("%size-x%", claim.width() + "").replace("%size-z%", claim.length() + "")));
 
     }
 
@@ -145,7 +144,7 @@ public class UserClaimEvent implements Listener {
         Claiming.generateClaimPillars(claim, claiming.getPillar(), p);
         p.sendMessage(C.chat(localeConfig.getString("claiming.success.two")));
 
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("claiming.purchase.cost")).replace("%cost%", C.getFormattedMoney(claim.price())).replace("%size-x%", claim.width() + "").replace("%size-z%", claim.length() + "")));
+        p.sendMessage(C.chat(localeConfig.getString("claiming.purchase.cost").replace("%cost%", C.getFormattedMoney(claim.price())).replace("%size-x%", claim.width() + "").replace("%size-z%", claim.length() + "")));
     }
 
     @EventHandler
@@ -214,7 +213,7 @@ public class UserClaimEvent implements Listener {
         double cost = claim.price();
         if (!claiming.isClaimingFor()) {
             if (faction.getBalance() < cost) {
-                p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("claiming.error.not-enough-money"))));
+                p.sendMessage(C.chat(localeConfig.getString("claiming.error.not-enough-money")));
                 return;
             }
         }

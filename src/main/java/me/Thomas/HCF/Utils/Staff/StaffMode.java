@@ -243,7 +243,7 @@ public class StaffMode implements Listener {
             for (int slot = 0; slot < 36; slot++) {
                 ItemStack item = p.getInventory().getItem(slot);
                 if (!isTool(item)) continue;
-                String name = item.getItemMeta().getPersistentDataContainer().get(toolKey, PersistentDataType.STRING);
+                String name = toolName(item);
                 if ("show".equals(name) || "hide".equals(name)) p.getInventory().setItem(slot, null);
             }
             placeTool(p, enabled ? "show" : "hide", enabled ? Material.LIME_DYE : Material.GRAY_DYE, 8);
@@ -296,21 +296,27 @@ public class StaffMode implements Listener {
         String path = (gui ? "staff.online.items." : "staff.") + name;
         Material configured = Material.matchMaterial(config.getString(path + ".material", fallback.name()));
         ItemStack item = new ItemStack(configured == null || configured.isAir() || !configured.isItem() ? fallback : configured);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(C.chat(config.getString(path + ".name", name)
-                .replace("%player%", player)).decoration(TextDecoration.ITALIC, false));
-        List<Component> lore = new ArrayList<>();
-        for (String line : config.getStringList(path + ".lore")) {
-            lore.add(C.chat(line.replace("%player%", player)).decoration(TextDecoration.ITALIC, false));
-        }
-        meta.lore(lore);
-        meta.getPersistentDataContainer().set(toolKey, PersistentDataType.STRING, name);
-        item.setItemMeta(meta);
+        item.editMeta(meta -> {
+            meta.displayName(C.chat(config.getString(path + ".name", name)
+                    .replace("%player%", player)).decoration(TextDecoration.ITALIC, false));
+            List<Component> lore = new ArrayList<>();
+            for (String line : config.getStringList(path + ".lore")) {
+                lore.add(C.chat(line.replace("%player%", player)).decoration(TextDecoration.ITALIC, false));
+            }
+            meta.lore(lore);
+            meta.getPersistentDataContainer().set(toolKey, PersistentDataType.STRING, name);
+        });
         return item;
     }
 
+    private String toolName(ItemStack item) {
+        ItemMeta meta = item == null ? null : item.getItemMeta();
+        return meta == null ? null : meta.getPersistentDataContainer().get(toolKey, PersistentDataType.STRING);
+    }
+
     private boolean isTool(ItemStack item) {
-        return item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(toolKey);
+        ItemMeta meta = item == null ? null : item.getItemMeta();
+        return meta != null && meta.getPersistentDataContainer().has(toolKey);
     }
 
     private void placeTool(Player p, String name, Material material, int fallbackSlot) {
@@ -385,7 +391,7 @@ public class StaffMode implements Listener {
         Player p = e.getPlayer();
         if (isFrozen(p)) { e.setCancelled(true); return; }
         if (!isEnabled(p)) return;
-        String name = isTool(e.getItem()) ? e.getItem().getItemMeta().getPersistentDataContainer().get(toolKey, PersistentDataType.STRING) : null;
+        String name = toolName(e.getItem());
         if (name == null) { if (isRestricted(p)) e.setCancelled(true); return; }
         if ("compass".equals(name) || "wand".equals(name)) {
             e.setUseItemInHand(Event.Result.DENY);
@@ -419,7 +425,7 @@ public class StaffMode implements Listener {
         if (!isEnabled(p) || isFrozen(p) || e.getHand() != EquipmentSlot.HAND || !(e.getRightClicked() instanceof Player target)) return;
         ItemStack item = p.getInventory().getItemInMainHand();
         if (!isTool(item)) return;
-        String name = item.getItemMeta().getPersistentDataContainer().get(toolKey, PersistentDataType.STRING);
+        String name = toolName(item);
         if ("inspect".equals(name) && Permission.has(p, "command.invsee", "staff")) inspect(p, target);
         if ("freeze".equals(name) && Permission.has(p, "command.freeze", "staff")) toggleFreeze(p, target);
     }

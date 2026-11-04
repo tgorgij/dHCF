@@ -1,12 +1,12 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 
 public class SetTypeCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -36,16 +36,16 @@ public class SetTypeCommand implements Subcommand {
             return true;
         }
         if (args.length != 2) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.settype.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.settype.usage").replace("%alias%", alias)));
             return true;
         }
         Faction faction = Faction.get(args[0]);
         if (faction == null) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.no-faction"))));
+            sender.sendMessage(C.chat(localeConfig.getString("primary.no-faction")));
             return true;
         }
         if (faction.getType().equals(Faction.Type.PLAYER)) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.only-system"))));
+            sender.sendMessage(C.chat(localeConfig.getString("primary.only-system")));
             return true;
         }
         String stringType = args[1].toUpperCase(Locale.ROOT);
@@ -53,7 +53,7 @@ public class SetTypeCommand implements Subcommand {
         try {
             type = Faction.Type.valueOf(stringType);
         } catch (IllegalArgumentException e) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.settype.invalid-type"))));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.settype.invalid-type")));
             return true;
         }
         if (type == Faction.Type.PLAYER) {
@@ -61,7 +61,7 @@ public class SetTypeCommand implements Subcommand {
             return true;
         }
         faction.setType(type);
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.settype.success")).replace("%faction%", faction.getName()).replace("%type%", type.toString())));
+        sender.sendMessage(C.chat(localeConfig.getString("commands.faction.settype.success").replace("%faction%", faction.getName()).replace("%type%", type.toString())));
         return true;
     }
 

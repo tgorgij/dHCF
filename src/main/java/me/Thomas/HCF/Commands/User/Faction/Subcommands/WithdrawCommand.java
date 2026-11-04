@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -7,14 +8,13 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 import java.util.*;
 
 public final class WithdrawCommand implements Subcommand {
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     @Override public String getName() { return "withdraw"; }
     @Override public List<String> getAliases() { return List.of(); }
     @Override
@@ -34,7 +34,7 @@ public final class WithdrawCommand implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.withdraw.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.withdraw.usage").replace("%alias%", alias)));
             return true;
         }
         double amount;
@@ -57,11 +57,11 @@ public final class WithdrawCommand implements Subcommand {
         faction.setBalance(faction.getBalance() - amount);
         user.setBalance(user.getBalance() + amount);
         Main.getInstance().saveTogether(user, faction);
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.withdraw.success")).replace("%amount%", C.getFormattedMoney(amount))));
+        sender.sendMessage(C.chat(localeConfig.getString("commands.faction.withdraw.success").replace("%amount%", C.getFormattedMoney(amount))));
         for (UUID uuid : faction.getOnlineMembers().keySet()) {
             if (uuid.equals(player.getUniqueId())) continue;
             Player member = Bukkit.getPlayer(uuid);
-            if (member != null) member.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.withdraw.broadcast"))
+            if (member != null) member.sendMessage(C.chat(localeConfig.getString("commands.faction.withdraw.broadcast")
                     .replace("%player%", player.getName()).replace("%amount%", C.getFormattedMoney(amount))));
         }
         return true;

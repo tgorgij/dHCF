@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.Admin.Economy;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Admin.Economy.Subcommands.SetCommand;
 import me.Thomas.HCF.Commands.Admin.Economy.Subcommands.GiveCommand;
 import me.Thomas.HCF.Commands.Admin.Economy.Subcommands.TakeCommand;
@@ -28,7 +29,7 @@ public class EconomyCommand implements TabExecutor {
             new HashMap<>();
 
     private final FileConfiguration messagesConfig = Main.getInstance().getMessagesConfig();
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     public EconomyCommand() {
         register(new SetCommand());

@@ -3,6 +3,7 @@ package me.Thomas.HCF.Events.Player.Connection;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.event.player.ChatEvent;
 import me.Thomas.HCF.Commands.Staff.Chat.ChatCommand;
+import me.Thomas.HCF.Commands.Staff.StaffChatCommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
@@ -21,16 +22,60 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class UserChatEvent implements Listener {
     private static final Map<UUID, UUID> factionChat = new ConcurrentHashMap<>();
+    private static final Map<UUID, UUID> allyChat = new ConcurrentHashMap<>();
+    private static final Map<UUID, UUID> staffChat = new ConcurrentHashMap<>();
+
+    public static boolean isStaffChat(UUID player) { return staffChat.containsKey(player); }
+
+    public static void setStaffChat(UUID player, boolean enabled) {
+        if (enabled) {
+            factionChat.remove(player);
+            allyChat.remove(player);
+            staffChat.put(player, UUID.randomUUID());
+        } else staffChat.remove(player);
+    }
 
     public static void setFactionChat(UUID player, boolean enabled) {
-        if (enabled) factionChat.put(player, UUID.randomUUID());
-        else factionChat.remove(player);
+        if (enabled) {
+            staffChat.remove(player);
+            allyChat.remove(player);
+            factionChat.put(player, UUID.randomUUID());
+        } else factionChat.remove(player);
+    }
+
+    public static void setAllyChat(UUID player, boolean enabled) {
+        if (enabled) {
+            staffChat.remove(player);
+            factionChat.remove(player);
+            allyChat.put(player, UUID.randomUUID());
+        } else allyChat.remove(player);
+    }
+
+    public static void sendAllyMessage(Player player, String message) {
+        User user = User.get(player);
+        Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
+        if (faction == null || !faction.hasMember(player.getUniqueId())) {
+            setAllyChat(player.getUniqueId(), false);
+            player.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.not-in")));
+            return;
+        }
+        Component formatted = C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.chat.ally-format")
+                .replace("%player%", player.getName()).replace("%faction%", faction.getName()))
+                .replaceText(builder -> builder.matchLiteral("%message%").replacement(Component.text(message)));
+        Set<UUID> recipients = new HashSet<>(faction.getOnlineMembers().keySet());
+        for (UUID uuid : faction.getAllies()) recipients.addAll(Faction.get(uuid).getOnlineMembers().keySet());
+        for (UUID uuid : recipients) {
+            Player member = Bukkit.getPlayer(uuid);
+            if (member != null) member.sendMessage(formatted);
+        }
     }
 
     /** Called on the server thread by commands and the scheduled chat handler. */
@@ -53,15 +98,20 @@ public class UserChatEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncChatEvent e) {
-        UUID session = factionChat.get(e.getPlayer().getUniqueId());
+        UUID staffSession = staffChat.get(e.getPlayer().getUniqueId());
+        UUID allySession = staffSession == null ? allyChat.get(e.getPlayer().getUniqueId()) : null;
+        Map<UUID, UUID> channel = staffSession != null ? staffChat : allySession != null ? allyChat : factionChat;
+        UUID session = staffSession != null ? staffSession : allySession != null ? allySession : factionChat.get(e.getPlayer().getUniqueId());
         if (session == null) return;
         e.setCancelled(true);
         Player player = e.getPlayer();
         String message = PlainTextComponentSerializer.plainText().serialize(e.message());
-        // Faction membership and Bukkit state are only accessed on the server thread.
+        // Channel permissions, faction membership, and Bukkit state are only accessed on the server thread.
         Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
-            if (player.isOnline() && session.equals(factionChat.get(player.getUniqueId()))) {
-                sendFactionMessage(player, message);
+            if (player.isOnline() && session.equals(channel.get(player.getUniqueId()))) {
+                if (staffSession != null) StaffChatCommand.send(player, message);
+                else if (allySession != null) sendAllyMessage(player, message);
+                else sendFactionMessage(player, message);
             }
         });
     }
@@ -69,6 +119,8 @@ public class UserChatEvent implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         setFactionChat(e.getPlayer().getUniqueId(), false);
+        setStaffChat(e.getPlayer().getUniqueId(), false);
+        setAllyChat(e.getPlayer().getUniqueId(), false);
     }
 
     // User timers and permission checks run on the server thread.
@@ -76,6 +128,16 @@ public class UserChatEvent implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPublicChat(ChatEvent e) {
         Player p = e.getPlayer();
+        if (isStaffChat(p.getUniqueId())) {
+            e.setCancelled(true);
+            StaffChatCommand.send(p, PlainTextComponentSerializer.plainText().serialize(e.message()));
+            return;
+        }
+        if (allyChat.containsKey(p.getUniqueId())) {
+            e.setCancelled(true);
+            sendAllyMessage(p, PlainTextComponentSerializer.plainText().serialize(e.message()));
+            return;
+        }
         if (factionChat.containsKey(p.getUniqueId())) return;
         e.viewers().removeIf(viewer -> viewer instanceof Player recipient && !User.get(recipient).isPublicChat());
         User source = User.get(p);
@@ -116,7 +178,7 @@ public class UserChatEvent implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPublicChatSent(ChatEvent e) {
         Player p = e.getPlayer();
-        if (ChatCommand.getSlowSeconds() == 0 || factionChat.containsKey(p.getUniqueId())
+        if (ChatCommand.getSlowSeconds() == 0 || isStaffChat(p.getUniqueId()) || allyChat.containsKey(p.getUniqueId()) || factionChat.containsKey(p.getUniqueId())
                 || Permission.has(p, "chat.bypass")) return;
         User.get(p).addTimer(Timer.Type.CHAT, new Timer(Timer.Type.CHAT,
                 System.currentTimeMillis() + ChatCommand.getSlowSeconds() * 1000L, 0L, false));

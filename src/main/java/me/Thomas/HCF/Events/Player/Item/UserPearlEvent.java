@@ -14,13 +14,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
-import java.util.Objects;
 
 public class UserPearlEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onLand(PlayerTeleportEvent e) {
-        if (e.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL || e.getTo() == null) return;
+        if (e.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
         Faction faction = Faction.getAtLocation(e.getTo());
         Faction source = Faction.getAtLocation(e.getFrom());
         if (faction != null && faction.getType() == Faction.Type.CONQUEST
@@ -54,8 +53,8 @@ public class UserPearlEvent implements Listener {
 
         e.setCancelled(true);
         long seconds = (user.getTimer(Timer.Type.ENDERPEARL).getRemainingTimeMillis() + 999L) / 1000L;
-        player.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig()
-                        .getString("events.player.timer.ongoing.enderpearl"))
+        player.sendMessage(C.chat(Main.getInstance().getLocaleConfig()
+                        .getTimerMessage("ongoing", Timer.Type.ENDERPEARL)
                 .replace("%time%", C.formatChatTime(Math.max(1L, seconds)))));
     }
 

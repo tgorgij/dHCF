@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Events.Player.Interact;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import com.destroystokyo.paper.event.player.PlayerSetSpawnEvent;
 import io.papermc.paper.event.block.PlayerShearBlockEvent;
 import me.Thomas.HCF.IO.Faction.Faction;
@@ -14,7 +15,6 @@ import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Openable;
 import org.bukkit.block.data.type.Switch;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -47,7 +47,6 @@ import org.bukkit.inventory.InventoryHolder;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -55,7 +54,7 @@ public class UserInteractInFactionEvent implements Listener {
 
     private static final long MESSAGE_COOLDOWN_MILLIS = 1_000L;
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     private final Map<UUID, Long> pressurePlateMessageCooldowns = new HashMap<>();
     private final Set<Material> guiBlocks = EnumSet.of(
             Material.ANVIL,
@@ -234,7 +233,7 @@ public class UserInteractInFactionEvent implements Listener {
                 && (faction.getDTR() <= 0 || Main.getInstance().isEOTWOngoing())) return false;
         if (disallowed && (!throttleMessage || canSendPressurePlateMessage(p))) {
             String messageFormat = "faction.modify.";
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString(messageFormat + message))
+            p.sendMessage(C.chat(localeConfig.getString(messageFormat + message)
                     .replace("%faction%", Faction.getNameAtLocation(location, user))));
         }
         return disallowed;

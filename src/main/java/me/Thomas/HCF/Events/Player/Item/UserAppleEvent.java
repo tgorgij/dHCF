@@ -10,7 +10,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 
-import java.util.Objects;
 
 public class UserAppleEvent implements Listener {
 
@@ -22,10 +21,9 @@ public class UserAppleEvent implements Listener {
         if (!user.hasTimer(type)) return;
 
         e.setCancelled(true);
-        String message = type == Timer.Type.APPLE ? "apple" : "gapple";
         long seconds = (user.getTimer(type).getRemainingTimeMillis() + 999L) / 1000L;
-        e.getPlayer().sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig()
-                        .getString("events.player.timer.ongoing." + message))
+        e.getPlayer().sendMessage(C.chat(Main.getInstance().getLocaleConfig()
+                        .getTimerMessage("ongoing", type)
                 .replace("%time%", C.formatChatTime(Math.max(1L, seconds)))));
     }
 

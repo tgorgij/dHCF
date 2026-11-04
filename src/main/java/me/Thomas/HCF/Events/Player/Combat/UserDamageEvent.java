@@ -1,11 +1,11 @@
 package me.Thomas.HCF.Events.Player.Combat;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.AbstractArrow;
@@ -131,52 +131,52 @@ public class UserDamageEvent implements Listener {
     }
 
     static boolean canCombat(LivingEntity victim, Player attacker) {
-        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+        LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
         User victimUser = Objects.requireNonNull(getVictimUser(victim));
         User attackerUser = User.get(attacker.getUniqueId());
 
         if (attackerUser.hasFaction() && attackerUser.getFaction().equals(victimUser.getFaction())
                 && !Main.getInstance().isFriendlyFireEnabled(attackerUser.getFaction())) {
-            attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.faction"))
+            attacker.sendMessage(C.chat(localeConfig.getString("events.player.combat.faction")
                     .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         Faction attackerTerritory = Faction.getAtLocation(attacker.getLocation());
         if (attackerTerritory != null && attackerTerritory.getType() == Faction.Type.SAFEZONE) {
-            attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.attacker-safezone"))
+            attacker.sendMessage(C.chat(localeConfig.getString("events.player.combat.attacker-safezone")
                     .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         Faction victimTerritory = Faction.getAtLocation(victim.getLocation());
         if (victimTerritory != null && victimTerritory.getType() == Faction.Type.SAFEZONE) {
-            attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.safezone"))
+            attacker.sendMessage(C.chat(localeConfig.getString("events.player.combat.safezone")
                     .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         if (victimUser.hasPvpProtection()) {
-            attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.pvp-timer"))
+            attacker.sendMessage(C.chat(localeConfig.getString("events.player.combat.pvp-timer")
                     .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         if (attackerUser.hasPvpProtection()) {
-            attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.attacker-pvp-timer"))
+            attacker.sendMessage(C.chat(localeConfig.getString("events.player.combat.attacker-pvp-timer")
                     .replace("%victim%", victimUser.getName())));
             return false;
         }
 
         if (Main.getInstance().isSOTWOngoing()) {
             if (!Main.getInstance().isSOTWEnabled(victimUser.getUUID())) {
-                attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.sotw"))
+                attacker.sendMessage(C.chat(localeConfig.getString("events.player.combat.sotw")
                         .replace("%victim%", victimUser.getName())));
                 return false;
             }
 
             if (!Main.getInstance().isSOTWEnabled(attacker.getUniqueId())) {
-                attacker.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.combat.attacker-sotw"))
+                attacker.sendMessage(C.chat(localeConfig.getString("events.player.combat.attacker-sotw")
                         .replace("%victim%", victimUser.getName())));
                 return false;
             }
@@ -253,7 +253,7 @@ public class UserDamageEvent implements Listener {
     }
 
     private static void applyVictimCombatTimer(LivingEntity victim) {
-        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+        LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
         User user = Objects.requireNonNull(getVictimUser(victim));
         if (victim instanceof Player player) {
             if (user.getTimer(Timer.Type.STUCK) != null) {
@@ -268,18 +268,16 @@ public class UserDamageEvent implements Listener {
     }
 
     private static void applyCombatTimer(Player player, User user) {
-        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+        LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
         if (user.getTimer(Timer.Type.HOME) != null) {
             user.removeTimer(Timer.Type.HOME);
-            player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.teleport.cancel"))));
+            player.sendMessage(C.chat(localeConfig.getString("primary.teleport.cancel")));
         }
         boolean hadCombatTimer = user.hasTimer(Timer.Type.COMBAT);
         user.addTimer(Timer.Type.COMBAT, new Timer(Timer.Type.COMBAT));
 
         if (!hadCombatTimer) {
-            player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("events.player.timer.start.combat",
-                            localeConfig.getString("events.player.timer.start.default")))
-                    .replace("%timer%", "combat")
+            player.sendMessage(C.chat(localeConfig.getTimerMessage("start", Timer.Type.COMBAT)
                     .replace("%time%", C.formatChatTime(Timer.Type.COMBAT.getLength()))));
         }
     }

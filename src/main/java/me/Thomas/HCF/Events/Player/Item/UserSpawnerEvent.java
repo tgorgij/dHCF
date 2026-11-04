@@ -27,7 +27,8 @@ public class UserSpawnerEvent implements Listener {
 
     public static int getUses(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return 0;
-        return Math.max(0, item.getItemMeta().getPersistentDataContainer().getOrDefault(usesKey(), PersistentDataType.INTEGER, 0));
+        ItemMeta meta = item.getItemMeta();
+        return meta == null ? 0 : Math.max(0, meta.getPersistentDataContainer().getOrDefault(usesKey(), PersistentDataType.INTEGER, 0));
     }
 
     public static EntityType getType(String name) {
@@ -47,18 +48,18 @@ public class UserSpawnerEvent implements Listener {
     }
 
     private static void updateCrowbar(ItemStack item, int uses) {
-        ItemMeta meta = item.getItemMeta();
-        meta.setUnbreakable(true);
-        meta.setMaxStackSize(1);
-        meta.getPersistentDataContainer().set(usesKey(), PersistentDataType.INTEGER, uses);
-        Items.decorate(meta, "crowbar", Map.of("%uses%", Integer.toString(uses)));
-        item.setItemMeta(meta);
+        item.editMeta(meta -> {
+            meta.setUnbreakable(true);
+            meta.setMaxStackSize(1);
+            meta.getPersistentDataContainer().set(usesKey(), PersistentDataType.INTEGER, uses);
+            Items.decorate(meta, "crowbar", Map.of("%uses%", Integer.toString(uses)));
+        });
     }
 
     public static ItemStack createSpawner(EntityType type) {
         if (type == null || getType(type.name()) == null) throw new IllegalArgumentException("Invalid spawner type");
         ItemStack item = Items.create("spawner", Material.SPAWNER, Map.of("%type%", type.name().toLowerCase(Locale.ROOT).replace('_', ' ')));
-        BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
+        if (!(item.getItemMeta() instanceof BlockStateMeta meta)) throw new IllegalStateException("Spawner item has no block state metadata");
         CreatureSpawner spawner = (CreatureSpawner) meta.getBlockState();
         spawner.setSpawnedType(type);
         meta.setBlockState(spawner);

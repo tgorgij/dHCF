@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
@@ -7,7 +8,6 @@ import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Combat.DTR;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
@@ -16,7 +16,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class SetDTRCommand implements Subcommand {
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() { return "setdtr"; }
@@ -31,7 +31,7 @@ public class SetDTRCommand implements Subcommand {
             return true;
         }
         if (args.length != 2) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction." + getName() + ".usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction." + getName() + ".usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -54,14 +54,14 @@ public class SetDTRCommand implements Subcommand {
             amount = Double.NaN;
         }
         if (!Double.isFinite(amount) || amount < minimum || amount > maximum) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.setdtr.invalid-amount"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.setdtr.invalid-amount")
                     .replace("%minimum%", Double.toString(minimum)).replace("%maximum%", Double.toString(maximum))));
             return true;
         }
         faction.setDTR(amount);
         DTR.setRegenerating(faction, true, Main.getInstance().getConfig(), System.currentTimeMillis());
         faction.saveAsync();
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction." + getName() + ".success"))
+        sender.sendMessage(C.chat(localeConfig.getString("commands.faction." + getName() + ".success")
                 .replace("%faction%", faction.getName()).replace("%dtr%", C.getFormattedDTR(amount))));
         return true;
     }

@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Events.Player.Combat;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import io.papermc.paper.event.entity.EntityEquipmentChangedEvent;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
@@ -44,7 +45,7 @@ public class UserMinerEvent implements Listener {
 
     private final Map<UUID, MinerState> miners = new HashMap<>();
     private final FileConfiguration config = Main.getInstance().getConfig();
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     private final BukkitTask task;
     private boolean changingEffects;
 

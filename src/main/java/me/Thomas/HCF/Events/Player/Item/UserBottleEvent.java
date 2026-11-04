@@ -28,15 +28,16 @@ public class UserBottleEvent implements Listener {
 
     private static int getExperience(ItemStack item) {
         if (item == null || item.getType() != Material.EXPERIENCE_BOTTLE || !item.hasItemMeta()) return 0;
-        return Math.max(0, item.getItemMeta().getPersistentDataContainer().getOrDefault(experienceKey(), PersistentDataType.INTEGER, 0));
+        ItemMeta meta = item.getItemMeta();
+        return meta == null ? 0 : Math.max(0, meta.getPersistentDataContainer().getOrDefault(experienceKey(), PersistentDataType.INTEGER, 0));
     }
 
     public static ItemStack createBottle(int experience) {
         if (experience <= 0) throw new IllegalArgumentException("Experience must be positive");
         ItemStack item = Items.create("experience-bottle", Material.EXPERIENCE_BOTTLE, Map.of("%experience%", Integer.toString(experience)));
-        ItemMeta meta = item.getItemMeta();
-        meta.getPersistentDataContainer().set(experienceKey(), PersistentDataType.INTEGER, experience);
-        item.setItemMeta(meta);
+        item.editMeta(meta -> {
+            meta.getPersistentDataContainer().set(experienceKey(), PersistentDataType.INTEGER, experience);
+        });
         return item;
     }
 

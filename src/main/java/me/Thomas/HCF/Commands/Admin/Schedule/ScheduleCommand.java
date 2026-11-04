@@ -12,6 +12,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +24,9 @@ import java.util.Map;
 import java.util.logging.Level;
 
 public class ScheduleCommand implements TabExecutor {
+
+    private static final DateTimeFormatter TIME = new DateTimeFormatterBuilder().parseCaseInsensitive()
+            .appendPattern("h:mma").toFormatter(Locale.ENGLISH).withResolverStyle(ResolverStyle.STRICT);
 
     private final Map<String, Subcommand> subcommands = new HashMap<>();
 
@@ -33,6 +40,14 @@ public class ScheduleCommand implements TabExecutor {
         subcommands.put(subcommand.getName(), subcommand);
         for (String alias : subcommand.getAliases()) subcommands.put(alias, subcommand);
     }
+
+    public static LocalTime parseTime(String value) {
+        if (value.matches("[0-9]{1,2}:[0-9]{2}(?i:am|pm)")) return LocalTime.parse(value, TIME);
+        if (value.matches("[0-9]{2}:[0-9]{2}")) return LocalTime.parse(value);
+        throw new IllegalArgumentException("invalid");
+    }
+
+    public static String formatTime(LocalTime time) { return time.format(TIME).toLowerCase(Locale.ROOT); }
 
     public static void send(CommandSender sender, String key, String... replacements) {
         String message = Main.getInstance().getLocaleConfig().getString("commands.schedule." + key);

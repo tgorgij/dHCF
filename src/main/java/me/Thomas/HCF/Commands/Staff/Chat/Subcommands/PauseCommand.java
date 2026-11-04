@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.Staff.Chat.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -7,16 +8,14 @@ import me.Thomas.HCF.Utils.Permission.Permission;
 import me.Thomas.HCF.Commands.Staff.Chat.ChatCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class PauseCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -35,13 +34,13 @@ public class PauseCommand implements Subcommand {
             return true;
         }
         if (args.length != 0) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.chat.pause.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.chat.pause.usage")
                     .replace("%alias%", alias)));
             return true;
         }
         boolean paused = ChatCommand.togglePaused();
-        Bukkit.broadcast(C.chat(Objects.requireNonNull(localeConfig.getString("commands.chat.pause."
-                + (paused ? "paused" : "resumed"))).replace("%player%", sender.getName())));
+        Bukkit.broadcast(C.chat(localeConfig.getString("commands.chat.pause."
+                + (paused ? "paused" : "resumed")).replace("%player%", sender.getName())));
         return true;
     }
 }

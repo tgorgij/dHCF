@@ -35,8 +35,7 @@ public class AddCommand implements Subcommand {
         int seconds = 0;
         try {
             String value = args[koth ? 2 : 1];
-            if (!value.matches("[0-9]{2}:[0-9]{2}")) throw new IllegalArgumentException();
-            time = LocalTime.parse(value);
+            time = ScheduleCommand.parseTime(value);
             if (koth) {
                 seconds = Integer.parseInt(args[3]);
                 if (seconds <= 0) throw new IllegalArgumentException();
@@ -50,10 +49,11 @@ public class AddCommand implements Subcommand {
             ScheduleCommand.send(sender, "no-koth");
             return true;
         }
-        EventScheduler.Schedule schedule = Main.getInstance().getEventScheduler().add(
+        EventScheduler scheduler = Main.getInstance().getEventScheduler();
+        EventScheduler.Schedule schedule = scheduler.add(
                 EventScheduler.Type.valueOf(args[0].toUpperCase(Locale.ROOT)), event == null ? null : event.getUUID(), time, seconds);
-        ScheduleCommand.send(sender, "added", "%id%", Long.toString(schedule.id()), "%event%", event == null ? args[0].equalsIgnoreCase("dtc") ? "DTC" : "Conquest" : event.getName(),
-                "%time%", time.toString(), "%timezone%", Main.getInstance().getEventScheduler().getTimezone().getId());
+        ScheduleCommand.send(sender, "added", "%id%", Integer.toString(scheduler.getSchedules().indexOf(schedule) + 1), "%event%", event == null ? args[0].equalsIgnoreCase("dtc") ? "DTC" : "Conquest" : event.getName(),
+                "%time%", ScheduleCommand.formatTime(time), "%timezone%", Main.getInstance().getEventScheduler().getTimezone().getId());
         return true;
     }
 
@@ -64,7 +64,7 @@ public class AddCommand implements Subcommand {
         if (args.length == 2 && args[0].equalsIgnoreCase("koth")) return Main.getInstance().getAllKOTHs().values().stream()
                 .map(KOTH::getName).filter(name -> name.toLowerCase(Locale.ROOT).startsWith(input)).sorted().toList();
         if (args.length == 2 && (args[0].equalsIgnoreCase("conquest") || args[0].equalsIgnoreCase("dtc")) || args.length == 3 && args[0].equalsIgnoreCase("koth")) {
-            return List.of("12:00", "18:00", "20:00").stream().filter(value -> value.startsWith(input)).toList();
+            return List.of("12:00pm", "6:00pm", "8:00pm").stream().filter(value -> value.startsWith(input)).toList();
         }
         if (args.length == 4 && args[0].equalsIgnoreCase("koth")) return List.of("300", "600", "900").stream().filter(value -> value.startsWith(input)).toList();
         return List.of();

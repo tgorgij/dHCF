@@ -60,6 +60,10 @@ commands:
   ability:
     description: Give ability items to an online player.
     usage: /ability <player> <item> [amount]
+  staffchat:
+    aliases: [sc]
+    description: Send a staff message or toggle staff chat.
+    usage: /staffchat [message]
   socialspy:
     aliases: [ss]
     description: Toggle viewing private messages between other players.
@@ -128,6 +132,17 @@ commands:
   freeze:
     description: Freeze or unfreeze a player or the server.
     usage: /freeze <player|all>
+  gamemode:
+    aliases: [gm]
+    description: Change a player's gamemode.
+    usage: /gamemode <mode> [player]
+  tp:
+    aliases: [teleport]
+    description: Teleport to a player or coordinates, or teleport one player to another.
+    usage: /tp <player> [player] or /tp <x> <y> <z>
+  world:
+    description: Change worlds while keeping your location.
+    usage: /world <world>
   tphere:
     description: Teleport an online player to you.
     usage: /tphere <player>
@@ -155,7 +170,7 @@ commands:
     usage: /pvp <enable|give> [player]
   lives:
     description: Check or manage player lives.
-    usage: /lives <check|set|add|take> [target] [amount]
+    usage: /lives <check|send|set|add|take> [target] [amount]
   revive:
     description: Revive a deathbanned player.
     usage: /revive <player>
@@ -176,6 +191,25 @@ commands:
     aliases:
       - eco
 permissions:
+  hcf.command.gamemode:
+    default: op
+  hcf.command.gamemode.others:
+    default: op
+  hcf.command.gamemode.survival:
+    default: op
+  hcf.command.gamemode.creative:
+    default: op
+  hcf.command.gamemode.adventure:
+    default: op
+  hcf.command.gamemode.spectator:
+    default: op
+  hcf.command.tp:
+    default: op
+  hcf.command.world:
+    default: op
+  hcf.command.staffchat:
+    description: Send and receive staff chat.
+    default: op
   hcf.command.socialspy:
     default: op
   hcf.command.setend:

@@ -46,6 +46,8 @@ public class FactionCommand implements TabExecutor {
         register(new JoinCommand());
         register(new OpenCommand());
         register(new FriendlyFireCommand());
+        register(new AllyCommand());
+        register(new UnallyCommand());
         register(new LockClaimCommand());
         register(new FocusCommand());
         register(new RallyCommand());

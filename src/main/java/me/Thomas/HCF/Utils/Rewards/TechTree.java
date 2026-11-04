@@ -7,6 +7,8 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -44,18 +46,30 @@ public class TechTree {
         org.bukkit.configuration.file.FileConfiguration config = Main.getInstance().getConfig();
         ConfigurationSection configuration = config.isSet("tech-tree.trees") ? config.getConfigurationSection("tech-tree.trees")
                 : config.getDefaults() == null ? null : config.getDefaults().getConfigurationSection("tech-tree.trees");
+        if (config.isSet("tech-tree.trees") && configuration == null) {
+            throw new IllegalArgumentException("Expected configuration section: tech-tree.trees");
+        }
         if (configuration != null) for (String id : configuration.getKeys(false)) {
             if (!id.matches("[a-z0-9_-]+")) throw new IllegalArgumentException("Invalid tech tree ID: " + id);
-            ConfigurationSection section = configuration.getConfigurationSection(id);
-            Requirement requirement = Requirement.valueOf(section.getString("requirement").toUpperCase(Locale.ROOT));
-            ConfigurationSection entries = section.getConfigurationSection("nodes");
-            if (entries == null) throw new IllegalArgumentException("Missing tech tree nodes: " + id);
+            ConfigurationSection section = requiredSection(configuration, id);
+            Requirement requirement;
+            String configuredRequirement = requiredString(section, "requirement");
+            try { requirement = Requirement.valueOf(configuredRequirement.toUpperCase(Locale.ROOT)); }
+            catch (IllegalArgumentException exception) {
+                throw new IllegalArgumentException("Invalid requirement at " + section.getCurrentPath() + ".requirement: " + configuredRequirement, exception);
+            }
+            ConfigurationSection entries = requiredSection(section, "nodes");
             List<Node> nodes = new ArrayList<>();
             for (String name : entries.getKeys(false)) {
                 if (!name.matches("[a-z0-9_-]+")) throw new IllegalArgumentException("Invalid tech node ID: " + name);
-                ConfigurationSection entry = entries.getConfigurationSection(name);
-                Reward reward = Reward.valueOf(entry.getString("type").toUpperCase(Locale.ROOT));
-                String configuredValue = entry.getString("value").toLowerCase(Locale.ROOT);
+                ConfigurationSection entry = requiredSection(entries, name);
+                Reward reward;
+                String configuredType = requiredString(entry, "type");
+                try { reward = Reward.valueOf(configuredType.toUpperCase(Locale.ROOT)); }
+                catch (IllegalArgumentException exception) {
+                    throw new IllegalArgumentException("Invalid reward type at " + entry.getCurrentPath() + ".type: " + configuredType, exception);
+                }
+                String configuredValue = requiredString(entry, "value").toLowerCase(Locale.ROOT);
                 String value = reward == Reward.COMMAND ? configuredValue : configuredValue.replaceFirst("^minecraft:", "");
                 int amount = entry.getInt("amount", -1), level = entry.getInt("level", 1);
                 if (amount < 0 || level < 1 || level > 255) throw new IllegalArgumentException("Invalid tech node: " + name);
@@ -76,6 +90,20 @@ public class TechTree {
             while (rows.next()) unlocked.computeIfAbsent(UUID.fromString(rows.getString("faction")), ignored -> new HashSet<>())
                     .add(rows.getString("tree") + "/" + rows.getString("node"));
         } catch (SQLException exception) { throw new IllegalStateException("Could not load faction tech unlocks", exception); }
+    }
+
+    private static @NotNull ConfigurationSection requiredSection(ConfigurationSection parent, String path) {
+        ConfigurationSection section = parent.getConfigurationSection(path);
+        if (section == null) throw new IllegalArgumentException("Expected configuration section: " + parent.getCurrentPath() + "." + path);
+        return section;
+    }
+
+    private static @NotNull String requiredString(ConfigurationSection section, String path) {
+        String value = section.getString(path);
+        if (!section.isString(path) || value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Expected non-empty string: " + section.getCurrentPath() + "." + path);
+        }
+        return value;
     }
 
     public static TechTree get() { return Main.getInstance().getTechTree(); }
@@ -201,18 +229,20 @@ public class TechTree {
     }
 
     public static void markPotion(ItemStack item) {
-        PotionMeta meta = (PotionMeta) item.getItemMeta();
+        if (!(item.getItemMeta() instanceof PotionMeta meta) || meta.getBasePotionType() == null) return;
         meta.getPersistentDataContainer().set(potionKey(), PersistentDataType.STRING, "variant:" + meta.getBasePotionType().getKey().getKey());
         item.setItemMeta(meta);
     }
 
     public static void clearPotion(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
         meta.getPersistentDataContainer().remove(potionKey());
         item.setItemMeta(meta);
     }
 
-    public static Map<Enchantment, Integer> enchants(ItemMeta meta) {
+    public static Map<Enchantment, Integer> enchants(@Nullable ItemMeta meta) {
+        if (meta == null) return Map.of();
         Map<Enchantment, Integer> result = new HashMap<>(meta.getEnchants());
         if (meta instanceof EnchantmentStorageMeta book) book.getStoredEnchants().forEach((enchantment, level) -> result.merge(enchantment, level, Math::max));
         return result;
@@ -221,6 +251,7 @@ public class TechTree {
     public static int producedEnchantment(ItemStack item, Enchantment enchantment) {
         if (item == null || !item.hasItemMeta()) return 0;
         ItemMeta meta = item.getItemMeta();
+        if (meta == null) return 0;
         String data = meta.getPersistentDataContainer().get(enchantKey(), PersistentDataType.STRING);
         if (data == null) return 0;
         for (String entry : data.split(";")) {

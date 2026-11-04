@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Events.Player.Movement;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
@@ -7,7 +8,6 @@ import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import me.Thomas.HCF.Utils.Timer.StuckTimer;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -19,7 +19,7 @@ import java.util.Objects;
 
 public class UserMoveFactionEvent implements Listener {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     private final String wilderness = localeConfig.getString("faction.wilderness");
     private final String warzone = localeConfig.getString("faction.warzone");
     private final String deathban = localeConfig.getString("faction.deathban");
@@ -92,7 +92,7 @@ public class UserMoveFactionEvent implements Listener {
                 ? Faction.isInWilderness(location) ? wilderness : warzone
                 : faction.getFormattedName(user);
         String deathbanStatus = faction == null || faction.isDeathban() ? deathban : nonDeathban;
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.moving." + direction))
+        p.sendMessage(C.chat(localeConfig.getString("faction.moving." + direction)
                 .replace("%deathban%", Objects.requireNonNull(deathbanStatus))
                 .replace("%faction%", Objects.requireNonNull(factionName))));
     }

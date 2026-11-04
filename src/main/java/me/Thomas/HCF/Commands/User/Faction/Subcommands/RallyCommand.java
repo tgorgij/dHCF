@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -9,7 +10,6 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -21,7 +21,7 @@ import java.util.UUID;
 
 public class RallyCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -46,7 +46,7 @@ public class RallyCommand implements Subcommand {
             return true;
         }
         if (args.length > 1 || args.length == 1 && !args[0].equalsIgnoreCase("clear")) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.rally.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.rally.usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -57,7 +57,7 @@ public class RallyCommand implements Subcommand {
         } else {
             Location location = player.getLocation();
             faction.setRally(location);
-            message = Objects.requireNonNull(localeConfig.getString("commands.faction.rally.set"))
+            message = localeConfig.getString("commands.faction.rally.set")
                     .replace("%location%", C.getFormattedLocation(location))
                     .replace("%dimension%", C.getFormattedDimension(location.getWorld()));
         }

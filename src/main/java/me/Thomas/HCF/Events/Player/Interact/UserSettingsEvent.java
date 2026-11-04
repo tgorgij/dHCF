@@ -16,7 +16,6 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -57,17 +56,17 @@ public class UserSettingsEvent implements Listener {
         String path = "settings." + menu.page.name().toLowerCase(java.util.Locale.ROOT) + ".items." + key;
         Material configured = Material.matchMaterial(Main.getInstance().getGuiConfig().getString(path + ".material", fallback.name()));
         ItemStack item = new ItemStack(configured == null || configured.isAir() || !configured.isItem() ? fallback : configured);
-        ItemMeta meta = item.getItemMeta();
-        String status = enabled == null ? "" : Main.getInstance().getLocaleConfig()
-                .getString("primary.status." + (enabled ? "enabled" : "disabled"));
-        String name = Main.getInstance().getGuiConfig().getString(path + ".name", key).replace("%state%", status);
-        meta.displayName(C.chat(name).decoration(TextDecoration.ITALIC, false));
-        List<Component> lore = new ArrayList<>();
-        for (String line : Main.getInstance().getGuiConfig().getStringList(path + ".lore")) {
-            lore.add(C.chat(line.replace("%state%", status)).decoration(TextDecoration.ITALIC, false));
-        }
-        meta.lore(lore);
-        item.setItemMeta(meta);
+        item.editMeta(meta -> {
+            String status = enabled == null ? "" : Main.getInstance().getLocaleConfig()
+                    .getString("primary.status." + (enabled ? "enabled" : "disabled"));
+            String name = Main.getInstance().getGuiConfig().getString(path + ".name", key).replace("%state%", status);
+            meta.displayName(C.chat(name).decoration(TextDecoration.ITALIC, false));
+            List<Component> lore = new ArrayList<>();
+            for (String line : Main.getInstance().getGuiConfig().getStringList(path + ".lore")) {
+                lore.add(C.chat(line.replace("%state%", status)).decoration(TextDecoration.ITALIC, false));
+            }
+            meta.lore(lore);
+        });
         return item;
     }
 

@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Main;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import com.github.retrooper.packetevents.PacketEvents;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import me.Thomas.HCF.Utils.Tab.TabList;
@@ -23,6 +24,10 @@ import me.Thomas.HCF.Commands.Staff.InvseeCommand;
 import me.Thomas.HCF.Commands.Staff.TPHereCommand;
 import me.Thomas.HCF.Commands.Staff.VanishCommand;
 import me.Thomas.HCF.Commands.Staff.SocialSpyCommand;
+import me.Thomas.HCF.Commands.Staff.StaffChatCommand;
+import me.Thomas.HCF.Commands.Admin.GamemodeCommand;
+import me.Thomas.HCF.Commands.Staff.TPCommand;
+import me.Thomas.HCF.Commands.Staff.WorldCommand;
 import me.Thomas.HCF.Utils.Staff.StaffMode;
 import me.Thomas.HCF.Commands.Staff.RestoreCommand;
 import me.Thomas.HCF.Commands.Staff.Chat.ChatCommand;
@@ -57,6 +62,7 @@ import me.Thomas.HCF.Utils.Rewards.TechTree;
 import me.Thomas.HCF.Commands.Admin.CrowbarCommand;
 import me.Thomas.HCF.Commands.Admin.AbilityCommand;
 import me.Thomas.HCF.Events.Player.Combat.UserAbilityEvent;
+import me.Thomas.HCF.Events.Player.Combat.UserAllyDamageEvent;
 import me.Thomas.HCF.Commands.Admin.SpawnerCommand;
 import me.Thomas.HCF.Commands.Admin.SetEnd.SetEndCommand;
 import me.Thomas.HCF.Events.Player.Movement.UserEndPortalEvent;
@@ -135,7 +141,7 @@ public class Main extends JavaPlugin {
     private DatabaseManager databaseManager;
     private FileConfiguration tabConfig;
     private TabList tabList;
-    private FileConfiguration localeConfig;
+    private LocaleConfig localeConfig;
     private FileConfiguration guiConfig;
     private FileConfiguration itemsConfig;
     private FileConfiguration scoreboardConfig;
@@ -294,6 +300,7 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("reclaim")).setExecutor(new ReclaimCommand());
 
         // Admin
+        Objects.requireNonNull(getCommand("gamemode")).setExecutor(new GamemodeCommand());
         Objects.requireNonNull(getCommand("border")).setExecutor(new BorderCommand());
         Objects.requireNonNull(getCommand("schedule")).setExecutor(new ScheduleCommand());
         Objects.requireNonNull(getCommand("customtimer")).setExecutor(new CustomTimerCommand());
@@ -323,8 +330,11 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("freeze")).setExecutor(new FreezeCommand());
         Objects.requireNonNull(getCommand("invsee")).setExecutor(new InvseeCommand());
         Objects.requireNonNull(getCommand("tphere")).setExecutor(new TPHereCommand());
+        Objects.requireNonNull(getCommand("tp")).setExecutor(new TPCommand());
+        Objects.requireNonNull(getCommand("world")).setExecutor(new WorldCommand());
         Objects.requireNonNull(getCommand("vanish")).setExecutor(new VanishCommand());
         Objects.requireNonNull(getCommand("socialspy")).setExecutor(new SocialSpyCommand());
+        Objects.requireNonNull(getCommand("staffchat")).setExecutor(new StaffChatCommand());
         Objects.requireNonNull(getCommand("revive")).setExecutor(new ReviveCommand());
         Objects.requireNonNull(getCommand("restore")).setExecutor(new RestoreCommand());
         Objects.requireNonNull(getCommand("chat")).setExecutor(new ChatCommand());
@@ -378,6 +388,7 @@ public class Main extends JavaPlugin {
         if (isFeatureEnabled("elevators")) pm.registerEvents(new UserElevatorEvent(), this);
         if (isFeatureEnabled("shops")) pm.registerEvents(new UserShopSignEvent(), this);
         // Check lethal damage after the protection and class damage handlers.
+        pm.registerEvents(new UserAllyDamageEvent(), this);
         pm.registerEvents(new UserAbilityEvent(), this);
     }
 
@@ -568,7 +579,7 @@ public class Main extends JavaPlugin {
         return databaseManager;
     }
 
-    public FileConfiguration getLocaleConfig() {
+    public LocaleConfig getLocaleConfig() {
         return localeConfig;
     }
 
@@ -686,7 +697,12 @@ public class Main extends JavaPlugin {
 
     private void loadLocale() {
         java.io.File localeFile = new java.io.File(getDataFolder(), "locale.yml");
-        localeConfig = YamlConfiguration.loadConfiguration(localeFile);
+        localeConfig = new LocaleConfig();
+        try {
+            localeConfig.load(localeFile);
+        } catch (java.io.IOException | org.bukkit.configuration.InvalidConfigurationException exception) {
+            throw new IllegalStateException("Could not load locale.yml", exception);
+        }
         try (java.io.InputStream resource = Objects.requireNonNull(getResource("locale.yml"));
              java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
             localeConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
@@ -887,6 +903,7 @@ public class Main extends JavaPlugin {
     }
 
     public void removeFaction(UUID uuid) {
+        for (Faction faction : factions.values()) if (!uuid.equals(faction.getUUID())) faction.forgetAlly(uuid);
         if (techTree != null) techTree.forgetFaction(uuid);
         if (conquest != null) conquest.removeFaction(uuid);
         Mountain mountain = mountains.remove(uuid);

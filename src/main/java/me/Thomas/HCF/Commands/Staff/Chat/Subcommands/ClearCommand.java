@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.Staff.Chat.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -8,16 +9,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class ClearCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -36,14 +35,14 @@ public class ClearCommand implements Subcommand {
             return true;
         }
         if (args.length != 0) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.chat.clear.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.chat.clear.usage")
                     .replace("%alias%", alias)));
             return true;
         }
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!Permission.has(p, "chat.bypass")) p.sendMessage(Component.text("\n".repeat(100)));
         }
-        Bukkit.broadcast(C.chat(Objects.requireNonNull(localeConfig.getString("commands.chat.clear.success"))
+        Bukkit.broadcast(C.chat(localeConfig.getString("commands.chat.clear.success")
                 .replace("%player%", sender.getName())));
         return true;
     }

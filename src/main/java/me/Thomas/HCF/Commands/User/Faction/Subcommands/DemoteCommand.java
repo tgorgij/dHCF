@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -7,7 +8,6 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -17,7 +17,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public final class DemoteCommand implements Subcommand {
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -49,7 +49,7 @@ public final class DemoteCommand implements Subcommand {
         }
         String path = "commands.faction." + getName();
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString(path + ".usage"))
+            sender.sendMessage(C.chat(localeConfig.getString(path + ".usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -69,11 +69,11 @@ public final class DemoteCommand implements Subcommand {
         faction.saveAsync();
         String rank = localeConfig.getString("commands.faction.demote.names."
                 + faction.getMemberType(target.getUUID()).name().toLowerCase(Locale.ROOT));
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString(path + ".success"))
+        sender.sendMessage(C.chat(localeConfig.getString(path + ".success")
                 .replace("%player%", target.getName()).replace("%rank%", Objects.requireNonNull(rank))));
         Player targetPlayer = Bukkit.getPlayer(target.getUUID());
         if (targetPlayer != null) {
-            targetPlayer.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString(path + ".target"))
+            targetPlayer.sendMessage(C.chat(localeConfig.getString(path + ".target")
                     .replace("%player%", player.getName()).replace("%rank%", rank)));
         }
         return true;

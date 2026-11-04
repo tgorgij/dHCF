@@ -40,10 +40,10 @@ public class RewardsCommand implements TabExecutor {
             TechTree tech = TechTree.get();
             for (TechTree.Tree tree : tech.getTrees()) {
                 String name = Main.getInstance().getGuiConfig().getString("rewards.trees." + tree.id() + ".label", tree.id());
-                sender.sendMessage(C.chat(Main.getInstance().getMessagesConfig().getString("rewards.list.tree").replace("%tree%", name)));
+                sender.sendMessage(C.chat(Main.getInstance().getMessagesConfig().getString("rewards.list.tree", "&e%tree%&7:").replace("%tree%", name)));
                 List<TechTree.Node> nodes = tree.nodes().stream().filter(node -> tech.isUnlocked(faction, tree, node)).toList();
-                if (nodes.isEmpty()) sender.sendMessage(C.chat(Main.getInstance().getMessagesConfig().getString("rewards.list.empty")));
-                for (TechTree.Node node : nodes) sender.sendMessage(C.chat(Main.getInstance().getMessagesConfig().getString("rewards.list.entry")
+                if (nodes.isEmpty()) sender.sendMessage(C.chat(Main.getInstance().getMessagesConfig().getString("rewards.list.empty", " &7None")));
+                for (TechTree.Node node : nodes) sender.sendMessage(C.chat(Main.getInstance().getMessagesConfig().getString("rewards.list.entry", " &7- &b%reward%")
                         .replace("%reward%", UserRewardsEvent.label(tree, node))));
             }
             return true;

@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.Admin.SOTW.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -8,17 +9,15 @@ import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class StartCommand implements Subcommand {
 
     private final FileConfiguration messagesConfig = Main.getInstance().getMessagesConfig();
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -33,11 +32,11 @@ public class StartCommand implements Subcommand {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String @NonNull [] args, @NotNull String alias) {
         if (!Permission.has(sender, "command.sotw.start", "admin")) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.no-permission"))));
+            sender.sendMessage(C.chat(localeConfig.getString("primary.no-permission")));
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.sotw.start.usage"))));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.sotw.start.usage")));
             return true;
         }
         if (Main.getInstance().hasServerTimer(ServerTimer.Type.SOTW)) {
@@ -53,7 +52,7 @@ public class StartCommand implements Subcommand {
         }
         ServerTimer timer = new ServerTimer(ServerTimer.Type.SOTW, time);
         Main.getInstance().addServerTimer(timer);
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.sotw.start.success"))));
+        sender.sendMessage(C.chat(localeConfig.getString("commands.sotw.start.success")));
         for (CommandSender player : Bukkit.getOnlinePlayers()) {
             Main.getInstance().sendMessage(player, "timers.sotw.start");
         }

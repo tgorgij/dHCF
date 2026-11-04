@@ -1,22 +1,21 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class OpenCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -35,7 +34,7 @@ public class OpenCommand implements Subcommand {
             return true;
         }
         if (args.length != 0) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.open.usage")).replace("%alias%", alias)));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.open.usage").replace("%alias%", alias)));
             return true;
         }
         User user = User.get(p);
@@ -50,7 +49,7 @@ public class OpenCommand implements Subcommand {
         }
         boolean status = faction.isOpen();
         faction.setOpen(!status);
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.open.success")).replace("%status%", Objects.requireNonNull(!status ? localeConfig.getString("primary.status.open") : localeConfig.getString("primary.status.closed")))));
+        p.sendMessage(C.chat(localeConfig.getString("commands.faction.open.success").replace("%status%", (!status ? localeConfig.getString("primary.status.open") : localeConfig.getString("primary.status.closed")))));
         return true;
     }
 }

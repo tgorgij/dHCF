@@ -1,24 +1,23 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 public class UninviteCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -47,7 +46,7 @@ public class UninviteCommand implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.uninvite.usage")).replace("%alias%", alias)));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.uninvite.usage").replace("%alias%", alias)));
             return true;
         }
         String name = args[0];
@@ -57,11 +56,11 @@ public class UninviteCommand implements Subcommand {
             return true;
         }
         if (!Main.getInstance().hasInvite(faction.getUUID(), target.getUUID())) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.uninvite.not-invited")).replace("%player%", target.getName())));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.uninvite.not-invited").replace("%player%", target.getName())));
             return true;
         }
         Main.getInstance().removeInvite(faction.getUUID(), target.getUUID());
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.uninvite.success")).replace("%player%", target.getName())));
+        p.sendMessage(C.chat(localeConfig.getString("commands.faction.uninvite.success").replace("%player%", target.getName())));
         return true;
     }
 

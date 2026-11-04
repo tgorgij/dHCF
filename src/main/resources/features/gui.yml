@@ -401,6 +401,8 @@ stats:
       name: '&eKills'
       lore:
         - '&7Kills: &f%kills%'
+        - '&7Killstreak: &f%killstreak%'
+        - '&7Highest Killstreak: &f%highest-killstreak%'
     deaths:
       material: SKELETON_SKULL
       name: '&eDeaths'

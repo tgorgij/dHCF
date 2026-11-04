@@ -13,7 +13,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -93,6 +92,8 @@ public class Faction {
     private int kills;
     private int eventCaptures;
     private String announcement;
+    private final Set<UUID> allies = new HashSet<>();
+    private final Set<UUID> allyRequests = new HashSet<>();
     private boolean deathban;
 
 
@@ -228,6 +229,11 @@ public class Faction {
         this.eventCaptures = resultSet.getInt("eventCaptures");
 
         this.announcement = resultSet.getString("announcement");
+        allies.clear();
+        String storedAllies = resultSet.getString("allies");
+        if (storedAllies != null && !storedAllies.isEmpty()) {
+            for (String ally : storedAllies.split(",")) allies.add(UUID.fromString(ally));
+        }
 
         this.deathban = resultSet.getBoolean("deathban");
 
@@ -247,8 +253,8 @@ public class Faction {
         String sql =
                 "INSERT INTO factions "
                         + "(uuid, type, name, leader, balance, lives, "
-                        + "members, color, home, open, dtr, points, eventCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "members, color, home, open, dtr, points, eventCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills, allies) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET "
                         + "type = excluded.type, "
                         + "name = excluded.name, "
@@ -265,12 +271,59 @@ public class Faction {
                         + "announcement = excluded.announcement, "
                         + "deathban = excluded.deathban, "
                         + "dtrFreezeExpiry = excluded.dtrFreezeExpiry, "
-                        + "dtrNextRegen = excluded.dtrNextRegen, kills = excluded.kills";
+                        + "dtrNextRegen = excluded.dtrNextRegen, kills = excluded.kills, allies = excluded.allies";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), type.name(), name, leader == null ? null : leader.toString(),
                 balance, lives, serializeMembers(), color, serializeLocation(home), open, dtr,
-                points, eventCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills);
+                points, eventCaptures, announcement, deathban, dtrFreezeExpiry, dtrNextRegen, kills,
+                allies.stream().map(UUID::toString).sorted().collect(java.util.stream.Collectors.joining(",")));
+    }
+
+    public Set<UUID> getAllies() {
+        return allies.stream().filter(this::isAllied).collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    public boolean isAllied(UUID uuid) {
+        if (type != Type.PLAYER || uuid == null || this.uuid.equals(uuid) || !allies.contains(uuid)) return false;
+        Faction faction = Faction.get(uuid);
+        return faction != null && faction.type == Type.PLAYER && faction.allies.contains(this.uuid);
+    }
+
+    public boolean hasAllyRequest(UUID faction) { return allyRequests.contains(faction); }
+    public void requestAlly(UUID faction) { allyRequests.add(faction); }
+
+    private void setAlly(UUID faction, boolean enabled) {
+        boolean changed = enabled ? allies.add(faction) : allies.remove(faction);
+        if (changed) revision++;
+    }
+
+    public void changeAlliance(Faction faction, boolean enabled) {
+        boolean previous = allies.contains(faction.uuid), previousOther = faction.allies.contains(uuid);
+        setAlly(faction.uuid, enabled);
+        faction.setAlly(uuid, enabled);
+        try {
+            List<SaveSnapshot> snapshots = new ArrayList<>();
+            SaveSnapshot own = snapshot(), other = faction.snapshot();
+            if (own != null) snapshots.add(own);
+            if (other != null) snapshots.add(other);
+            Main.getInstance().getDatabaseManager().save(snapshots).join();
+        } catch (RuntimeException exception) {
+            setAlly(faction.uuid, previous);
+            faction.setAlly(uuid, previousOther);
+            throw exception;
+        }
+        allyRequests.remove(faction.uuid);
+        faction.allyRequests.remove(uuid);
+        Main.getInstance().refreshNameColors();
+    }
+
+    public void forgetAlly(UUID faction) {
+        allyRequests.remove(faction);
+        if (allies.remove(faction)) {
+            revision++;
+            saveAsync();
+        }
     }
 
     private String serializeMembers() {
@@ -581,7 +634,7 @@ public class Faction {
     public void broadcastMemberConnection(Player player, boolean online) {
         if (type != Type.PLAYER || !hasMember(player.getUniqueId())) return;
         String key = online ? "faction.member.online" : "faction.member.offline";
-        Component message = C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString(key))
+        Component message = C.chat(Main.getInstance().getLocaleConfig().getString(key)
                 .replace("%player%", player.getName()));
         for (UUID uuid : members.keySet()) {
             if (uuid.equals(player.getUniqueId())) continue;
@@ -738,9 +791,9 @@ public class Faction {
 
     public static ItemStack getClaimWand() {
         ItemStack wand = Items.create("claim-wand", Material.DIAMOND_HOE, Map.of());
-        ItemMeta meta = wand.getItemMeta();
-        meta.getPersistentDataContainer().set(new NamespacedKey(Main.getInstance(), "claim-wand"), PersistentDataType.BYTE, (byte) 1);
-        wand.setItemMeta(meta);
+        wand.editMeta(meta -> {
+            meta.getPersistentDataContainer().set(new NamespacedKey(Main.getInstance(), "claim-wand"), PersistentDataType.BYTE, (byte) 1);
+        });
         return wand;
     }
 
@@ -829,11 +882,13 @@ public class Faction {
         switch (type) {
             case PLAYER -> {
                 if (!receiver.hasFaction()) {
-                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.colors.enemy"))) + this.name;
+                    name = C.getColorCode(Main.getInstance().getConfig().getString("factions.colors.enemy", "RED")) + this.name;
                 } else if (receiver.getFaction().equals(this.uuid)) {
-                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.colors.team"))) + this.name;
+                    name = C.getColorCode(Main.getInstance().getConfig().getString("factions.colors.team", "GREEN")) + this.name;
                 } else {
-                    name = C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.colors.enemy"))) + this.name;
+                    Faction viewer = Faction.get(receiver.getFaction());
+                    String relation = viewer != null && viewer.isAllied(uuid) ? "ally" : "enemy";
+                    name = C.getColorCode(Main.getInstance().getConfig().getString("factions.colors." + relation, relation.equals("ally") ? "BLUE" : "RED")) + this.name;
                 }
             }
             case KOTH -> name = C.getColorCode(this.color) + this.name + " KOTH";

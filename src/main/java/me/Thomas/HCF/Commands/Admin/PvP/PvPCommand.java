@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 public class PvPCommand implements TabExecutor {
     private final Map<String, Subcommand> subcommands = new HashMap<>();
@@ -45,8 +44,8 @@ public class PvPCommand implements TabExecutor {
                 sender.sendMessage(C.chat(line.replace("%alias%", alias)));
             }
         } else {
-            sender.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig()
-                    .getString("commands.pvp.enable.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig()
+                    .getString("commands.pvp.enable.usage").replace("%alias%", alias)));
         }
         return true;
     }

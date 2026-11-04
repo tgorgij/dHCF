@@ -30,6 +30,8 @@ public class User {
     private UUID faction;
     private double balance;
     private int kills;
+    private int killstreak;
+    private int highestKillstreak;
     private int deaths;
     private int lives;
     private long deathbanExpiry;
@@ -142,6 +144,8 @@ public class User {
 
         this.balance = resultSet.getDouble("balance");
         this.kills = resultSet.getInt("kills");
+        this.killstreak = resultSet.getInt("killstreak");
+        this.highestKillstreak = resultSet.getInt("highestKillstreak");
         this.deaths = resultSet.getInt("deaths");
         this.lives = resultSet.getInt("lives");
 
@@ -189,6 +193,8 @@ public class User {
         this.faction = null;
         this.balance = Main.getInstance().getConfig().getDouble("economy.default-balance");
         this.kills = 0;
+        this.killstreak = 0;
+        this.highestKillstreak = 0;
         this.deaths = 0;
         this.lives = 0;
         this.timers = new EnumMap<>(Timer.Type.class);
@@ -326,8 +332,8 @@ public class User {
         String sql =
                 "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
-                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns, reclaimed, abilityCooldowns, filteredItems, ignoredPlayers, notes) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns, reclaimed, abilityCooldowns, filteredItems, ignoredPlayers, notes, killstreak, highestKillstreak) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
                         + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
                         + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry, "
@@ -335,7 +341,7 @@ public class User {
                         + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience, mountainMessages=excluded.mountainMessages, "
                         + "messages=excluded.messages, messageSounds=excluded.messageSounds, "
                         + "scoreboard=excluded.scoreboard, publicChat=excluded.publicChat, "
-                        + "requestReportCooldowns=excluded.requestReportCooldowns, reclaimed=excluded.reclaimed, abilityCooldowns=excluded.abilityCooldowns, filteredItems=excluded.filteredItems, ignoredPlayers=excluded.ignoredPlayers, notes=excluded.notes";
+                        + "requestReportCooldowns=excluded.requestReportCooldowns, reclaimed=excluded.reclaimed, abilityCooldowns=excluded.abilityCooldowns, filteredItems=excluded.filteredItems, ignoredPlayers=excluded.ignoredPlayers, notes=excluded.notes, killstreak=excluded.killstreak, highestKillstreak=excluded.highestKillstreak";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), name, faction == null ? null : faction.toString(),
@@ -343,7 +349,7 @@ public class User {
                 getLastInventory(), lastExperience, mountainMessages ? 1 : 0,
                 messages ? 1 : 0, messageSounds ? 1 : 0, scoreboard ? 1 : 0, publicChat ? 1 : 0, requestReportCooldowns ? 1 : 0, reclaimed ? 1 : 0, abilityCooldowns ? 1 : 0,
                 filteredItems.stream().map(Material::name).sorted().collect(java.util.stream.Collectors.joining(",")),
-                ignoredPlayers.stream().map(UUID::toString).sorted().collect(java.util.stream.Collectors.joining(",")), serializeNotes());
+                ignoredPlayers.stream().map(UUID::toString).sorted().collect(java.util.stream.Collectors.joining(",")), serializeNotes(), killstreak, highestKillstreak);
     }
 
     public boolean isIgnoring(UUID player) { return ignoredPlayers.contains(player); }
@@ -472,8 +478,8 @@ public class User {
         if (player == null) timer.pause();
         addTimer(type, timer);
         if (player != null) {
-            player.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig()
-                            .getString("events.player.timer.start." + type.name().toLowerCase(Locale.ROOT)))
+            player.sendMessage(C.chat(Main.getInstance().getLocaleConfig()
+                            .getTimerMessage("start", type)
                     .replace("%time%", C.formatChatTime(type.getLength()))));
         }
         return true;
@@ -652,6 +658,18 @@ public class User {
         revision++;
     }
 
+    public int getKillstreak() { return killstreak; }
+
+    public int getHighestKillstreak() { return highestKillstreak; }
+
+    public void setKillstreak(int killstreak) {
+        killstreak = Math.max(0, killstreak);
+        if (this.killstreak == killstreak) return;
+        this.killstreak = killstreak;
+        highestKillstreak = Math.max(highestKillstreak, killstreak);
+        revision++;
+    }
+
     public int getDeaths() {
         return deaths;
     }
@@ -732,8 +750,7 @@ public class User {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null && entry.getKey() != Timer.Type.CHAT) {
                 player.sendMessage(me.Thomas.HCF.Utils.Chat.C.chat(
-                        Main.getInstance().getLocaleConfig().getString("events.player.timer.end.default", "")
-                                .replace("%timer%", entry.getKey().name().toLowerCase(Locale.ROOT))));
+                        Main.getInstance().getLocaleConfig().getTimerMessage("end", entry.getKey())));
             }
             iterator.remove();
             revision++;

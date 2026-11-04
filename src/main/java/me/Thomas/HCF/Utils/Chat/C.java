@@ -10,7 +10,6 @@ import org.bukkit.World;
 
 import java.text.DecimalFormat;
 import java.util.Locale;
-import java.util.Objects;
 
 public class C {
 
@@ -46,6 +45,8 @@ public class C {
             if (viewer.getUUID().equals(target.getUUID())
                     || viewer.hasFaction() && viewer.getFaction().equals(target.getFaction())) relation = "team";
             else if (viewer.hasFaction()) {
+                Faction faction = Faction.get(viewer.getFaction());
+                if (faction != null && faction.isAllied(target.getFaction())) relation = "ally";
                 Main.Focus focus = Main.getInstance().getFocus(viewer.getFaction());
                 if (focus != null && (focus.faction() ? focus.target().equals(target.getFaction())
                         : focus.target().equals(target.getUUID()))) relation = "focus";
@@ -54,6 +55,7 @@ public class C {
         String fallback = switch (relation) {
             case "team" -> "GREEN";
             case "focus" -> "PINK";
+            case "ally" -> "BLUE";
             default -> "RED";
         };
         String color = getColorCode(Main.getInstance().getConfig().getString("factions.colors." + relation, fallback));
@@ -146,7 +148,7 @@ public class C {
     }
 
     public static String getFormattedMoney(double amount) {
-        DecimalFormat formatter = new DecimalFormat(Main.getInstance().getConfig().getString("economy.currency-symbol") + "#,##0.00");
+        DecimalFormat formatter = new DecimalFormat(Main.getInstance().getConfig().getString("economy.currency-symbol", "$") + "#,##0.00");
         return formatter.format(amount);
     }
 
@@ -174,11 +176,11 @@ public class C {
 
     public static String getFormattedDTR(double dtr) {
         if (dtr <= 0) {
-            return C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.dtr.colors.raidable"))) + dtr;
+            return C.getColorCode(Main.getInstance().getConfig().getString("factions.dtr.colors.raidable", "RED")) + dtr;
         } else if (dtr < 1) {
-            return C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.dtr.colors.close-to-raidable"))) + dtr;
+            return C.getColorCode(Main.getInstance().getConfig().getString("factions.dtr.colors.close-to-raidable", "YELLOW")) + dtr;
         } else {
-            return C.getColorCode(Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.dtr.colors.not-raidable"))) + dtr;
+            return C.getColorCode(Main.getInstance().getConfig().getString("factions.dtr.colors.not-raidable", "GREEN")) + dtr;
         }
     }
 }

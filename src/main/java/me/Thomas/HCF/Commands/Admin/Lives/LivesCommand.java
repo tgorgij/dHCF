@@ -2,6 +2,7 @@ package me.Thomas.HCF.Commands.Admin.Lives;
 
 import me.Thomas.HCF.Commands.Admin.Lives.Subcommands.AddCommand;
 import me.Thomas.HCF.Commands.Admin.Lives.Subcommands.CheckCommand;
+import me.Thomas.HCF.Commands.Admin.Lives.Subcommands.SendCommand;
 import me.Thomas.HCF.Commands.Admin.Lives.Subcommands.SetCommand;
 import me.Thomas.HCF.Commands.Admin.Lives.Subcommands.TakeCommand;
 import me.Thomas.HCF.Commands.Subcommand;
@@ -18,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 public class LivesCommand implements TabExecutor {
     private final Map<String, Subcommand> subcommands = new HashMap<>();
@@ -28,6 +28,7 @@ public class LivesCommand implements TabExecutor {
         register(new AddCommand());
         register(new TakeCommand());
         register(new CheckCommand());
+        register(new SendCommand());
     }
 
     private void register(Subcommand subcommand) {
@@ -43,8 +44,8 @@ public class LivesCommand implements TabExecutor {
         Subcommand subcommand = args.length == 0 ? null : subcommands.get(args[0].toLowerCase(Locale.ROOT));
         if (subcommand != null) return subcommand.execute(sender, Arrays.copyOfRange(args, 1, args.length), alias);
         if (!Permission.has(sender, "command.lives", "admin")) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig()
-                    .getString("commands.lives.check.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig()
+                    .getString("commands.lives.usage").replace("%alias%", alias)));
             return true;
         }
         for (String line : Main.getInstance().getMessagesConfig().getStringList("help.lives")) {
@@ -60,7 +61,7 @@ public class LivesCommand implements TabExecutor {
         if (args.length == 1) {
             String input = args[0].toLowerCase(Locale.ROOT);
             return subcommands.keySet().stream()
-                    .filter(name -> name.equals("check") ? sender instanceof Player : Permission.has(sender, "command.lives", "admin"))
+                    .filter(name -> (name.equals("check") || name.equals("send")) ? sender instanceof Player : Permission.has(sender, "command.lives", "admin"))
                     .filter(name -> name.startsWith(input)).sorted().toList();
         }
         Subcommand subcommand = subcommands.get(args[0].toLowerCase(Locale.ROOT));

@@ -2,7 +2,7 @@ update-ticks: 20
 header: '&d&l%server-name% &7| &fHCF'
 footer: '&eThere are currently &d%online%/%max-players% &eplayers.'
 store: 'store.example.com'
-unset: '-'
+unset: ''
 no-event: 'None'
 end-portal-location: 1000
 member: '&a%rank%%player%'

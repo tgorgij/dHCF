@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.Admin.KOTH.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.KOTH.KOTH;
 import me.Thomas.HCF.IO.Faction.Faction;
@@ -7,17 +8,15 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 public class StartCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() { return "start"; }
@@ -32,7 +31,7 @@ public class StartCommand implements Subcommand {
             return true;
         }
         if (args.length != 2) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.koth.start.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.koth.start.usage")
                     .replace("%alias%", alias).replace("%koth%", args.length == 0 ? "<name>" : args[0])));
             return true;
         }
@@ -61,7 +60,7 @@ public class StartCommand implements Subcommand {
             return true;
         }
         koth.start(seconds);
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.koth.start.success"))
+        sender.sendMessage(C.chat(localeConfig.getString("commands.koth.start.success")
                 .replace("%koth%", koth.getName())));
         return true;
     }

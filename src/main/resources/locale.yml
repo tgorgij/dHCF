@@ -288,6 +288,10 @@ commands:
     not-active: "&c%player% has no %timer% timer to remove."
     added: "&eSet &b%player%&e's &b%timer% &etimer to &b%time%&e."
     removed: "&eRemoved &b%player%&e's &b%timer% &etimer."
+  staffchat:
+    usage: "&cUsage: /%alias% [message]"
+    toggled: "&eStaff chat %state%&e."
+    format: "&9[Staff] &b%player%&7: &e%message%"
   socialspy:
     usage: "&cUsage: /%alias%"
     toggled: "&eSocial spy %state%&e."
@@ -351,10 +355,10 @@ commands:
     failed: "&cThis reward could not be unlocked."
     unlocked: "&eUnlocked &b%node% &efor your faction."
   schedule:
-    add-usage: "&cUsage: /%alias% add koth <name> <HH:mm> <capture-seconds> or /%alias% add conquest <HH:mm> or /%alias% add dtc <HH:mm>"
+    add-usage: "&cUsage: /%alias% add koth <name> <time> <capture-seconds> or /%alias% add conquest <time> or /%alias% add dtc <time>"
     list-usage: "&cUsage: /%alias% list"
     remove-usage: "&cUsage: /%alias% remove <id>"
-    invalid: "&cUse a valid 24-hour HH:mm time and positive KOTH capture duration in seconds."
+    invalid: "&cUse a valid time such as 7:18pm (or 19:18) and a positive KOTH capture duration in seconds."
     no-koth: "&cThat KOTH does not exist."
     duplicate: "&cThat event is already scheduled at that time."
     failed: "&cThe schedule could not be updated."
@@ -550,6 +554,14 @@ commands:
       disabled: "&cPvP protection is disabled. Set timers.pvp to a positive duration."
       success: "&eGave &b%player% &ePvP protection for &b%time%&e."
   lives:
+    usage: "&cUsage: /%alias% <check|send <player> <amount>>"
+    send:
+      usage: "&cUsage: /%alias% send <player> <amount>"
+      self: "&cYou cannot send lives to yourself."
+      insufficient: "&cYou do not have enough lives."
+      failed: "&cYour lives could not be sent."
+      success: "&eSent &b%amount% &elives to &b%player%&e."
+      received: "&eYou received &b%amount% &elives from &b%player%&e."
     insufficient-lives: "&cThat player does not have enough lives."
     check:
       usage: "&cUsage: /%alias% check"
@@ -576,6 +588,28 @@ commands:
       invalid-time: "&cEnter a whole number of seconds, 0 or greater."
       enabled: "&ePublic chat has been slowed to &b%time% seconds &eby &b%player%&e."
       disabled: "&eChat slow mode has been disabled by &b%player%&e."
+  gamemode:
+    usage: "&cUsage: /%alias% <mode> [player]"
+    invalid: "&cChoose survival, creative, adventure, or spectator."
+    failed: "&cCould not change %player%'s gamemode."
+    received: "&eYour gamemode has been set to &b%mode%&e."
+    success: "&eSet &b%player%&e's gamemode to &b%mode%&e."
+    modes:
+      survival: "Survival"
+      creative: "Creative"
+      adventure: "Adventure"
+      spectator: "Spectator"
+  tp:
+    usage: "&cUsage: /%alias% <player> [player] or /%alias% <x> <y> <z>"
+    invalid-coordinates: "&cSpecify valid coordinates."
+    failed: "&cCould not teleport %player%."
+    teleported: "&eYou have been teleported."
+    success: "&eTeleported &b%player% &eto &b%target%&e."
+  world:
+    usage: "&cUsage: /%alias% <world>"
+    not-found: "&cThat world is not loaded."
+    failed: "&cCould not change worlds."
+    success: "&eChanged your world to &b%world%&e."
   tphere:
     usage: "&cUsage: /%alias% <player>"
     self: "&cYou cannot teleport yourself to yourself."
@@ -594,6 +628,21 @@ commands:
     not-deathbanned: "&c%player% is not deathbanned."
     success: "&aYou revived %player%."
   faction:
+    ally:
+      usage: "&cUsage: /%alias% ally <faction>"
+      invalid-faction: "&cThat player faction does not exist."
+      self: "&cYou cannot ally your own faction."
+      already: "&cYou are already allied with that faction."
+      limit: "&cBoth factions must have fewer than %max% allies."
+      failed: "&cThe alliance could not be saved. Please try again."
+      accepted: "&b%faction% &eand &b%ally% &eare now allies."
+      pending: "&cYour faction already sent an ally request to that faction."
+      requested: "&b%player% &esent an ally request to &b%faction%&e."
+      request-received: "&b%faction% &ewants to ally. Use &b/f ally %faction% &eto accept."
+    unally:
+      usage: "&cUsage: /%alias% unally <faction>"
+      not-allied: "&cYou are not allied with that faction."
+      success: "&b%player% &eended the alliance between &b%faction% &eand &b%ally%&e."
     subclaim:
       protected: "&cOnly the subclaim owner can access or modify this container and sign."
       invalid-container: "&cAttach the subclaim sign to a chest, trapped chest, or barrel."
@@ -603,8 +652,11 @@ commands:
       save-failed: "&cThe subclaim could not be saved. Please try again."
       created: "&eSubclaim saved."
     lives:
-      usage: "&cUsage: /%alias% lives add <amount>"
+      usage: "&cUsage: /%alias% lives <add|withdraw> <amount>"
       insufficient-lives: "&cYou do not have enough personal lives."
+      insufficient-faction-lives: "&cYour faction does not have enough lives."
+      failed: "&cThe lives could not be transferred. Please try again."
+      withdrawn: "&eYou withdrew &b%amount% &elives from your faction."
       success: "&eYou deposited &b%amount% &elives into your faction."
     revive:
       usage: "&cUsage: /%alias% revive <player>"
@@ -760,9 +812,11 @@ commands:
       usage: "&cUsage: /%alias% list [page]"
       invalid-page: "&cThat page does not exist. There are %pages% pages."
     chat:
-      usage: "&cUsage: /%alias% c <p|f|message...>"
+      usage: "&cUsage: /%alias% c <p|f|a|message...>"
       public: "&eYou are now speaking in public chat."
       faction: "&eYou are now speaking in faction chat."
+      ally: "&eYou are now speaking in ally chat."
+      ally-format: "&9[Ally] [%faction%] %player%: &f%message%"
       format: "&a[Faction] %player%: &f%message%"
     transfer:
       usage: "&cUsage: /%alias% transfer <player>"

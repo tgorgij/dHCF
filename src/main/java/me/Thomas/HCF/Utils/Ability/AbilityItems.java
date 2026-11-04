@@ -42,7 +42,8 @@ public class AbilityItems {
 
     public static Type getType(ItemStack item) {
         if (item == null || item.isEmpty() || !item.hasItemMeta()) return null;
-        return getType(item.getItemMeta().getPersistentDataContainer().get(key("type"), PersistentDataType.STRING));
+        ItemMeta meta = item.getItemMeta();
+        return meta == null ? null : getType(meta.getPersistentDataContainer().get(key("type"), PersistentDataType.STRING));
     }
 
     public static Type getType(String id) {
@@ -54,16 +55,16 @@ public class AbilityItems {
     public static ItemStack create(Type type) {
         int uses = Math.max(1, Main.getInstance().getConfig().getInt(type.path() + ".uses", 5));
         ItemStack item = Items.create("abilities." + type.id, type.material, Map.of("%uses%", Integer.toString(uses)));
-        ItemMeta meta = item.getItemMeta();
-        meta.getPersistentDataContainer().set(key("type"), PersistentDataType.STRING, type.id);
-        if (type == Type.ARCHER) {
-            // A charged bow has its own identity, even after it is moved between slots.
-            meta.setMaxStackSize(1);
-            meta.setUnbreakable(true);
-            meta.getPersistentDataContainer().set(key("identity"), PersistentDataType.STRING, UUID.randomUUID().toString());
-            meta.getPersistentDataContainer().set(key("uses"), PersistentDataType.INTEGER, uses);
-        }
-        item.setItemMeta(meta);
+        item.editMeta(meta -> {
+            meta.getPersistentDataContainer().set(key("type"), PersistentDataType.STRING, type.id);
+            if (type == Type.ARCHER) {
+                // A charged bow has its own identity, even after it is moved between slots.
+                meta.setMaxStackSize(1);
+                meta.setUnbreakable(true);
+                meta.getPersistentDataContainer().set(key("identity"), PersistentDataType.STRING, UUID.randomUUID().toString());
+                meta.getPersistentDataContainer().set(key("uses"), PersistentDataType.INTEGER, uses);
+            }
+        });
         return item;
     }
 

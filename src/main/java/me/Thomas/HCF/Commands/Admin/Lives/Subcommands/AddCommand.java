@@ -1,20 +1,19 @@
 package me.Thomas.HCF.Commands.Admin.Lives.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 public final class AddCommand implements Subcommand {
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     @Override public String getName() { return "add"; }
     @Override public List<String> getAliases() { return List.of(); }
 
@@ -25,7 +24,7 @@ public final class AddCommand implements Subcommand {
             return true;
         }
         if (args.length != 2) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.lives.add.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.lives.add.usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -52,7 +51,7 @@ public final class AddCommand implements Subcommand {
         }
         user.setLives((int) result);
         user.saveAsync();
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.lives.add.success"))
+        sender.sendMessage(C.chat(localeConfig.getString("commands.lives.add.success")
                 .replace("%player%", user.getName()).replace("%amount%", Integer.toString(amount))
                 .replace("%lives%", Integer.toString(user.getLives()))));
         return true;

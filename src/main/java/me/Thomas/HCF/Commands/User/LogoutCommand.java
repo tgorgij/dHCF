@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -7,17 +8,15 @@ import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class LogoutCommand implements TabExecutor {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias,
@@ -27,7 +26,7 @@ public class LogoutCommand implements TabExecutor {
             return true;
         }
         if (args.length != 0) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.logout.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.logout.usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -46,10 +45,10 @@ public class LogoutCommand implements TabExecutor {
 
     public static void start(Player player, long seconds) {
         User user = User.get(player);
-        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+        LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
         Timer timer = new Timer(Timer.Type.LOGOUT, System.currentTimeMillis() + seconds * 1000L, 0L, false);
         user.addTimer(Timer.Type.LOGOUT, timer);
-        player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.logout.started"))
+        player.sendMessage(C.chat(localeConfig.getString("commands.logout.started")
                 .replace("%time%", C.formatChatTime(seconds))));
 
         new BukkitRunnable() {

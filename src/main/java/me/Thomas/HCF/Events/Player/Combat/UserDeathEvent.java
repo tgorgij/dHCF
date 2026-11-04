@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Events.Player.Combat;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.IO.Database.CombatLoggerStateStore;
 import me.Thomas.HCF.IO.Database.CombatLoggerStateStore.State;
@@ -19,7 +20,6 @@ import io.papermc.paper.event.player.PlayerItemGroupCooldownEvent;
 import org.bukkit.Material;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -55,7 +55,7 @@ import java.util.logging.Level;
 
 public class UserDeathEvent implements Listener {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     private final Map<UUID, Set<NamespacedKey>> itemCooldownGroups = new HashMap<>();
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -213,6 +213,7 @@ public class UserDeathEvent implements Listener {
     private void recordDeathStatistics(EntityDeathEvent e, User victim) {
         victim.setPvpProtectionPending(true);
         victim.setDeaths(victim.getDeaths() + 1);
+        victim.setKillstreak(0);
         Conquest conquest = Conquest.get();
         if (conquest != null) conquest.onDeath(victim);
         Player killer = getKiller(e);
@@ -221,6 +222,7 @@ public class UserDeathEvent implements Listener {
         if (killer != null && !killer.getUniqueId().equals(victim.getUUID())) {
             User killerUser = User.get(killer);
             killerUser.setKills(killerUser.getKills() + 1);
+            killerUser.setKillstreak((int) Math.min(Integer.MAX_VALUE, (long) killerUser.getKillstreak() + 1));
             transferKillBalance(victim, killerUser);
             SaveSnapshot killerSnapshot = killerUser.snapshot();
             if (killerSnapshot != null) snapshots.add(killerSnapshot);

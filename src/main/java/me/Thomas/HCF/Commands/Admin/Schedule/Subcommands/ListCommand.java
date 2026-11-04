@@ -20,10 +20,11 @@ public class ListCommand implements Subcommand {
         EventScheduler scheduler = Main.getInstance().getEventScheduler();
         ScheduleCommand.send(sender, "header", "%timezone%", scheduler.getTimezone().getId());
         if (scheduler.getSchedules().isEmpty()) ScheduleCommand.send(sender, "empty");
+        int index = 1;
         for (EventScheduler.Schedule schedule : scheduler.getSchedules()) {
             KOTH koth = schedule.koth() == null ? null : KOTH.get(schedule.koth());
-            ScheduleCommand.send(sender, "entry", "%id%", Long.toString(schedule.id()), "%type%", schedule.type().name(),
-                    "%event%", koth == null ? schedule.type() == EventScheduler.Type.DTC ? "DTC" : "Conquest" : koth.getName(), "%time%", schedule.time().toString(),
+            ScheduleCommand.send(sender, "entry", "%id%", Integer.toString(index++), "%type%", schedule.type().name(),
+                    "%event%", koth == null ? schedule.type() == EventScheduler.Type.DTC ? "DTC" : "Conquest" : koth.getName(), "%time%", ScheduleCommand.formatTime(schedule.time()),
                     "%duration%", Integer.toString(schedule.seconds()));
         }
         return true;

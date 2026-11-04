@@ -1,11 +1,11 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -14,7 +14,7 @@ import org.jspecify.annotations.NonNull;
 import java.util.*;
 
 public final class ListCommand implements Subcommand {
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     @Override public String getName() { return "list"; }
     @Override public List<String> getAliases() { return List.of(); }
 
@@ -30,7 +30,7 @@ public final class ListCommand implements Subcommand {
             if (args.length == 1) page = Integer.parseInt(args[0]);
             if (page < 1) throw new NumberFormatException();
         } catch (NumberFormatException exception) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.list.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.list.usage").replace("%alias%", alias)));
             return true;
         }
         // Capture online counts once so sorting and the displayed values use the same snapshot.
@@ -44,7 +44,7 @@ public final class ListCommand implements Subcommand {
                 .toList();
         int pages = Math.max(1, (entries.size() + 9) / 10);
         if (page > pages) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.list.invalid-page"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.list.invalid-page")
                     .replace("%pages%", Integer.toString(pages))));
             return true;
         }
@@ -59,10 +59,10 @@ public final class ListCommand implements Subcommand {
             Entry entry = entries.get(index);
             Faction faction = entry.faction();
             boolean team = viewer != null && Objects.equals(viewer.getFaction(), faction.getUUID());
-            String color = Main.getInstance().getConfig().getString(team ? "factions.colors.team" : "factions.colors.enemy");
-            String line = Objects.requireNonNull(messages.getString("factions.list.entry"))
+            String color = Main.getInstance().getConfig().getString(team ? "factions.colors.team" : "factions.colors.enemy", team ? "GREEN" : "RED");
+            String line = messages.getString("factions.list.entry", "&e%number%. %color%%faction% &7(&a%online%/%max%&7)")
                     .replace("%number%", Integer.toString(firstNumber(page) + index - start))
-                    .replace("%color%", C.getColorCode(Objects.requireNonNull(color)))
+                    .replace("%color%", C.getColorCode(color))
                     .replace("%faction%", faction.getName())
                     .replace("%online%", Integer.toString(entry.online()))
                     .replace("%max%", Integer.toString(faction.getMembers().size()));

@@ -24,11 +24,13 @@ public class SwordStats {
         ItemStack sword = killer.getInventory().getItemInMainHand();
         if (!sword.getType().name().endsWith("_SWORD")) return;
         ItemMeta meta = sword.getItemMeta();
+        if (meta == null) return;
         PersistentDataContainer data = meta.getPersistentDataContainer();
         int previous = Math.max(0, data.getOrDefault(key("kills"), PersistentDataType.INTEGER, 0));
         int kills = previous == Integer.MAX_VALUE ? previous : previous + 1;
         GsonComponentSerializer serializer = GsonComponentSerializer.gson();
-        List<Component> lore = new ArrayList<>(meta.hasLore() ? meta.lore() : List.of());
+        List<Component> existingLore = meta.lore();
+        List<Component> lore = new ArrayList<>(existingLore == null ? List.of() : existingLore);
         List<String> old = data.getOrDefault(key("lore"), PersistentDataType.LIST.strings(), List.of());
         List<String> serializedLore = lore.stream().map(serializer::serialize).toList();
         int start = old.isEmpty() ? -1 : Collections.indexOfSubList(serializedLore, old);

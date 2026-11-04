@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.Admin.SOTW.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -7,16 +8,14 @@ import me.Thomas.HCF.Utils.Permission.Permission;
 import me.Thomas.HCF.Utils.Timer.ServerTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class PauseCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -31,11 +30,11 @@ public class PauseCommand implements Subcommand {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String @NonNull [] args, @NotNull String alias) {
         if (!Permission.has(sender, "command.sotw.pause", "admin")) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.no-permission"))));
+            sender.sendMessage(C.chat(localeConfig.getString("primary.no-permission")));
             return true;
         }
         if (args.length != 0) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.sotw.pause.usage"))));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.sotw.pause.usage")));
             return true;
         }
         ServerTimer timer = Main.getInstance().getServerTimer(ServerTimer.Type.SOTW);
@@ -45,7 +44,7 @@ public class PauseCommand implements Subcommand {
         }
         Main.getInstance().pauseServerTimer(ServerTimer.Type.SOTW);
         String state = timer.isPaused() ? "paused" : "resumed";
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.sotw.pause." + state))));
+        sender.sendMessage(C.chat(localeConfig.getString("commands.sotw.pause." + state)));
         for (CommandSender player : Bukkit.getOnlinePlayers()) {
             Main.getInstance().sendMessage(player, "timers.sotw." + state);
         }

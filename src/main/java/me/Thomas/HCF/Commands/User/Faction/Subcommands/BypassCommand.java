@@ -1,22 +1,21 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class BypassCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -39,12 +38,12 @@ public class BypassCommand implements Subcommand {
             return true;
         }
         if (args.length != 0) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.bypass.usage")).replace("%alias%", alias)));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.bypass.usage").replace("%alias%", alias)));
             return true;
         }
         User user = User.get(p);
         user.setBypass(!user.isBypass());
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.bypass.toggle")).replace("%status%", Objects.requireNonNull(user.isBypass() ? localeConfig.getString("primary.status.enabled") : localeConfig.getString("primary.status.disabled")))));
+        p.sendMessage(C.chat(localeConfig.getString("commands.faction.bypass.toggle").replace("%status%", (user.isBypass() ? localeConfig.getString("primary.status.enabled") : localeConfig.getString("primary.status.disabled")))));
         return false;
     }
 }

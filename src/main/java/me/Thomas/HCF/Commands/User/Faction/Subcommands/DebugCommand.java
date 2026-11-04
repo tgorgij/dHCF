@@ -1,20 +1,19 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class DebugCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -35,13 +34,13 @@ public class DebugCommand implements Subcommand {
         }
 
         if (args.length != 0) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.debug.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.debug.usage").replace("%alias%", alias)));
             return true;
         }
 
         boolean debug = Main.getInstance().isFactionDebug();
         Main.getInstance().setFactionDebug(!debug);
-        sender.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("commands.faction.debug.toggle")).replace("%status%", Objects.requireNonNull(!debug ? localeConfig.getString("primary.status.enabled") : localeConfig.getString("primary.status.disabled")))));
+        sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.debug.toggle").replace("%status%", (!debug ? localeConfig.getString("primary.status.enabled") : localeConfig.getString("primary.status.disabled")))));
         return true;
     }
 }

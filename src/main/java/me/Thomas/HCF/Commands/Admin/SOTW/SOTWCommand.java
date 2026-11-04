@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.Admin.SOTW;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Admin.SOTW.Subcommands.*;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.Main.Main;
@@ -20,7 +21,7 @@ public class SOTWCommand implements TabExecutor {
             new HashMap<>();
 
     private final FileConfiguration messagesConfig = Main.getInstance().getMessagesConfig();
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     public SOTWCommand() {
         register(new AddCommand());
@@ -68,7 +69,7 @@ public class SOTWCommand implements TabExecutor {
 
     private void sendHelp(CommandSender sender) {
         if (!Permission.has(sender, "command.sotw", "admin")) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.sotw.alt-usage"))));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.sotw.alt-usage")));
             return;
         }
         for (String s : messagesConfig.getStringList("help.sotw")) {

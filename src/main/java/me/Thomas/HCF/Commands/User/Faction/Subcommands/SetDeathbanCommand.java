@@ -1,12 +1,12 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
@@ -16,7 +16,7 @@ import java.util.Objects;
 
 public class SetDeathbanCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -35,7 +35,7 @@ public class SetDeathbanCommand implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.setdeathban.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.setdeathban.usage").replace("%alias%", alias)));
             return true;
         }
         Faction faction = Faction.get(args[0]);
@@ -48,7 +48,7 @@ public class SetDeathbanCommand implements Subcommand {
             return true;
         }
         faction.setDeathban(!faction.isDeathban());
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.setdeathban.success")).replace("%status%", Objects.requireNonNull(faction.isDeathban() ? localeConfig.getString("primary.status.enabled") : localeConfig.getString("primary.status.disabled"))).replace("%faction%", faction.getName())));
+        sender.sendMessage(C.chat(localeConfig.getString("commands.faction.setdeathban.success").replace("%status%", (faction.isDeathban() ? localeConfig.getString("primary.status.enabled") : localeConfig.getString("primary.status.disabled"))).replace("%faction%", faction.getName())));
         return true;
     }
 

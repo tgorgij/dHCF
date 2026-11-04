@@ -1,23 +1,22 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 public class DepositCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -42,7 +41,7 @@ public class DepositCommand implements Subcommand {
         }
         Faction faction = Faction.get(user.getFaction());
         if (args.length != 1) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.deposit.usage")).replace("%alias%", alias)));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.deposit.usage").replace("%alias%", alias)));
             return true;
         }
         double amount;
@@ -69,11 +68,11 @@ public class DepositCommand implements Subcommand {
         user.setBalance(user.getBalance() - amount);
         faction.setBalance(faction.getBalance() + amount);
         Main.getInstance().saveTogether(user, faction);
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.deposit.success")).replace("%amount%", C.getFormattedMoney(amount))));
+        p.sendMessage(C.chat(localeConfig.getString("commands.faction.deposit.success").replace("%amount%", C.getFormattedMoney(amount))));
         for (UUID uuid : faction.getOnlineMembers().keySet()) {
             Player player = Main.getInstance().getServer().getPlayer(uuid);
             if (player == null) continue;
-            player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.deposit.broadcast")).replace("%player%", p.getName()).replace("%amount%", C.getFormattedMoney(amount))));
+            player.sendMessage(C.chat(localeConfig.getString("commands.faction.deposit.broadcast").replace("%player%", p.getName()).replace("%amount%", C.getFormattedMoney(amount))));
         }
         return true;
     }

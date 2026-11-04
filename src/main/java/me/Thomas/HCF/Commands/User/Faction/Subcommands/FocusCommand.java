@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -8,7 +9,6 @@ import me.Thomas.HCF.Utils.Chat.C;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -25,7 +25,7 @@ public final class FocusCommand implements Subcommand {
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String @NonNull [] args, @NotNull String alias) {
-        FileConfiguration locale = Main.getInstance().getLocaleConfig();
+        LocaleConfig locale = Main.getInstance().getLocaleConfig();
         if (!(sender instanceof Player player)) {
             sender.sendMessage(C.chat(locale.getString("primary.not-player")));
             return true;
@@ -37,7 +37,7 @@ public final class FocusCommand implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(locale.getString("commands.faction.focus.usage"))
+            sender.sendMessage(C.chat(locale.getString("commands.faction.focus.usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -62,7 +62,7 @@ public final class FocusCommand implements Subcommand {
             broadcast(own, player, locale.getString("commands.faction.focus.cleared"));
         } else {
             Main.getInstance().setFocus(own.getUUID(), focus);
-            broadcast(own, player, Objects.requireNonNull(locale.getString("commands.faction.focus.success"))
+            broadcast(own, player, locale.getString("commands.faction.focus.success")
                     .replace("%target%", faction != null ? faction.getName() : target.getName()));
         }
         return true;

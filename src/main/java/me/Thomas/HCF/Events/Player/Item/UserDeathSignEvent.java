@@ -57,9 +57,9 @@ public class UserDeathSignEvent implements Listener {
         }
         for (int i = 0; i < lines.length; i++) placeholders.put("%line" + (i + 1) + "%", lines[i]);
         ItemStack item = Items.create("death-sign", Material.OAK_SIGN, placeholders);
-        ItemMeta meta = item.getItemMeta();
-        for (int i = 0; i < lines.length; i++) meta.getPersistentDataContainer().set(lineKey(i), PersistentDataType.STRING, lines[i]);
-        item.setItemMeta(meta);
+        item.editMeta(meta -> {
+            for (int i = 0; i < lines.length; i++) meta.getPersistentDataContainer().set(lineKey(i), PersistentDataType.STRING, lines[i]);
+        });
         return item;
     }
 
@@ -69,6 +69,7 @@ public class UserDeathSignEvent implements Listener {
         ItemStack item = e.getItemInHand();
         if (!item.hasItemMeta()) return;
         ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
         String[] lines = new String[4];
         for (int i = 0; i < lines.length; i++) {
             lines[i] = meta.getPersistentDataContainer().get(lineKey(i), PersistentDataType.STRING);

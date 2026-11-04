@@ -266,11 +266,15 @@ timers: # seconds
   enderpearl: 15
 
 factions:
+  allies:
+    max: 1
+    damage-multiplier: 0.5
   points:
     kill: 5
     death: 5
     raidable: 15
     koth: 50
+    conquest: 250
     dtc: 50
   border:
     material: RED_STAINED_GLASS

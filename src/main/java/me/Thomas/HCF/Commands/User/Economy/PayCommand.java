@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Economy;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -7,18 +8,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 public class PayCommand implements TabExecutor {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias,
@@ -28,7 +27,7 @@ public class PayCommand implements TabExecutor {
             return true;
         }
         if (args.length != 2) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.pay.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.pay.usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -55,7 +54,7 @@ public class PayCommand implements TabExecutor {
             return true;
         }
         if (amount.compareTo(BigDecimal.valueOf(minimum)) < 0) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.pay.minimum"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.pay.minimum")
                     .replace("%minimum%", C.getFormattedMoney(minimum))));
             return true;
         }
@@ -85,11 +84,11 @@ public class PayCommand implements TabExecutor {
         target.setBalance(newTargetBalance);
         Main.getInstance().getDatabaseManager().save(List.of(user.snapshot(), target.snapshot()));
         String formattedAmount = C.getFormattedMoney(amount.doubleValue());
-        player.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.pay.success"))
+        player.sendMessage(C.chat(localeConfig.getString("commands.pay.success")
                 .replace("%player%", target.getName()).replace("%amount%", formattedAmount)));
         Player recipient = Bukkit.getPlayer(target.getUUID());
         if (recipient != null) {
-            recipient.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.pay.received"))
+            recipient.sendMessage(C.chat(localeConfig.getString("commands.pay.received")
                     .replace("%player%", player.getName()).replace("%amount%", formattedAmount)));
         }
         return true;

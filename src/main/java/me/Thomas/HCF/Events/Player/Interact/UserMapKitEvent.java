@@ -18,7 +18,6 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -51,25 +50,25 @@ public class UserMapKitEvent implements Listener {
         String path = "mapkit." + key;
         Material material = Material.matchMaterial(Main.getInstance().getGuiConfig().getString(path + ".material", fallback.name()));
         ItemStack item = new ItemStack(material == null || material.isAir() || !material.isItem() ? fallback : material);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(C.chat(Main.getInstance().getGuiConfig().getString(path + ".name", " ")).decoration(TextDecoration.ITALIC, false));
-        List<Component> lore = new ArrayList<>();
-        for (String line : Main.getInstance().getGuiConfig().getStringList(path + ".lore")) {
-            lore.add(C.chat(line).decoration(TextDecoration.ITALIC, false));
-        }
-        if (enchantments) {
-            for (Enchantment enchantment : RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT)) {
-                int configured = Main.getInstance().getConfig().getInt("enchantments." + enchantment.getKey().getKey(), -1);
-                int limit = configured < 0 ? enchantment.getMaxLevel() : configured;
-                if (limit == 0 || !enchantment.canEnchantItem(item)) continue;
-                Component line = C.chat(Main.getInstance().getGuiConfig().getString("mapkit.enchantment", "&e%enchantment% &7%level%")
-                        .replace("%level%", Integer.toString(limit)))
-                        .replaceText(builder -> builder.matchLiteral("%enchantment%").replacement(enchantment.description()));
-                lore.add(line.decoration(TextDecoration.ITALIC, false));
+        item.editMeta(meta -> {
+            meta.displayName(C.chat(Main.getInstance().getGuiConfig().getString(path + ".name", " ")).decoration(TextDecoration.ITALIC, false));
+            List<Component> lore = new ArrayList<>();
+            for (String line : Main.getInstance().getGuiConfig().getStringList(path + ".lore")) {
+                lore.add(C.chat(line).decoration(TextDecoration.ITALIC, false));
             }
-        }
-        meta.lore(lore);
-        item.setItemMeta(meta);
+            if (enchantments) {
+                for (Enchantment enchantment : RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT)) {
+                    int configured = Main.getInstance().getConfig().getInt("enchantments." + enchantment.getKey().getKey(), -1);
+                    int limit = configured < 0 ? enchantment.getMaxLevel() : configured;
+                    if (limit == 0 || !enchantment.canEnchantItem(item)) continue;
+                    Component line = C.chat(Main.getInstance().getGuiConfig().getString("mapkit.enchantment", "&e%enchantment% &7%level%")
+                            .replace("%level%", Integer.toString(limit)))
+                            .replaceText(builder -> builder.matchLiteral("%enchantment%").replacement(enchantment.description()));
+                    lore.add(line.decoration(TextDecoration.ITALIC, false));
+                }
+            }
+            meta.lore(lore);
+        });
         return item;
     }
 

@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -7,18 +8,16 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Timer.Timer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class HomeCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     private final boolean disabledInEnd = Main.getInstance().getConfig().getBoolean("factions.home.disable-in-end");
 
     @Override
@@ -38,7 +37,7 @@ public class HomeCommand implements Subcommand {
             return true;
         }
         if (args.length != 0) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.home.usage")).replace("%alias%", alias)));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.home.usage").replace("%alias%", alias)));
             return true;
         }
         User user = User.get(p);
@@ -72,10 +71,10 @@ public class HomeCommand implements Subcommand {
 
     public static void start(Player p, long seconds) {
         User user = User.get(p);
-        FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+        LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
         Timer timer = new Timer(Timer.Type.HOME, System.currentTimeMillis() + seconds * 1000L, 0L, false);
         user.addTimer(Timer.Type.HOME, timer);
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.home.success"))
+        p.sendMessage(C.chat(localeConfig.getString("commands.faction.home.success")
                 .replace("%time%", C.formatChatTime(seconds))));
 
         new BukkitRunnable() {
@@ -87,7 +86,7 @@ public class HomeCommand implements Subcommand {
                 Faction currentFaction = Faction.get(user.getFaction());
                 if (currentFaction == null || currentFaction.getHome() == null) return;
                 p.teleportAsync(currentFaction.getHome());
-                p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.teleport.hq"))
+                p.sendMessage(C.chat(localeConfig.getString("primary.teleport.hq")
                         .replace("%faction%", currentFaction.getName())));
             }
         }.runTaskLater(Main.getInstance(), seconds * 20L);

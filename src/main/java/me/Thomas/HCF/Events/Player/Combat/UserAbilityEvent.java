@@ -148,18 +148,22 @@ public class UserAbilityEvent implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBowShot(EntityShootBowEvent e) {
+        ItemStack bow = e.getBow();
         if (!(e.getEntity() instanceof Player p) || !(e.getProjectile() instanceof AbstractArrow arrow)
-                || AbilityItems.getType(e.getBow()) != Type.ARCHER) return;
+                || bow == null || AbilityItems.getType(bow) != Type.ARCHER) return;
+        ItemMeta meta = bow.getItemMeta();
+        if (meta == null) return;
         if (!available(p) || !AbilityItems.ready(p, Type.ARCHER, true) || e.getForce() < 1.0F) return;
-        String identity = e.getBow().getItemMeta().getPersistentDataContainer().get(AbilityItems.key("identity"), PersistentDataType.STRING);
+        String identity = meta.getPersistentDataContainer().get(AbilityItems.key("identity"), PersistentDataType.STRING);
         if (identity != null) arrow.getPersistentDataContainer().set(AbilityItems.key("bow"), PersistentDataType.STRING, identity);
     }
 
     private boolean chargeBow(Player p, String identity) {
         for (int slot = 0; slot < p.getInventory().getSize(); slot++) {
             ItemStack bow = p.getInventory().getItem(slot);
-            if (AbilityItems.getType(bow) != Type.ARCHER) continue;
+            if (bow == null || AbilityItems.getType(bow) != Type.ARCHER) continue;
             ItemMeta meta = bow.getItemMeta();
+            if (meta == null) continue;
             if (!identity.equals(meta.getPersistentDataContainer().get(AbilityItems.key("identity"), PersistentDataType.STRING))) continue;
             int uses = meta.getPersistentDataContainer().getOrDefault(AbilityItems.key("uses"), PersistentDataType.INTEGER, 0);
             if (uses <= 0) return false;

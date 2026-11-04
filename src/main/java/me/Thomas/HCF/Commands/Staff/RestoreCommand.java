@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.Staff;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
@@ -8,19 +9,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.logging.Level;
 
 public class RestoreCommand implements TabExecutor {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
@@ -30,13 +29,13 @@ public class RestoreCommand implements TabExecutor {
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.restore.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.restore.usage")
                     .replace("%alias%", alias)));
             return true;
         }
         Player p = Bukkit.getPlayerExact(args[0]);
         if (p == null || !p.isOnline()) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.restore.offline"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.restore.offline")
                     .replace("%player%", args[0])));
             return true;
         }
@@ -45,7 +44,7 @@ public class RestoreCommand implements TabExecutor {
             return true;
         }
         if (p.isDead()) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.restore.dead"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.restore.dead")
                     .replace("%player%", p.getName())));
             return true;
         }
@@ -53,7 +52,7 @@ public class RestoreCommand implements TabExecutor {
         byte[] inventory = user.getLastInventory();
         Integer experience = user.getLastExperience();
         if (inventory == null || experience == null) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.restore.no-inventory"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.restore.no-inventory")
                     .replace("%player%", p.getName())));
             return true;
         }
@@ -89,7 +88,7 @@ public class RestoreCommand implements TabExecutor {
             sender.sendMessage(C.chat(localeConfig.getString("commands.restore.failed")));
             return true;
         }
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.restore.success"))
+        sender.sendMessage(C.chat(localeConfig.getString("commands.restore.success")
                 .replace("%player%", p.getName())));
         return true;
     }

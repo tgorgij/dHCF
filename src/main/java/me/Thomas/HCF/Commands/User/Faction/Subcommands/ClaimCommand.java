@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Claims.Claiming;
 import me.Thomas.HCF.IO.Faction.Faction;
@@ -7,7 +8,6 @@ import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -15,11 +15,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class ClaimCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -38,7 +37,7 @@ public class ClaimCommand implements Subcommand {
             return true;
         }
         if (args.length != 0) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.claim.usage")).replace("%alias%", alias)));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.claim.usage").replace("%alias%", alias)));
             return true;
         }
         User user = User.get(p);
@@ -75,7 +74,7 @@ public class ClaimCommand implements Subcommand {
         inventory.setItem(0, Faction.getClaimWand());
         user.setClaiming(new Claiming(faction.getUUID(), false));
         Claiming.showNearbyClaims(p);
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.claim.success"))));
+        p.sendMessage(C.chat(localeConfig.getString("commands.faction.claim.success")));
         return true;
     }
 }

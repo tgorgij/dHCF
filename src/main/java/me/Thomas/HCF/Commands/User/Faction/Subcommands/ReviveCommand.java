@@ -1,12 +1,12 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -16,7 +16,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public final class ReviveCommand implements Subcommand {
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
     @Override public String getName() { return "revive"; }
     @Override public List<String> getAliases() { return List.of(); }
 
@@ -37,7 +37,7 @@ public final class ReviveCommand implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.revive.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.revive.usage")
                     .replace("%alias%", alias)));
             return true;
         }
@@ -51,7 +51,7 @@ public final class ReviveCommand implements Subcommand {
             return true;
         }
         if (target.getDeathbanExpiry() <= System.currentTimeMillis()) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.revive.not-deathbanned"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.revive.not-deathbanned")
                     .replace("%player%", target.getName())));
             return true;
         }
@@ -62,7 +62,7 @@ public final class ReviveCommand implements Subcommand {
         faction.setLives(faction.getLives() - 1);
         target.setDeathbanExpiry(0L);
         Main.getInstance().saveTogether(target, faction);
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.revive.success"))
+        sender.sendMessage(C.chat(localeConfig.getString("commands.faction.revive.success")
                 .replace("%player%", target.getName())));
         return true;
     }

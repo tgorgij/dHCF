@@ -18,7 +18,6 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -53,6 +52,8 @@ public class UserStatsEvent implements Listener {
         Map<String, String> values = new HashMap<>();
         values.put("%player%", target.getName());
         values.put("%kills%", Integer.toString(target.getKills()));
+        values.put("%killstreak%", Integer.toString(target.getKillstreak()));
+        values.put("%highest-killstreak%", Integer.toString(target.getHighestKillstreak()));
         values.put("%deaths%", Integer.toString(target.getDeaths()));
         long total = 0L;
         for (Map.Entry<String, List<Material>> ore : ORES.entrySet()) {
@@ -82,14 +83,14 @@ public class UserStatsEvent implements Listener {
         String path = "stats.items." + key;
         Material material = Material.matchMaterial(Main.getInstance().getGuiConfig().getString(path + ".material", fallback.name()));
         ItemStack item = new ItemStack(material == null || material.isAir() || !material.isItem() ? fallback : material);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(C.chat(format(Main.getInstance().getGuiConfig().getString(path + ".name", key), values)).decoration(TextDecoration.ITALIC, false));
-        List<Component> lore = new ArrayList<>();
-        for (String line : Main.getInstance().getGuiConfig().getStringList(path + ".lore")) {
-            lore.add(C.chat(format(line, values)).decoration(TextDecoration.ITALIC, false));
-        }
-        meta.lore(lore);
-        item.setItemMeta(meta);
+        item.editMeta(meta -> {
+            meta.displayName(C.chat(format(Main.getInstance().getGuiConfig().getString(path + ".name", key), values)).decoration(TextDecoration.ITALIC, false));
+            List<Component> lore = new ArrayList<>();
+            for (String line : Main.getInstance().getGuiConfig().getStringList(path + ".lore")) {
+                lore.add(C.chat(format(line, values)).decoration(TextDecoration.ITALIC, false));
+            }
+            meta.lore(lore);
+        });
         return item;
     }
 

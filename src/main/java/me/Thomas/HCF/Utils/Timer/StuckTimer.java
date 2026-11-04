@@ -13,7 +13,6 @@ import org.bukkit.block.Block;
 import org.bukkit.util.BoundingBox;
 
 import java.util.ArrayDeque;
-import java.util.Objects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator;
@@ -261,8 +260,8 @@ public final class StuckTimer extends Timer {
         if (isActive()) {
             User.get(player).removeTimer(Type.STUCK);
             boolean teleported = destination != null && player.teleport(destination);
-            player.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString(
-                    "commands.faction.stuck." + (teleported ? "completed" : "no-safe-location")))));
+            player.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString(
+                    "commands.faction.stuck." + (teleported ? "completed" : "no-safe-location"))));
         }
         return true;
     }

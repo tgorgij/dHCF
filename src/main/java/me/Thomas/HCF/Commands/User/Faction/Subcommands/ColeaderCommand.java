@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -7,7 +8,6 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -17,7 +17,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public final class ColeaderCommand implements Subcommand {
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -72,8 +72,8 @@ public final class ColeaderCommand implements Subcommand {
                     .filter(entry -> entry.getValue() == Faction.MemberType.COLEADER.getValue())
                     .map(entry -> User.get(entry.getKey())).filter(Objects::nonNull)
                     .map(User::getName).sorted(String.CASE_INSENSITIVE_ORDER).toList();
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString(path + ".list"))
-                    .replace("%players%", names.isEmpty() ? Objects.requireNonNull(localeConfig.getString("primary.none"))
+            sender.sendMessage(C.chat(localeConfig.getString(path + ".list")
+                    .replace("%players%", names.isEmpty() ? localeConfig.getString("primary.none")
                             : String.join(", ", names))));
             return true;
         }
@@ -98,11 +98,11 @@ public final class ColeaderCommand implements Subcommand {
             return true;
         }
         faction.saveAsync();
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString(path + "." + action + ".success"))
+        sender.sendMessage(C.chat(localeConfig.getString(path + "." + action + ".success")
                 .replace("%player%", target.getName())));
         Player targetPlayer = Bukkit.getPlayer(target.getUUID());
         if (targetPlayer != null) {
-            targetPlayer.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString(path + "." + action + ".target"))
+            targetPlayer.sendMessage(C.chat(localeConfig.getString(path + "." + action + ".target")
                     .replace("%player%", player.getName())));
         }
         return true;

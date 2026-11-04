@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -9,7 +10,6 @@ import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -28,7 +28,7 @@ public class ShowCommand implements Subcommand {
         return List.of("who");
     }
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String @NonNull [] args, @NotNull String alias) {
@@ -44,12 +44,12 @@ public class ShowCommand implements Subcommand {
             }
             showPlayerFaction(p, Faction.get(user.getFaction()));
             if (Main.getInstance().isFactionDebug()) {
-                p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", Faction.get(user.getFaction()).getType().name().toLowerCase(Locale.ROOT))));
+                p.sendMessage(C.chat(localeConfig.getString("faction.debug.type").replace("%type%", Faction.get(user.getFaction()).getType().name().toLowerCase(Locale.ROOT))));
             }
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.show.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.show.usage").replace("%alias%", alias)));
             return true;
         }
         String name = args[0];
@@ -58,20 +58,20 @@ public class ShowCommand implements Subcommand {
             if (!faction.getType().equals(Faction.Type.PLAYER)) {
                 showSystemFaction(sender, faction);
                 if (Main.getInstance().isFactionDebug()) {
-                    sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", faction.getType().name().toLowerCase(Locale.ROOT))));
+                    sender.sendMessage(C.chat(localeConfig.getString("faction.debug.type").replace("%type%", faction.getType().name().toLowerCase(Locale.ROOT))));
                 }
                 return true;
             }
             if (!(sender instanceof Player p)) {
                 showPlayerFactionAsConsole(sender, faction);
                 if (Main.getInstance().isFactionDebug()) {
-                    sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", faction.getType().name().toLowerCase(Locale.ROOT))));
+                    sender.sendMessage(C.chat(localeConfig.getString("faction.debug.type").replace("%type%", faction.getType().name().toLowerCase(Locale.ROOT))));
                 }
                 return true;
             }
             showPlayerFaction(p, faction);
             if (Main.getInstance().isFactionDebug()) {
-                p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", faction.getType().name().toLowerCase(Locale.ROOT))));
+                p.sendMessage(C.chat(localeConfig.getString("faction.debug.type").replace("%type%", faction.getType().name().toLowerCase(Locale.ROOT))));
             }
             return true;
         }
@@ -81,19 +81,19 @@ public class ShowCommand implements Subcommand {
             return true;
         }
         if (!user.hasFaction()) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.show.no-faction")).replace("%player%", user.getName())));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.show.no-faction").replace("%player%", user.getName())));
             return true;
         }
         if (!(sender instanceof Player p)) {
             showPlayerFactionAsConsole(sender, Faction.get(user.getFaction()));
             if (Main.getInstance().isFactionDebug()) {
-                sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", Faction.get(user.getFaction()).getType().name().toLowerCase(Locale.ROOT))));
+                sender.sendMessage(C.chat(localeConfig.getString("faction.debug.type").replace("%type%", Faction.get(user.getFaction()).getType().name().toLowerCase(Locale.ROOT))));
             }
             return true;
         }
         showPlayerFaction(p, Faction.get(user.getFaction()));
         if (Main.getInstance().isFactionDebug()) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("faction.debug.type")).replace("%type%", Faction.get(user.getFaction()).getType().name().toLowerCase(Locale.ROOT))));
+            p.sendMessage(C.chat(localeConfig.getString("faction.debug.type").replace("%type%", Faction.get(user.getFaction()).getType().name().toLowerCase(Locale.ROOT))));
         }
         return true;
     }
@@ -121,9 +121,9 @@ public class ShowCommand implements Subcommand {
             if (s.contains("%hq%")) {
                 Location home = faction.getHome();
                 if (home != null) {
-                    s = s.replace("%hq%", Objects.requireNonNull(Main.getInstance().getConfig().getString("settings.location-format")).replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
+                    s = s.replace("%hq%", Main.getInstance().getConfig().getString("settings.location-format", "X: %x%, Z: %z%").replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
                 } else {
-                    s = s.replace("%hq%", Objects.requireNonNull(localeConfig.getString("primary.none")));
+                    s = s.replace("%hq%", localeConfig.getString("primary.none"));
                 }
             }
             sender.sendMessage(C.chat(s));
@@ -133,12 +133,15 @@ public class ShowCommand implements Subcommand {
     private void showPlayerFaction(Player p, Faction faction) {
         User user = User.get(p);
         for (String s : Main.getInstance().getMessagesConfig().getStringList("factions.show.player")) {
+            if (s.contains("%allies%")) {
+                if (faction.getAllies().isEmpty()) continue;
+                String color = C.getColorCode(Main.getInstance().getConfig().getString("factions.colors.ally", "BLUE"));
+                String allies = faction.getAllies().stream().map(Faction::get).map(Faction::getName)
+                        .sorted(String.CASE_INSENSITIVE_ORDER).map(name -> color + name).collect(java.util.stream.Collectors.joining("&e, "));
+                s = s.replace("%allies%", allies);
+            }
             if (s.contains("%faction%")) {
-                String color = Main.getInstance().getConfig().getString("factions.colors.enemy");
-                if (user.hasFaction() && user.getFaction().equals(faction.getUUID())) {
-                    color = Main.getInstance().getConfig().getString("factions.colors.team");
-                }
-                s = s.replace("%faction%", C.getColorCode(Objects.requireNonNull(color)) + faction.getName());
+                s = s.replace("%faction%", faction.getFormattedName(user));
             }
             if (s.contains("%online-members%")) {
                 s = s.replace("%online-members%", faction.getOnlineMembers().size() + "");
@@ -149,9 +152,9 @@ public class ShowCommand implements Subcommand {
             if (s.contains("%hq%")) {
                 Location home = faction.getHome();
                 if (home != null) {
-                    s = s.replace("%hq%", Objects.requireNonNull(Main.getInstance().getConfig().getString("settings.location-format")).replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
+                    s = s.replace("%hq%", Main.getInstance().getConfig().getString("settings.location-format", "X: %x%, Z: %z%").replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
                 } else {
-                    s = s.replace("%hq%", Objects.requireNonNull(localeConfig.getString("primary.none")));
+                    s = s.replace("%hq%", localeConfig.getString("primary.none"));
                 }
             }
             if (s.contains("%leader%")) {
@@ -216,7 +219,7 @@ public class ShowCommand implements Subcommand {
 
             if (s.contains("%open%")) {
                 if (!faction.isOpen()) continue;
-                s = s.replace("%open%", Objects.requireNonNull(localeConfig.getString("primary.status.open")));
+                s = s.replace("%open%", localeConfig.getString("primary.status.open"));
             }
 
             if (s.contains("%lives%")) {
@@ -233,7 +236,7 @@ public class ShowCommand implements Subcommand {
 
             if (s.contains("%announcement%")) {
                 if (!Objects.equals(user.getFaction(), faction.getUUID()) && !Permission.has(p, "staff")) continue;
-                s = s.replace("%announcement%", faction.getAnnouncement() == null ? Objects.requireNonNull(localeConfig.getString("primary.none")) : faction.getAnnouncement());
+                s = s.replace("%announcement%", faction.getAnnouncement() == null ? localeConfig.getString("primary.none") : faction.getAnnouncement());
             }
             p.sendMessage(C.chat(s));
         }
@@ -243,23 +246,30 @@ public class ShowCommand implements Subcommand {
         User user = User.get(uuid);
 
         Player onlineLeader = Bukkit.getPlayer(uuid);
-        String color = Main.getInstance().getConfig().getString("settings.colors.offline");
+        String color = Main.getInstance().getConfig().getString("settings.colors.offline", "GRAY");
 
         if (onlineLeader != null) {
-            color = Main.getInstance().getConfig().getString("settings.colors.online");
+            color = Main.getInstance().getConfig().getString("settings.colors.online", "GREEN");
         } else if (Main.getInstance().isFeatureEnabled("deathbans") && user.getDeathbanExpiry() != 0) {
-            color = Main.getInstance().getConfig().getString("settings.colors.deathban");
+            color = Main.getInstance().getConfig().getString("settings.colors.deathban", "RED");
         }
 
-        String name = C.getColorCode(Objects.requireNonNull(color)) + user.getName();
-        return Objects.requireNonNull(Main.getInstance().getConfig().getString("factions.player-format")).replace("%player%", name).replace("%kills%", user.getKills() + "");
+        String name = C.getColorCode(color) + user.getName();
+        return Main.getInstance().getConfig().getString("factions.player-format", "&9%player%&7[&c%kills%&7]").replace("%player%", name).replace("%kills%", user.getKills() + "");
     }
 
     private void showPlayerFactionAsConsole(CommandSender sender, Faction faction) {
         for (String s : Main.getInstance().getMessagesConfig().getStringList("factions.show.player")) {
+            if (s.contains("%allies%")) {
+                if (faction.getAllies().isEmpty()) continue;
+                String color = C.getColorCode(Main.getInstance().getConfig().getString("factions.colors.ally", "BLUE"));
+                String allies = faction.getAllies().stream().map(Faction::get).map(Faction::getName)
+                        .sorted(String.CASE_INSENSITIVE_ORDER).map(name -> color + name).collect(java.util.stream.Collectors.joining("&e, "));
+                s = s.replace("%allies%", allies);
+            }
             if (s.contains("%faction%")) {
                 String color = Main.getInstance().getConfig().getString("factions.colors.enemy");
-                s = s.replace("%faction%", C.getColorCode(Objects.requireNonNull(color)) + faction.getName());
+                s = s.replace("%faction%", C.getColorCode(color) + faction.getName());
             }
             if (s.contains("%online-members%")) {
                 s = s.replace("%online-members%", faction.getOnlineMembers().size() + "");
@@ -270,9 +280,9 @@ public class ShowCommand implements Subcommand {
             if (s.contains("%hq%")) {
                 Location home = faction.getHome();
                 if (home != null) {
-                    s = s.replace("%hq%", Objects.requireNonNull(Main.getInstance().getConfig().getString("settings.location-format")).replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
+                    s = s.replace("%hq%", Main.getInstance().getConfig().getString("settings.location-format", "X: %x%, Z: %z%").replace("%x%", home.getBlockX() + "").replace("%z%", home.getBlockZ() + ""));
                 } else {
-                    s = s.replace("%hq%", Objects.requireNonNull(localeConfig.getString("primary.none")));
+                    s = s.replace("%hq%", localeConfig.getString("primary.none"));
                 }
             }
             if (s.contains("%leader%")) {
@@ -337,7 +347,7 @@ public class ShowCommand implements Subcommand {
 
             if (s.contains("%open%")) {
                 if (!faction.isOpen()) continue;
-                s = s.replace("%open%", Objects.requireNonNull(localeConfig.getString("primary.status.open")));
+                s = s.replace("%open%", localeConfig.getString("primary.status.open"));
             }
 
             if (s.contains("%lives%")) {
@@ -354,7 +364,7 @@ public class ShowCommand implements Subcommand {
 
             if (s.contains("%announcement%")) {
                 if (!Permission.has(sender, "staff")) continue;
-                s = s.replace("%announcement%", faction.getAnnouncement() == null ? Objects.requireNonNull(localeConfig.getString("primary.none")) : faction.getAnnouncement());
+                s = s.replace("%announcement%", faction.getAnnouncement() == null ? localeConfig.getString("primary.none") : faction.getAnnouncement());
             }
             sender.sendMessage(C.chat(s));
         }

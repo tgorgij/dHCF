@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -126,9 +125,7 @@ public class Claiming {
                 continue;
             }
 
-            player.sendMessage(C.chat(Objects.requireNonNull(
-                    Main.getInstance().getLocaleConfig().getString("commands.faction.map.format")
-            ).replace("%faction%", faction.getFormattedName(user))
+            player.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.map.format").replace("%faction%", faction.getFormattedName(user))
                     .replace("%material%", entry.getValue().name())));
         }
 

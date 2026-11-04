@@ -72,9 +72,12 @@
 - hcf.command.freeze
 - hcf.command.invsee
 - hcf.command.tphere
+- hcf.command.tp
+- hcf.command.world
 - hcf.command.invsee.modify
 - hcf.command.vanish
 - hcf.command.socialspy
+- hcf.command.staffchat
 - hcf.freeze.bypass
 - hcf.vanish.see
 - worldedit.wand
@@ -130,6 +133,12 @@
 - hcf.command.heal
 - hcf.command.feed
 - hcf.command.more
+- hcf.command.gamemode
+- hcf.command.gamemode.others
+- hcf.command.gamemode.survival
+- hcf.command.gamemode.creative
+- hcf.command.gamemode.adventure
+- hcf.command.gamemode.spectator
 - hcf.command.notes
 
 26. World borders

@@ -1,22 +1,21 @@
 package me.Thomas.HCF.Commands.Admin.KOTH.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.KOTH.KOTH;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class SetPos2Command implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() { return "setpos2"; }
@@ -31,7 +30,7 @@ public class SetPos2Command implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.koth.setpos2.usage"))
+            sender.sendMessage(C.chat(localeConfig.getString("commands.koth.setpos2.usage")
                     .replace("%alias%", alias).replace("%koth%", args.length == 0 ? "<name>" : args[0])));
             return true;
         }
@@ -51,7 +50,7 @@ public class SetPos2Command implements Subcommand {
             return true;
         }
         koth.saveAsync();
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.koth.setpos2.success"))
+        sender.sendMessage(C.chat(localeConfig.getString("commands.koth.setpos2.success")
                 .replace("%koth%", koth.getName())));
         return true;
     }

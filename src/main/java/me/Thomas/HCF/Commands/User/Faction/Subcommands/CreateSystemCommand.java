@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 public class CreateSystemCommand implements Subcommand {
@@ -34,7 +33,7 @@ public class CreateSystemCommand implements Subcommand {
         }
 
         if (args.length != 1) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("commands.faction.createsystem.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.createsystem.usage").replace("%alias%", alias)));
             return true;
         }
         String name = args[0];
@@ -44,8 +43,8 @@ public class CreateSystemCommand implements Subcommand {
         Faction faction = new Faction(uuid, name);
         Main.getInstance().addFaction(faction);
         faction.saveAsync();
-        sender.sendMessage(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("commands.faction.createsystem.success")).replace("%faction%", name)));
-        Bukkit.broadcast(C.chat(Objects.requireNonNull(Main.getInstance().getLocaleConfig().getString("commands.faction.createsystem.broadcast")).replace("%player%", sender.getName()).replace("%faction%", name)));
+        sender.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.createsystem.success").replace("%faction%", name)));
+        Bukkit.broadcast(C.chat(Main.getInstance().getLocaleConfig().getString("commands.faction.createsystem.broadcast").replace("%player%", sender.getName()).replace("%faction%", name)));
         return true;
     }
 }

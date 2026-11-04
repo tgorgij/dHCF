@@ -1,5 +1,6 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
@@ -7,17 +8,15 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public class InviteCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -46,7 +45,7 @@ public class InviteCommand implements Subcommand {
             return true;
         }
         if (args.length != 1) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.invite.usage")).replace("%alias%", alias)));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.invite.usage").replace("%alias%", alias)));
             return true;
         }
         String name = args[0];
@@ -60,26 +59,26 @@ public class InviteCommand implements Subcommand {
             return true;
         }
         if (target.hasFaction() && target.getFaction().equals(user.getFaction())) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.invite.your-faction")).replace("%player%", target.getName())));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.invite.your-faction").replace("%player%", target.getName())));
             return true;
         }
         if (target.hasFaction()) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.invite.other-faction")).replace("%player%", target.getName())));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.invite.other-faction").replace("%player%", target.getName())));
             return true;
         }
         if (Main.getInstance().hasInvite(faction.getUUID(), target.getUUID())) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.invite.pending")).replace("%player%", target.getName())));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.invite.pending").replace("%player%", target.getName())));
             return true;
         }
         if (faction.isOpen()) {
-            p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.invite.open"))));
+            p.sendMessage(C.chat(localeConfig.getString("commands.faction.invite.open")));
             return true;
         }
         Main.getInstance().addInvite(faction.getUUID(), target.getUUID());
-        p.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.invite.success")).replace("%player%", target.getName())));
+        p.sendMessage(C.chat(localeConfig.getString("commands.faction.invite.success").replace("%player%", target.getName())));
         Player targetPlayer = Bukkit.getPlayer(target.getUUID());
         if (targetPlayer != null) {
-            targetPlayer.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.invite.other")).replace("%faction%", faction.getName()).replace("%player%", p.getName())));
+            targetPlayer.sendMessage(C.chat(localeConfig.getString("commands.faction.invite.other").replace("%faction%", faction.getName()).replace("%player%", p.getName())));
         }
         return true;
     }

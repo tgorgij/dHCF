@@ -1,12 +1,12 @@
 package me.Thomas.HCF.Commands.User.Faction.Subcommands;
 
+import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import me.Thomas.HCF.Commands.Subcommand;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 
 public class SetColorCommand implements Subcommand {
 
-    private final FileConfiguration localeConfig = Main.getInstance().getLocaleConfig();
+    private final LocaleConfig localeConfig = Main.getInstance().getLocaleConfig();
 
     @Override
     public String getName() {
@@ -36,27 +36,27 @@ public class SetColorCommand implements Subcommand {
             return true;
         }
         if (args.length != 2) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.setcolor.usage")).replace("%alias%", alias)));
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.setcolor.usage").replace("%alias%", alias)));
             return true;
         }
         Faction faction = Faction.get(args[0]);
         if (faction == null) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.no-faction"))));
+            sender.sendMessage(C.chat(localeConfig.getString("primary.no-faction")));
             return true;
         }
         if (faction.getType().equals(Faction.Type.PLAYER)) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.only-system"))));
+            sender.sendMessage(C.chat(localeConfig.getString("primary.only-system")));
             return true;
         }
         String color = args[1];
         if (C.getColorCode(color).isEmpty()) {
-            sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("primary.invalid-color"))));
+            sender.sendMessage(C.chat(localeConfig.getString("primary.invalid-color")));
             return true;
         }
 
         String code = C.getColorCode(color);
         faction.setColor(color.toLowerCase(Locale.ROOT));
-        sender.sendMessage(C.chat(Objects.requireNonNull(localeConfig.getString("commands.faction.setcolor.success")).replace("%faction%", faction.getName()).replace("%color%", code)));
+        sender.sendMessage(C.chat(localeConfig.getString("commands.faction.setcolor.success").replace("%faction%", faction.getName()).replace("%color%", code)));
         return true;
     }
 

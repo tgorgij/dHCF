@@ -71,6 +71,9 @@ commands:
   setend:
     description: Set End portal arrival and return locations.
     usage: /setend <entrance|exit>
+  rankrevive:
+    description: Use your rank revive on a deathbanned player.
+    usage: /rankrevive <player>
   reclaim:
     description: Redeem your rank rewards or reset all reclaims.
     usage: /reclaim [reset]
@@ -191,6 +194,10 @@ commands:
     aliases:
       - eco
 permissions:
+  hcf.rankrevive.diamond:
+    default: false
+  hcf.rankrevive.gold:
+    default: false
   hcf.command.gamemode:
     default: op
   hcf.command.gamemode.others:
@@ -257,6 +264,8 @@ permissions:
   hcf.report.receive:
     default: op
   hcf.sign.shop.create:
+    default: op
+  hcf.sign.kit.create:
     default: op
   hcf.command.crowbar:
     default: op

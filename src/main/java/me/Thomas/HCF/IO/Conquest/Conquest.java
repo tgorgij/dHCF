@@ -201,7 +201,8 @@ public class Conquest {
     private Candidate candidate(Player p) {
         if (!p.isOnline() || p.isDead() || p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR) return null;
         User user = User.get(p);
-        if (user.isInStaffMode() || user.isVanished() || user.hasPvpProtection() || !user.hasFaction()) return null;
+        if (user.isInStaffMode() || user.isVanished() || user.hasPvpProtection() || !user.hasFaction()
+                || Main.getInstance().getStaffMode() != null && Main.getInstance().getStaffMode().isFrozen(p)) return null;
         Faction team = Faction.get(user.getFaction());
         if (team == null || team.getType() != Faction.Type.PLAYER || !team.hasMember(p.getUniqueId())) return null;
         return new Candidate(p, team.getUUID());

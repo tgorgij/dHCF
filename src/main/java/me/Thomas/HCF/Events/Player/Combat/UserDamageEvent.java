@@ -23,6 +23,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.persistence.PersistentDataType;
@@ -34,6 +35,23 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class UserDamageEvent implements Listener {
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onFish(PlayerFishEvent e) {
+        if (e.getState() != PlayerFishEvent.State.CAUGHT_ENTITY
+                || !(e.getCaught() instanceof LivingEntity victim) || getVictimUser(victim) == null) return;
+        if (e.getPlayer().getUniqueId().equals(getVictimUser(victim).getUUID()) || !canCombat(victim, e.getPlayer())) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSuccessfulFish(PlayerFishEvent e) {
+        if (e.getState() == PlayerFishEvent.State.CAUGHT_ENTITY
+                && e.getCaught() instanceof LivingEntity victim && getVictimUser(victim) != null) {
+            applySuccessfulCombat(victim, e.getPlayer());
+        }
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void UserDamageUser(EntityDamageByEntityEvent e) {

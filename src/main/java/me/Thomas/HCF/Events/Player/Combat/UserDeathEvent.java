@@ -129,7 +129,8 @@ public class UserDeathEvent implements Listener {
         String victim = prefix + " " + getPlayerName(user);
         Component message = formatDeathMessage(e, victim);
         trackSwordKill(e, user, message);
-        Main.getInstance().getServer().broadcast(message);
+        deathLightning(e);
+        broadcastDeath(message);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -155,7 +156,9 @@ public class UserDeathEvent implements Listener {
         addDeathSign(e, user, deathTime);
         Component deathMessage = formatDeathMessage(e, getPlayerName(user));
         trackSwordKill(e, user, deathMessage);
-        e.deathMessage(deathMessage);
+        deathLightning(e);
+        e.deathMessage(null);
+        broadcastDeath(deathMessage);
         // Let the death finish processing drops and statistics before disconnecting the player.
         Main.getInstance().getServer().getScheduler().runTask(Main.getInstance(), () -> {
             if (!Main.getInstance().isFeatureEnabled("deathbans")) return;
@@ -166,6 +169,21 @@ public class UserDeathEvent implements Listener {
                     "&cYou are deathbanned. &eYou can log back in in &c%time%&e.");
             player.kick(C.chat(message.replace("%time%", C.formatChatTime(remaining))));
         });
+    }
+
+    private void deathLightning(EntityDeathEvent e) {
+        if (Main.getInstance().isFeatureEnabled("death-lightning")) {
+            e.getEntity().getWorld().strikeLightningEffect(e.getEntity().getLocation());
+        }
+    }
+
+    private void broadcastDeath(Component message) {
+        if (Main.getInstance().isFeatureEnabled("death-messages")) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (User.get(player).isDeathMessages()) player.sendMessage(message);
+            }
+        }
+        Bukkit.getConsoleSender().sendMessage(message);
     }
 
     private void trackSwordKill(EntityDeathEvent e, User victim, Component message) {
@@ -261,6 +279,23 @@ public class UserDeathEvent implements Listener {
         }
         // Save statistics, transferred money, faction points, and DTR together.
         Main.getInstance().getDatabaseManager().save(snapshots);
+        if (killer != null && !killer.getUniqueId().equals(victim.getUUID())) giveKillstreakReward(killer);
+    }
+
+    private void giveKillstreakReward(Player player) {
+        if (!Main.getInstance().getConfig().getBoolean("settings.features.killstreaks", false)) return;
+        int kills = User.get(player).getKillstreak();
+        for (String configured : Main.getInstance().getConfig().getStringList("killstreaks.rewards." + kills)) {
+            String command = configured.replace("%player%", player.getName())
+                    .replace("%kills%", Integer.toString(kills)).trim();
+            if (command.startsWith("/")) command = command.substring(1);
+            if (command.isBlank()) continue;
+            try {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            } catch (RuntimeException exception) {
+                Main.getInstance().getLogger().log(Level.SEVERE, "Could not run killstreak reward: " + command, exception);
+            }
+        }
     }
 
     private void transferKillBalance(User victim, User killer) {

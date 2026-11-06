@@ -12,6 +12,7 @@ public class Timer {
         REQUEST("timers.request"),
         REPORT("timers.report"),
         LFF("timers.lff"),
+        RANKREVIVE("timers.rankrevive"),
         HOME("timers.home"),
         LOGOUT("timers.logout"),
         STUCK("timers.stuck"),

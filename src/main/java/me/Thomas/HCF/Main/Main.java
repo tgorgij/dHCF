@@ -1,6 +1,8 @@
 package me.Thomas.HCF.Main;
 
 import me.Thomas.HCF.IO.Locale.LocaleConfig;
+import me.Thomas.HCF.Events.World.MobEvent;
+import me.Thomas.HCF.Events.World.ClaimProtectionEvent;
 import com.github.retrooper.packetevents.PacketEvents;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import me.Thomas.HCF.Utils.Tab.TabList;
@@ -36,6 +38,7 @@ import me.Thomas.HCF.Commands.User.Economy.BalanceCommand;
 import me.Thomas.HCF.Commands.User.Economy.PayCommand;
 import me.Thomas.HCF.Commands.User.LogoutCommand;
 import me.Thomas.HCF.Commands.Donator.CraftCommand;
+import me.Thomas.HCF.Commands.Donator.RankReviveCommand;
 import me.Thomas.HCF.Commands.Donator.BottleCommand;
 import me.Thomas.HCF.Commands.Donator.Reclaim.ReclaimCommand;
 import me.Thomas.HCF.Commands.User.MessageCommand;
@@ -92,6 +95,7 @@ import me.Thomas.HCF.Events.Player.Item.UserFoundDiamondsEvent;
 import me.Thomas.HCF.Events.Player.Item.UserDeathSignEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserElevatorEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserShopSignEvent;
+import me.Thomas.HCF.Events.Player.Interact.UserKitEvent;
 import me.Thomas.HCF.Events.Player.Item.UserEnchantEvent;
 import me.Thomas.HCF.Events.Player.Item.UserBrewEvent;
 import me.Thomas.HCF.Events.Player.Interact.UserInteractInFactionEvent;
@@ -144,6 +148,7 @@ public class Main extends JavaPlugin {
     private LocaleConfig localeConfig;
     private FileConfiguration guiConfig;
     private FileConfiguration itemsConfig;
+    private FileConfiguration kitsConfig;
     private FileConfiguration scoreboardConfig;
     private FileConfiguration messagesConfig;
     private BoardHandler boardHandler;
@@ -191,7 +196,10 @@ public class Main extends JavaPlugin {
         return instance;
     }
 
+    public boolean isKitMap() { return getConfig().getBoolean("settings.features.kitmap", false); }
+
     public boolean isFeatureEnabled(String feature) {
+        if (feature.equals("deathbans") && isKitMap()) return false;
         return getConfig().getBoolean("settings.features." + feature, true);
     }
 
@@ -212,6 +220,7 @@ public class Main extends JavaPlugin {
         loadLocale();
         loadGui();
         loadItems();
+        loadKits();
         loadTab();
         loadScoreboard();
         loadMessages();
@@ -298,6 +307,7 @@ public class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("craft")).setExecutor(new CraftCommand());
         Objects.requireNonNull(getCommand("bottle")).setExecutor(new BottleCommand());
         Objects.requireNonNull(getCommand("reclaim")).setExecutor(new ReclaimCommand());
+        Objects.requireNonNull(getCommand("rankrevive")).setExecutor(new RankReviveCommand());
 
         // Admin
         Objects.requireNonNull(getCommand("gamemode")).setExecutor(new GamemodeCommand());
@@ -345,6 +355,7 @@ public class Main extends JavaPlugin {
         PluginManager pm = getServer().getPluginManager();
 
         pm.registerEvents(staffMode, this);
+        pm.registerEvents(new ClaimProtectionEvent(), this);
         if (isFeatureEnabled("mountain")) pm.registerEvents(new MountainEvent(), this);
 
         // User
@@ -353,11 +364,13 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new UserSettingsEvent(), this);
         pm.registerEvents(new UserStatsEvent(), this);
         pm.registerEvents(new UserMapKitEvent(), this);
+        pm.registerEvents(new UserKitEvent(), this);
         pm.registerEvents(new UserProcessingEvent(), this);
         if (isFeatureEnabled("rewards")) pm.registerEvents(new UserRewardsEvent(), this);
         pm.registerEvents(new UserCommandEvent(), this);
         pm.registerEvents(new UserDamageEvent(), this);
         pm.registerEvents(new UserMobProtectionEvent(), this);
+        pm.registerEvents(new MobEvent(), this);
         pm.registerEvents(new UserArcherEvent(), this);
         if (isFeatureEnabled("classes")) {
             pm.registerEvents(new UserBardEvent(), this);
@@ -583,6 +596,18 @@ public class Main extends JavaPlugin {
         return localeConfig;
     }
 
+    public FileConfiguration getKitsConfig() { return kitsConfig; }
+
+    private void loadKits() {
+        kitsConfig = YamlConfiguration.loadConfiguration(new java.io.File(getDataFolder(), "features/kits.yml"));
+        try (java.io.InputStream resource = Objects.requireNonNull(getResource("features/kits.yml"));
+             java.io.Reader reader = new java.io.InputStreamReader(resource, java.nio.charset.StandardCharsets.UTF_8)) {
+            kitsConfig.setDefaults(YamlConfiguration.loadConfiguration(reader));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not load kit defaults", exception);
+        }
+    }
+
     public FileConfiguration getItemsConfig() { return itemsConfig; }
 
     public FileConfiguration getGuiConfig() {
@@ -680,7 +705,7 @@ public class Main extends JavaPlugin {
         saveResource("config.yml", false);
         saveResource("locale.yml", false);
         saveResource("messages.yml", false);
-        for (String name : List.of("items.yml", "gui.yml", "scoreboard.yml", "tab.yml")) {
+        for (String name : List.of("items.yml", "gui.yml", "scoreboard.yml", "tab.yml", "kits.yml")) {
             java.nio.file.Path destination = getDataFolder().toPath().resolve("features").resolve(name);
             java.nio.file.Path legacy = getDataFolder().toPath().resolve(name);
             try {

@@ -198,13 +198,13 @@ public class UserCombatLogoutEvent implements Listener {
         user.removeTimer(Timer.Type.STUCK);
         user.removeTimer(Timer.Type.LOGOUT);
         if (p.isDead() || !user.hasTimer(Timer.Type.COMBAT)) return;
-        Villager villager = p.getWorld().spawn(p.getLocation(), Villager.class);
+        Villager villager = p.getWorld().spawn(p.getLocation(), Villager.class, logger ->
+                logger.getPersistentDataContainer().set(new NamespacedKey(Main.getInstance(), "player"),
+                        PersistentDataType.STRING, p.getUniqueId().toString()));
         villager.setPersistent(false);
         villager.setAI(false);
         villager.setCanPickupItems(false);
         villager.setProfession(Villager.Profession.NITWIT);
-        NamespacedKey player = new NamespacedKey(Main.getInstance(), "player");
-        villager.getPersistentDataContainer().set(player, PersistentDataType.STRING, p.getUniqueId().toString());
         villager.getPersistentDataContainer().set(new NamespacedKey(Main.getInstance(), "combat-logger-session"),
                 PersistentDataType.STRING, session);
         villager.getPersistentDataContainer().set(new NamespacedKey(Main.getInstance(), "deathban-duration"),

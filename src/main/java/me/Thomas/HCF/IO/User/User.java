@@ -38,6 +38,8 @@ public class User {
     private boolean pvpProtectionPending;
     private boolean reclaimed;
     private boolean mountainMessages = true;
+    private boolean mountainScoreboard = true;
+    private boolean deathMessages = true;
     private boolean messages = true;
     private boolean messageSounds = true;
     private boolean scoreboard = true;
@@ -157,6 +159,8 @@ public class User {
         this.pvpProtectionPending = resultSet.getBoolean("pvpProtectionPending");
         this.reclaimed = resultSet.getBoolean("reclaimed");
         this.mountainMessages = resultSet.getBoolean("mountainMessages");
+        this.mountainScoreboard = resultSet.getBoolean("mountainScoreboard");
+        this.deathMessages = resultSet.getBoolean("deathMessages");
         this.messages = resultSet.getBoolean("messages");
         this.messageSounds = resultSet.getBoolean("messageSounds");
         this.scoreboard = resultSet.getBoolean("scoreboard");
@@ -202,6 +206,8 @@ public class User {
         this.pvpProtectionPending = false;
         this.reclaimed = false;
         this.mountainMessages = true;
+        this.mountainScoreboard = true;
+        this.deathMessages = true;
         this.messages = true;
         this.messageSounds = true;
         this.scoreboard = true;
@@ -237,6 +243,22 @@ public class User {
     public UUID getLastConversation() { return lastConversation; }
 
     public void setLastConversation(UUID uuid) { lastConversation = uuid; }
+
+    public boolean isMountainScoreboard() { return mountainScoreboard; }
+
+    public void setMountainScoreboard(boolean enabled) {
+        if (mountainScoreboard == enabled) return;
+        mountainScoreboard = enabled;
+        revision++;
+    }
+
+    public boolean isDeathMessages() { return deathMessages; }
+
+    public void setDeathMessages(boolean enabled) {
+        if (deathMessages == enabled) return;
+        deathMessages = enabled;
+        revision++;
+    }
 
     public boolean isMountainMessages() { return mountainMessages; }
 
@@ -332,8 +354,8 @@ public class User {
         String sql =
                 "INSERT INTO players "
                         + "(uuid, name, faction, balance, kills, deaths, lives, "
-                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns, reclaimed, abilityCooldowns, filteredItems, ignoredPlayers, notes, killstreak, highestKillstreak) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "timers, deathbanExpiry, pvpProtectionPending, lastInventory, lastExperience, mountainMessages, messages, messageSounds, scoreboard, publicChat, requestReportCooldowns, reclaimed, abilityCooldowns, filteredItems, ignoredPlayers, notes, killstreak, highestKillstreak, mountainScoreboard, deathMessages) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, faction=excluded.faction, "
                         + "balance=excluded.balance, kills=excluded.kills, deaths=excluded.deaths, "
                         + "lives=excluded.lives, timers=excluded.timers, deathbanExpiry=excluded.deathbanExpiry, "
@@ -341,7 +363,7 @@ public class User {
                         + "lastInventory=excluded.lastInventory, lastExperience=excluded.lastExperience, mountainMessages=excluded.mountainMessages, "
                         + "messages=excluded.messages, messageSounds=excluded.messageSounds, "
                         + "scoreboard=excluded.scoreboard, publicChat=excluded.publicChat, "
-                        + "requestReportCooldowns=excluded.requestReportCooldowns, reclaimed=excluded.reclaimed, abilityCooldowns=excluded.abilityCooldowns, filteredItems=excluded.filteredItems, ignoredPlayers=excluded.ignoredPlayers, notes=excluded.notes, killstreak=excluded.killstreak, highestKillstreak=excluded.highestKillstreak";
+                        + "requestReportCooldowns=excluded.requestReportCooldowns, reclaimed=excluded.reclaimed, abilityCooldowns=excluded.abilityCooldowns, filteredItems=excluded.filteredItems, ignoredPlayers=excluded.ignoredPlayers, notes=excluded.notes, killstreak=excluded.killstreak, highestKillstreak=excluded.highestKillstreak, mountainScoreboard=excluded.mountainScoreboard, deathMessages=excluded.deathMessages";
         long version = revision;
         return new SaveSnapshot(sql, () -> savedRevision = version,
                 uuid.toString(), name, faction == null ? null : faction.toString(),
@@ -349,7 +371,7 @@ public class User {
                 getLastInventory(), lastExperience, mountainMessages ? 1 : 0,
                 messages ? 1 : 0, messageSounds ? 1 : 0, scoreboard ? 1 : 0, publicChat ? 1 : 0, requestReportCooldowns ? 1 : 0, reclaimed ? 1 : 0, abilityCooldowns ? 1 : 0,
                 filteredItems.stream().map(Material::name).sorted().collect(java.util.stream.Collectors.joining(",")),
-                ignoredPlayers.stream().map(UUID::toString).sorted().collect(java.util.stream.Collectors.joining(",")), serializeNotes(), killstreak, highestKillstreak);
+                ignoredPlayers.stream().map(UUID::toString).sorted().collect(java.util.stream.Collectors.joining(",")), serializeNotes(), killstreak, highestKillstreak, mountainScoreboard ? 1 : 0, deathMessages ? 1 : 0);
     }
 
     public boolean isIgnoring(UUID player) { return ignoredPlayers.contains(player); }
@@ -736,8 +758,11 @@ public class User {
     }
 
     public void clearCooldowns() {
-        // PvP protection is not a cooldown; retain it while clearing combat, item timers, and teleport warmups.
-        if (timers.keySet().removeIf(type -> type != Timer.Type.PVP && type != Timer.Type.STARTING)) revision++;
+        // Protection and administrative cooldowns survive death.
+        if (timers.keySet().removeIf(type -> switch (type) {
+            case PVP, STARTING, RANKREVIVE, CHAT, REQUEST, REPORT, LFF -> false;
+            default -> true;
+        })) revision++;
     }
 
     public void expireTimers() {

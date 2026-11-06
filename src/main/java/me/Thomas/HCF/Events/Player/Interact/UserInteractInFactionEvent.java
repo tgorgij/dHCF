@@ -3,6 +3,9 @@ package me.Thomas.HCF.Events.Player.Interact;
 import me.Thomas.HCF.IO.Locale.LocaleConfig;
 import com.destroystokyo.paper.event.player.PlayerSetSpawnEvent;
 import io.papermc.paper.event.block.PlayerShearBlockEvent;
+import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
+import io.papermc.paper.event.player.PlayerFlowerPotManipulateEvent;
+import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.DTC.DTC;
 import me.Thomas.HCF.IO.Mountain.Mountain;
@@ -11,40 +14,65 @@ import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.DoubleChest;
+import org.bukkit.block.Sign;
 import org.bukkit.block.data.Openable;
 import org.bukkit.block.data.type.Switch;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Vehicle;
+import org.bukkit.entity.minecart.HopperMinecart;
+import org.bukkit.damage.DamageSource;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockFertilizeEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.BlockMultiPlaceEvent;
+import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.block.TNTPrimeEvent;
+import org.bukkit.event.block.CauldronLevelChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerHarvestBlockEvent;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.event.player.PlayerUnleashEntityEvent;
 import org.bukkit.event.world.StructureGrowEvent;
-import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.inventory.InventoryHolder;
 
 import java.util.EnumSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -74,8 +102,16 @@ public class UserInteractInFactionEvent implements Listener {
     @EventHandler
     public void onPlace(BlockPlaceEvent e) {
         Player p = e.getPlayer();
-        Location location = e.getBlock().getLocation();
-        if (disallowed(p, location, "build")) e.setCancelled(true);
+        if (e instanceof BlockMultiPlaceEvent multi) {
+            for (BlockState state : multi.getReplacedBlockStates()) {
+                if (disallowed(p, state.getLocation(), "build")) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+        } else if (disallowed(p, e.getBlock().getLocation(), "build")) {
+            e.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -109,14 +145,177 @@ public class UserInteractInFactionEvent implements Listener {
             return;
         }
 
-        if (e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getHand() != EquipmentSlot.HAND) return;
-        boolean protectedInteraction = block.getState() instanceof InventoryHolder
+        if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        boolean protectedInteraction = block.getType() == Material.RESPAWN_ANCHOR
+                || block.getState() instanceof InventoryHolder
                 || block.getBlockData() instanceof Openable
                 || block.getBlockData() instanceof Switch
                 || guiBlocks.contains(block.getType());
-        if (protectedInteraction && disallowed(e.getPlayer(), block.getLocation(), "interact")) {
-            e.setUseInteractedBlock(Event.Result.DENY);
+        boolean modifiesBlock = modifiesBlock(e.getItem())
+                || block.getState() instanceof Sign && e.getItem() != null
+                && (e.getItem().getType().name().endsWith("_DYE")
+                || e.getItem().getType() == Material.INK_SAC || e.getItem().getType() == Material.GLOW_INK_SAC);
+        if ((protectedInteraction || modifiesBlock)
+                && disallowed(e.getPlayer(), block.getLocation(), modifiesBlock ? "build" : "interact")) {
+            if (protectedInteraction) e.setUseInteractedBlock(Event.Result.DENY);
+            if (modifiesBlock) e.setUseItemInHand(Event.Result.DENY);
         }
+    }
+
+    private boolean modifiesBlock(ItemStack item) {
+        if (item == null) return false;
+        Material material = item.getType();
+        String name = material.name();
+        return name.endsWith("_AXE") || name.endsWith("_HOE") || name.endsWith("_SHOVEL")
+                || material == Material.HONEYCOMB || material == Material.BONE_MEAL
+                || material == Material.SHEARS || material == Material.BRUSH;
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSignOpen(PlayerOpenSignEvent e) {
+        if (disallowed(e.getPlayer(), e.getSign().getLocation(), "build")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSignChange(SignChangeEvent e) {
+        if (disallowed(e.getPlayer(), e.getBlock().getLocation(), "build")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onCauldronChange(CauldronLevelChangeEvent e) {
+        if (e.getEntity() instanceof Player p && disallowed(p, e.getBlock().getLocation(), "build")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onHarvest(PlayerHarvestBlockEvent e) {
+        if (disallowed(e.getPlayer(), e.getHarvestedBlock().getLocation(), "build")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onFlowerPot(PlayerFlowerPotManipulateEvent e) {
+        if (disallowed(e.getPlayer(), e.getFlowerpot().getLocation(), "build")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerChangeBlock(EntityChangeBlockEvent e) {
+        if (e.getEntity() instanceof Player p && disallowed(p, e.getBlock().getLocation(), "build")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onInventoryOpen(InventoryOpenEvent e) {
+        if (!(e.getPlayer() instanceof Player p)) return;
+        InventoryHolder holder = e.getInventory().getHolder();
+        if (holder instanceof Player || !(holder instanceof Entity || holder instanceof BlockState || holder instanceof DoubleChest)) return;
+        for (Location location : inventoryLocations(e.getInventory())) {
+            if (disallowed(p, location, "interact")) {
+                e.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    private NamespacedKey hopperFactionKey() {
+        return new NamespacedKey(Main.getInstance(), "hopper-faction");
+    }
+
+    private boolean protectedFaction(Faction faction) {
+        return faction != null && (faction.getType() != Faction.Type.PLAYER
+                || !faction.isRaidable() && !Main.getInstance().isEOTWOngoing());
+    }
+
+    private List<Location> inventoryLocations(Inventory inventory) {
+        InventoryHolder holder = inventory.getHolder();
+        if (holder instanceof DoubleChest chest) {
+            List<Location> locations = new ArrayList<>();
+            if (chest.getLeftSide() instanceof BlockState left) locations.add(left.getLocation());
+            if (chest.getRightSide() instanceof BlockState right) locations.add(right.getLocation());
+            return locations;
+        }
+        Location location = holder instanceof Entity entity ? entity.getLocation()
+                : holder instanceof BlockState block ? block.getLocation() : inventory.getLocation();
+        return location == null ? List.of() : List.of(location);
+    }
+
+    private boolean ownsHopper(InventoryHolder holder, Faction faction) {
+        return !(holder instanceof HopperMinecart cart) || faction.getUUID().toString().equals(
+                cart.getPersistentDataContainer().get(hopperFactionKey(), PersistentDataType.STRING));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHopperPlace(EntityPlaceEvent e) {
+        if (!(e.getEntity() instanceof HopperMinecart cart)) return;
+        cart.getPersistentDataContainer().remove(hopperFactionKey());
+        Player p = e.getPlayer();
+        if (p == null) return;
+        User user = User.get(p);
+        Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
+        if (faction != null && faction.getType() == Faction.Type.PLAYER && faction.hasMember(p.getUniqueId())) {
+            cart.getPersistentDataContainer().set(hopperFactionKey(), PersistentDataType.STRING, faction.getUUID().toString());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onInventoryMove(InventoryMoveItemEvent e) {
+        InventoryHolder source = e.getSource().getHolder(), destination = e.getDestination().getHolder();
+        boolean hopperCart = source instanceof HopperMinecart || destination instanceof HopperMinecart;
+        List<Location> initiator = hopperCart ? List.of() : inventoryLocations(e.getInitiator());
+        List<Location> locations = new ArrayList<>(inventoryLocations(e.getSource()));
+        locations.addAll(inventoryLocations(e.getDestination()));
+        for (Location location : locations) {
+            Faction faction = Faction.getAtLocation(location);
+            if (!protectedFaction(faction)) continue;
+            boolean allowed = hopperCart ? ownsHopper(source, faction) && ownsHopper(destination, faction)
+                    : !initiator.isEmpty() && initiator.stream().allMatch(origin -> {
+                        Faction owner = Faction.getAtLocation(origin);
+                        return owner != null && owner.getUUID().equals(faction.getUUID());
+                    });
+            if (!allowed) {
+                e.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onItemFrameChange(PlayerItemFrameChangeEvent e) {
+        if (disallowed(e.getPlayer(), e.getItemFrame().getLocation(), "interact")) e.setCancelled(true);
+    }
+
+    private boolean vehicleDamageDenied(Vehicle vehicle, Entity attacker, DamageSource damage) {
+        if (!protectedFaction(Faction.getAtLocation(vehicle.getLocation()))) return false;
+        Entity direct = damage.getDirectEntity();
+        if (attacker instanceof Player p && (direct == null || direct instanceof Player)) {
+            return disallowed(p, vehicle.getLocation(), "interact");
+        }
+        return true;
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onVehicleEnter(VehicleEnterEvent e) {
+        if (e.getEntered() instanceof Player p
+                && protectedFaction(Faction.getAtLocation(e.getVehicle().getLocation()))
+                && disallowed(p, e.getVehicle().getLocation(), "interact")) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onFish(PlayerFishEvent e) {
+        if (e.getState() != PlayerFishEvent.State.CAUGHT_ENTITY) return;
+        Entity caught = e.getCaught();
+        if ((caught instanceof Vehicle || caught instanceof ArmorStand)
+                && protectedFaction(Faction.getAtLocation(caught.getLocation()))
+                && disallowed(e.getPlayer(), caught.getLocation(), "interact")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onVehicleDamage(VehicleDamageEvent e) {
+        if (vehicleDamageDenied(e.getVehicle(), e.getAttacker(), e.getDamageSource())) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onVehicleDestroy(VehicleDestroyEvent e) {
+        if (vehicleDamageDenied(e.getVehicle(), e.getAttacker(), e.getDamageSource())) e.setCancelled(true);
     }
 
     @EventHandler
@@ -133,6 +332,13 @@ public class UserInteractInFactionEvent implements Listener {
     public void onFertilize(BlockFertilizeEvent e) {
         Player p = e.getPlayer();
         if (p != null && disallowed(p, e.getBlock().getLocation(), "interact")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onTNTPrime(TNTPrimeEvent e) {
+        Player player = e.getPrimingEntity() instanceof Player p ? p
+                : e.getPrimingEntity() instanceof Projectile projectile && projectile.getShooter() instanceof Player p ? p : null;
+        if (player != null && disallowed(player, e.getBlock().getLocation(), "build")) e.setCancelled(true);
     }
 
     @EventHandler

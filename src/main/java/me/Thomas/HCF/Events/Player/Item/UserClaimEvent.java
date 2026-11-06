@@ -7,6 +7,7 @@ import me.Thomas.HCF.IO.Faction.Faction;
 import me.Thomas.HCF.IO.User.User;
 import me.Thomas.HCF.Main.Main;
 import me.Thomas.HCF.Utils.Chat.C;
+import me.Thomas.HCF.Utils.Permission.Permission;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -32,17 +33,7 @@ public class UserClaimEvent implements Listener {
         ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
-        if (!user.getClaiming().isClaimingFor() && user.getFaction() == null) {
-            user.setClaiming(null);
-            p.getInventory().remove(claimWand);
-            return;
-        }
-        Faction faction = Faction.get(user.getClaiming().getFaction());
-        if (faction == null) {
-            user.setClaiming(null);
-            p.getInventory().remove(claimWand);
-            return;
-        }
+        if (validateClaiming(p, claimWand) == null) return;
         if (e.getClickedBlock() == null) return;
 
         Claiming claiming = user.getClaiming();
@@ -69,7 +60,7 @@ public class UserClaimEvent implements Listener {
         }
 
         Claim claim = new Claim(claiming.getFaction(), one, two);
-        if (invalidSize(p, claim)) return;
+        if (invalidClaim(p, claim)) return;
         if (claim.intersects()) {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.intersects")));
             return;
@@ -95,17 +86,7 @@ public class UserClaimEvent implements Listener {
         ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
-        if (!user.getClaiming().isClaimingFor() && user.getFaction() == null) {
-            user.setClaiming(null);
-            p.getInventory().remove(claimWand);
-            return;
-        }
-        Faction faction = Faction.get(user.getClaiming().getFaction());
-        if (faction == null) {
-            user.setClaiming(null);
-            p.getInventory().remove(claimWand);
-            return;
-        }
+        if (validateClaiming(p, claimWand) == null) return;
 
         if (e.getClickedBlock() == null) return;
 
@@ -133,7 +114,7 @@ public class UserClaimEvent implements Listener {
         }
 
         Claim claim = new Claim(claiming.getFaction(), one, two);
-        if (invalidSize(p, claim)) return;
+        if (invalidClaim(p, claim)) return;
         if (claim.intersects()) {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.intersects")));
             return;
@@ -177,17 +158,8 @@ public class UserClaimEvent implements Listener {
         ItemStack claimWand = Faction.getClaimWand();
         if (!e.getItem().isSimilar(claimWand)) return;
         e.setCancelled(true);
-        if (!user.getClaiming().isClaimingFor() && user.getFaction() == null) {
-            user.setClaiming(null);
-            p.getInventory().remove(claimWand);
-            return;
-        }
-        Faction faction = Faction.get(user.getClaiming().getFaction());
-        if (faction == null) {
-            user.setClaiming(null);
-            p.getInventory().remove(claimWand);
-            return;
-        }
+        Faction faction = validateClaiming(p, claimWand);
+        if (faction == null) return;
 
         Claiming claiming = user.getClaiming();
 
@@ -204,7 +176,7 @@ public class UserClaimEvent implements Listener {
         }
 
         Claim claim = new Claim(claiming.getFaction(), one, two);
-        if (invalidSize(p, claim)) return;
+        if (invalidClaim(p, claim)) return;
         if (claim.intersects()) {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.intersects")));
             return;
@@ -230,11 +202,43 @@ public class UserClaimEvent implements Listener {
         p.getInventory().remove(claimWand);
     }
 
-    private boolean invalidSize(Player p, Claim claim) {
+    private Faction validateClaiming(Player p, ItemStack claimWand) {
+        User user = User.get(p);
+        Claiming claiming = user.getClaiming();
+        Faction faction = Faction.get(claiming.getFaction());
+        String message = null;
+        if (faction == null) message = "primary.no-faction";
+        else if (claiming.isClaimingFor()) {
+            if (!Permission.has(p, "faction.claimfor", "admin")) message = "primary.no-permission";
+            else if (faction.getType() == Faction.Type.PLAYER) message = "primary.only-system";
+        } else if (faction.getType() != Faction.Type.PLAYER || !faction.getUUID().equals(user.getFaction())
+                || !faction.hasMember(user.getUUID())) {
+            message = "commands.faction.not-in";
+        } else if (faction.getMemberType(user.getUUID()) != Faction.MemberType.LEADER
+                && faction.getMemberType(user.getUUID()) != Faction.MemberType.COLEADER) {
+            message = "commands.faction.coleader.not";
+        }
+        if (message == null) return faction;
+        Claiming.hidePillars(p);
+        user.setClaiming(null);
+        p.getInventory().remove(claimWand);
+        p.sendMessage(C.chat(localeConfig.getString(message)));
+        return null;
+    }
+
+    private boolean invalidClaim(Player p, Claim claim) {
         User user = User.get(p);
         Claiming claiming = user.getClaiming();
         if (claiming == null) return true;
         if (claiming.isClaimingFor()) return false;
+        // The rectangle overlaps warzone if its closest point to the origin lies in warzone.
+        Location closest = claim.one();
+        closest.setX(Math.clamp(0, claim.minX(), claim.maxX()));
+        closest.setZ(Math.clamp(0, claim.minZ(), claim.maxZ()));
+        if (!Faction.isInWilderness(closest)) {
+            p.sendMessage(C.chat(localeConfig.getString("claiming.error.not-in-wilderness")));
+            return true;
+        }
         if (claim.isTooSmall()) {
             p.sendMessage(C.chat(localeConfig.getString("claiming.error.too-small")));
             return true;

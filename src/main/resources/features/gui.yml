@@ -13,11 +13,37 @@ settings:
         name: '&eMessage Settings'
         lore:
         - '&7Click to open.'
+      chat-menu:
+        material: PAPER
+        name: '&eChat Settings'
+        lore:
+        - '&7Click to open.'
+  chat:
+    title: '&eChat Settings'
+    rows: 3
+    items:
+      mountains:
+        material: GLOWSTONE
+        name: '&eGlowstone Mountain Messages&7: %state%'
+        lore:
+        - '&7Show mountain reset announcements in chat.'
+        - '&7Click to toggle.'
+      death-messages:
+        material: SKELETON_SKULL
+        name: '&eDeath Messages&7: %state%'
+        lore:
+        - '&7Show public death messages.'
+        - '&7Click to toggle.'
       public-chat:
         material: PAPER
         name: '&ePublic Chat&7: %state%'
         lore:
         - '&7Click to toggle.'
+      back:
+        material: ARROW
+        name: '&eBack'
+        lore:
+        - '&7Click to open.'
   scoreboard:
     title: '&eScoreboard Settings'
     rows: 3

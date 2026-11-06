@@ -162,7 +162,7 @@ public class Board {
                 text = text.replace(configured.placeholder(), C.formatTime(timer.getRemainingTimeMillis()));
             }
             if (text.contains("%mountains%")) {
-                if (!Main.getInstance().isFeatureEnabled("mountain") || !user.isMountainMessages()) continue;
+                if (!Main.getInstance().isFeatureEnabled("mountain") || !user.isMountainScoreboard()) continue;
                 String format = Main.getInstance().getScoreboardConfig().getString("boards.mountain", "&e%name% Mountain&7: &c%time%");
                 List<Mountain> mountains = Main.getInstance().getAllMountains().values().stream()
                         .filter(mountain -> mountain.getNextRegeneration() > 0)

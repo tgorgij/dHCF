@@ -52,6 +52,12 @@ public final class KickCommand implements Subcommand {
             sender.sendMessage(C.chat(localeConfig.getString("commands.faction.kick.cannot")));
             return true;
         }
+        long freezeRemaining = faction.getDTRFreezeExpiry() - System.currentTimeMillis();
+        if (freezeRemaining > 0) {
+            sender.sendMessage(C.chat(localeConfig.getString("commands.faction.kick.dtr-freeze")
+                    .replace("%time%", C.formatChatTime((freezeRemaining + 999L) / 1000L))));
+            return true;
+        }
         target.setFaction(null);
         target.removeTimer(me.Thomas.HCF.Utils.Timer.Timer.Type.HOME);
         faction.removeMember(target.getUUID());

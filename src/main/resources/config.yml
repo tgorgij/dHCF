@@ -1,6 +1,10 @@
-
 settings:
   features:
+    kitmap: false
+    killstreaks: false
+    mob-stacking: true
+    entity-limits: true
+    auto-smelt: true
     scoreboard: true
     tablist: true
     koth: true
@@ -9,10 +13,13 @@ settings:
     mountain: true
     classes: true
     deathbans: true
+    death-messages: true
+    death-lightning: true
     elevators: true
     shops: true
     rewards: true
     reclaim: true
+  xp-multiplier: 1.0
   server-name: "HCF"
   timezone: "America/Los_Angeles"
   colors:
@@ -266,6 +273,9 @@ timers: # seconds
   enderpearl: 15
 
 factions:
+  end:
+    block-combat-entry: true
+    block-combat-exit: true
   allies:
     max: 1
     damage-multiplier: 0.5
@@ -280,6 +290,7 @@ factions:
     material: RED_STAINED_GLASS
   player-format: "&9%player%&7[&c%kills%&7]"
   dtr:
+    kitmap-multiplier: 0.5
     maximum: 6.06
     minimum: -0.99
     freeze-minutes: 30
@@ -722,3 +733,27 @@ sword-stats:
 borders:
   overworld: 3000
   nether: 2000
+
+killstreaks:
+  rewards:
+    3:
+      - "economy give %player% 100"
+    5:
+      - "minecraft:give %player% golden_apple 2"
+    10:
+      - "minecraft:give %player% enchanted_golden_apple 1"
+    15:
+      - "minecraft:effect give %player% strength 10 0"
+
+mob-stacking:
+  radius: 8.0
+
+entity-limits:
+  per-chunk: 100
+
+rank-revive:
+  permissions:
+    - permission: "hcf.rankrevive.diamond"
+      cooldown: 21600
+    - permission: "hcf.rankrevive.gold"
+      cooldown: 43200

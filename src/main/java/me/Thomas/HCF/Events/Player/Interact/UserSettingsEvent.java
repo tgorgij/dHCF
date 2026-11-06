@@ -25,7 +25,7 @@ import java.util.UUID;
 
 public class UserSettingsEvent implements Listener {
 
-    private enum Page { MAIN, SCOREBOARD, MESSAGES }
+    private enum Page { MAIN, SCOREBOARD, MESSAGES, CHAT }
 
     private static class Menu implements InventoryHolder {
         private final UUID owner;
@@ -81,13 +81,18 @@ public class UserSettingsEvent implements Listener {
             case MAIN -> {
                 menu.inventory.setItem(row + 2, item(menu, Material.PAINTING, "scoreboard-menu", null));
                 menu.inventory.setItem(row + 4, item(menu, Material.WRITABLE_BOOK, "messages-menu", null));
-                menu.inventory.setItem(row + 6, item(menu, Material.PAPER, "public-chat", user.isPublicChat()));
+                menu.inventory.setItem(row + 6, item(menu, Material.PAPER, "chat-menu", null));
             }
             case SCOREBOARD -> {
                 menu.inventory.setItem(row + 1, item(menu, Material.PAINTING, "scoreboard", user.isScoreboard() && Main.getInstance().isFeatureEnabled("scoreboard")));
-                menu.inventory.setItem(row + 5, item(menu, Material.GLOWSTONE, "mountains", user.isMountainMessages() && Main.getInstance().isFeatureEnabled("mountain")));
+                menu.inventory.setItem(row + 5, item(menu, Material.GLOWSTONE, "mountains", user.isMountainScoreboard() && Main.getInstance().isFeatureEnabled("mountain")));
                 menu.inventory.setItem(row + 7, item(menu, Material.BLAZE_POWDER, "ability-cooldowns", user.isAbilityCooldowns()));
                 menu.inventory.setItem(row + 3, item(menu, Material.CLOCK, "request-report-cooldowns", user.isRequestReportCooldowns()));
+            }
+            case CHAT -> {
+                menu.inventory.setItem(row + 2, item(menu, Material.GLOWSTONE, "mountains", user.isMountainMessages() && Main.getInstance().isFeatureEnabled("mountain")));
+                menu.inventory.setItem(row + 4, item(menu, Material.SKELETON_SKULL, "death-messages", user.isDeathMessages() && Main.getInstance().isFeatureEnabled("death-messages")));
+                menu.inventory.setItem(row + 6, item(menu, Material.PAPER, "public-chat", user.isPublicChat()));
             }
             case MESSAGES -> {
                 menu.inventory.setItem(row + 2, item(menu, Material.WRITABLE_BOOK, "messages", user.isMessages()));
@@ -109,6 +114,7 @@ public class UserSettingsEvent implements Listener {
         Page next = null;
         if (menu.page == Page.MAIN && slot == row + 2) next = Page.SCOREBOARD;
         else if (menu.page == Page.MAIN && slot == row + 4) next = Page.MESSAGES;
+        else if (menu.page == Page.MAIN && slot == row + 6) next = Page.CHAT;
         else if (menu.page != Page.MAIN && slot == menu.inventory.getSize() - 5) next = Page.MAIN;
         if (next != null) {
             Page page = next;
@@ -120,9 +126,23 @@ public class UserSettingsEvent implements Listener {
         }
         User user = User.get(p);
         switch (menu.page) {
-            case MAIN -> {
-                if (slot != row + 6) return;
-                user.setPublicChat(!user.isPublicChat());
+            case MAIN -> { return; }
+            case CHAT -> {
+                if (slot == row + 2) {
+                    if (!Main.getInstance().isFeatureEnabled("mountain")) {
+                        p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
+                        return;
+                    }
+                    user.setMountainMessages(!user.isMountainMessages());
+                } else if (slot == row + 4) {
+                    if (!Main.getInstance().isFeatureEnabled("death-messages")) {
+                        p.sendMessage(C.chat(Main.getInstance().getLocaleConfig().getString("primary.feature-disabled")));
+                        return;
+                    }
+                    user.setDeathMessages(!user.isDeathMessages());
+                }
+                else if (slot == row + 6) user.setPublicChat(!user.isPublicChat());
+                else return;
             }
             case SCOREBOARD -> {
                 if (slot == row + 1 && !Main.getInstance().isFeatureEnabled("scoreboard")
@@ -131,7 +151,7 @@ public class UserSettingsEvent implements Listener {
                     return;
                 }
                 if (slot == row + 1) user.setScoreboard(!user.isScoreboard());
-                else if (slot == row + 5) user.setMountainMessages(!user.isMountainMessages());
+                else if (slot == row + 5) user.setMountainScoreboard(!user.isMountainScoreboard());
                 else if (slot == row + 3) user.setRequestReportCooldowns(!user.isRequestReportCooldowns());
                 else if (slot == row + 7) user.setAbilityCooldowns(!user.isAbilityCooldowns());
                 else return;

@@ -27,6 +27,8 @@ primary:
     hq: "&eWarped to &d%faction%&e's HQ."
 
 events:
+  mob:
+    stack-name: "&e%amount%x &f%mob%"
   eotw:
     scheduled: "&6[EOTW] EOTW starts in %time%."
     started: "&6[EOTW] EOTW has started! All player factions can now be raided."
@@ -60,6 +62,17 @@ events:
     extended: "&6[KOTH] %koth% has been extended and has %time% remaining."
     pearl-blocked: "&6[KOTH] Enderpearls are disabled in %koth%'s territory."
   player:
+    end:
+      pvp-timer: "&cYou cannot enter The End with a PvP timer."
+      starting-timer: "&cYou cannot enter The End with a starting timer."
+      combat-entry: "&cYou cannot enter The End while in combat."
+      combat-exit: "&cYou cannot exit The End while in combat."
+    kit:
+      created: "&eCreated a &b%kit% &ekit sign."
+      invalid: "&cThat kit does not exist in features/kits.yml."
+      configuration-error: "&cThat kit is configured incorrectly. Please contact an administrator."
+      unavailable: "&cYou cannot use kit signs while frozen or in mod mode."
+      received: "&eEquipped the &b%kit% &ekit."
     world-border: "&cYou cannot cross the world border."
     found-diamonds: "&7[&bFD&7] &b%player% &7found &b%amount% %ore%&7."
     shop:
@@ -148,6 +161,7 @@ events:
         apple: "&cYou cannot eat another golden apple for &b%time%&c."
         gapple: "&cYou cannot eat another enchanted golden apple for &b%time%&c."
       end:
+        rankrevive: "&eYou can use &b/rankrevive &eagain."
         default: "&eYour &b%timer% timer &ehas expired."
 
 
@@ -155,7 +169,7 @@ claiming:
   purchase:
     cost: "&eCost of Area: &b%cost% &7(%size-x%x%size-z%)"
   error:
-    not-in-wilderness: "&cYou must be in the wilderness to claim."
+    not-in-wilderness: "&cClaims must be entirely in the wilderness."
     already: "&cYou are already claiming for a faction."
     faction-already: "&cSomeone in your faction is already claiming."
     has: "&cYour faction already has a claim."
@@ -623,6 +637,14 @@ commands:
     no-inventory: "&c%player% has no last inventory to restore."
     success: "&eYou restored &b%player%&e's last inventory and experience."
     failed: "&cThe inventory could not be restored. Please try again."
+  rankrevive:
+    usage: "&cUsage: /%alias% <player>"
+    cooldown: "&cYou can use rank revive again in %time%."
+    self: "&cYou cannot rank revive yourself."
+    not-deathbanned: "&c%player% is not deathbanned."
+    failed: "&cThe rank revive could not be saved. Please try again."
+    success: "&eYou used your rank revive on &b%player%&e. They can now log back in."
+    received: "&b%player% &eused their rank revive on you."
   revive:
     usage: "&cUsage: /%alias% <player>"
     not-deathbanned: "&c%player% is not deathbanned."
@@ -786,6 +808,7 @@ commands:
       broadcast: "&c&l%player% has disbanded the faction."
     kick:
       usage: "&cUsage: /%alias% kick <player>"
+      dtr-freeze: "&cYou cannot kick faction members during DTR freeze. Freeze expires in &b%time%&c."
       cannot: "&cYou can only kick players below your rank. You cannot kick yourself or the leader."
       success: "&eYou kicked &b%player% &efrom the faction."
       target: "&b%player% &ekicked you from the faction."
@@ -916,6 +939,7 @@ commands:
     home:
       usage: "&cUsage: /%alias% home"
       none: "&cYour faction does not have a home."
+      failed: "&cYour home teleport could not be completed. Please try again."
       end: "&cYou cannot teleport to your faction's home while you're in the end"
       success: "&eTeleporting to your faction's HQ. Please wait &d%time%&e..."
     stuck:

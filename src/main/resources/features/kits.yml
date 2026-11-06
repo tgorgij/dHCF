@@ -1,0 +1,315 @@
+kits:
+  diamond:
+    name: Diamond
+    armor:
+      helmet:
+        material: DIAMOND_HELMET
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      chestplate:
+        material: DIAMOND_CHESTPLATE
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      leggings:
+        material: DIAMOND_LEGGINGS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      boots:
+        material: DIAMOND_BOOTS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+          feather_falling: 4
+    items:
+      '0':
+        material: DIAMOND_SWORD
+        enchantments:
+          sharpness: 2
+          unbreaking: 3
+      '1':
+        material: ENDER_PEARL
+        amount: 16
+      '2':
+        material: GOLDEN_CARROT
+        amount: 64
+      '3':
+        material: POTION
+        potion: STRONG_SWIFTNESS
+      '4':
+        material: POTION
+        potion: STRONG_SWIFTNESS
+      '5':
+        material: POTION
+        potion: STRONG_SWIFTNESS
+    fill:
+      material: SPLASH_POTION
+      potion: STRONG_HEALING
+  netherite:
+    name: Netherite
+    armor:
+      helmet:
+        material: NETHERITE_HELMET
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      chestplate:
+        material: NETHERITE_CHESTPLATE
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      leggings:
+        material: NETHERITE_LEGGINGS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      boots:
+        material: NETHERITE_BOOTS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+          feather_falling: 4
+    items:
+      '0':
+        material: NETHERITE_SWORD
+        enchantments:
+          sharpness: 2
+          unbreaking: 3
+      '1':
+        material: ENDER_PEARL
+        amount: 16
+      '2':
+        material: GOLDEN_CARROT
+        amount: 64
+      '3':
+        material: POTION
+        potion: STRONG_SWIFTNESS
+      '4':
+        material: POTION
+        potion: STRONG_SWIFTNESS
+      '5':
+        material: POTION
+        potion: STRONG_SWIFTNESS
+    fill:
+      material: SPLASH_POTION
+      potion: STRONG_HEALING
+  bard:
+    name: Bard
+    armor:
+      helmet:
+        material: GOLDEN_HELMET
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      chestplate:
+        material: GOLDEN_CHESTPLATE
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      leggings:
+        material: GOLDEN_LEGGINGS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      boots:
+        material: GOLDEN_BOOTS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+          feather_falling: 4
+    items:
+      '0':
+        material: DIAMOND_SWORD
+        enchantments:
+          sharpness: 2
+          unbreaking: 3
+      '1':
+        material: ENDER_PEARL
+        amount: 16
+      '2':
+        material: GOLDEN_CARROT
+        amount: 64
+      '3':
+        material: BLAZE_POWDER
+        amount: 64
+      '4':
+        material: IRON_INGOT
+        amount: 64
+      '5':
+        material: GHAST_TEAR
+        amount: 64
+      '6':
+        material: FEATHER
+        amount: 64
+      '7':
+        material: SPIDER_EYE
+        amount: 64
+      '8':
+        material: SUGAR
+        amount: 64
+    fill:
+      material: SPLASH_POTION
+      potion: STRONG_HEALING
+  rogue:
+    name: Rogue
+    armor:
+      helmet:
+        material: CHAINMAIL_HELMET
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      chestplate:
+        material: CHAINMAIL_CHESTPLATE
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      leggings:
+        material: CHAINMAIL_LEGGINGS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      boots:
+        material: CHAINMAIL_BOOTS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+          feather_falling: 4
+    items:
+      '0':
+        material: DIAMOND_SWORD
+        enchantments:
+          sharpness: 2
+          unbreaking: 3
+      '1':
+        material: ENDER_PEARL
+        amount: 16
+      '2':
+        material: GOLDEN_CARROT
+        amount: 64
+      '3':
+        material: GOLDEN_SWORD
+      '4':
+        material: GOLDEN_SWORD
+      '5':
+        material: GOLDEN_SWORD
+      '6':
+        material: GOLDEN_SWORD
+      '7':
+        material: GOLDEN_SWORD
+      '8':
+        material: GOLDEN_SWORD
+      '9':
+        material: SUGAR
+        amount: 64
+      '10':
+        material: FEATHER
+        amount: 64
+    fill:
+      material: SPLASH_POTION
+      potion: STRONG_HEALING
+  archer:
+    name: Archer
+    armor:
+      helmet:
+        material: LEATHER_HELMET
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      chestplate:
+        material: LEATHER_CHESTPLATE
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      leggings:
+        material: LEATHER_LEGGINGS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      boots:
+        material: LEATHER_BOOTS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+          feather_falling: 4
+    items:
+      '0':
+        material: DIAMOND_SWORD
+        enchantments:
+          sharpness: 2
+          unbreaking: 3
+      '1':
+        material: ENDER_PEARL
+        amount: 16
+      '2':
+        material: GOLDEN_CARROT
+        amount: 64
+      '3':
+        material: BOW
+        enchantments:
+          power: 5
+          unbreaking: 3
+      '4':
+        material: ARROW
+        amount: 64
+      '5':
+        material: SUGAR
+        amount: 64
+      '6':
+        material: FEATHER
+        amount: 64
+    fill:
+      material: SPLASH_POTION
+      potion: STRONG_HEALING
+  miner:
+    name: Miner
+    armor:
+      helmet:
+        material: IRON_HELMET
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      chestplate:
+        material: IRON_CHESTPLATE
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      leggings:
+        material: IRON_LEGGINGS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+      boots:
+        material: IRON_BOOTS
+        enchantments:
+          protection: 2
+          unbreaking: 3
+          feather_falling: 4
+    items:
+      '0':
+        material: DIAMOND_SWORD
+        enchantments:
+          sharpness: 2
+          unbreaking: 3
+      '1':
+        material: ENDER_PEARL
+        amount: 16
+      '2':
+        material: GOLDEN_CARROT
+        amount: 64
+      '3':
+        material: DIAMOND_PICKAXE
+        enchantments:
+          efficiency: 5
+          unbreaking: 3
+          fortune: 3
+      '4':
+        material: DIAMOND_PICKAXE
+        enchantments:
+          efficiency: 5
+          unbreaking: 3
+          silk_touch: 1
+    fill:
+      material: SPLASH_POTION
+      potion: STRONG_HEALING

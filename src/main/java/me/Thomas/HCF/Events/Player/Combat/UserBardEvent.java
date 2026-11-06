@@ -208,7 +208,7 @@ public class UserBardEvent implements Listener {
                 && faction.getUUID().equals(recipient.getFaction()) && faction.hasMember(recipient.getUUID());
     }
 
-    private boolean apply(Player bard, Effect effect) {
+    private void apply(Player bard, Effect effect) {
         List<Player> targets = new ArrayList<>();
         targets.add(bard);
         double radius = Math.min(128.0, setting("radius", 15.0));
@@ -221,17 +221,14 @@ public class UserBardEvent implements Listener {
             boolean team = sameFaction(bard, target);
             if (effect.enemies() ? !team : team) targets.add(target);
         }
-        boolean applied = false;
         boolean harmful = effect.potion().getType().getEffectCategory() == PotionEffectType.Category.HARMFUL;
         for (Player target : targets) {
             boolean self = target.getUniqueId().equals(bard.getUniqueId());
             if (!self && (effect.enemies() || harmful) && !UserDamageEvent.canCombat(target, bard)) continue;
             // Native potion merging preserves stronger boosts and resumes weaker held effects when they expire.
             if (!target.addPotionEffect(effect.potion())) continue;
-            applied = true;
             if (!self && harmful) UserDamageEvent.applySuccessfulCombat(target, bard);
         }
-        return applied;
     }
 
     private void deactivate(Player p, boolean notify) {
@@ -272,7 +269,8 @@ public class UserBardEvent implements Listener {
             return;
         }
         ItemStack item = p.getInventory().getItemInMainHand();
-        if (item == null || item.getType() != e.getItem().getType() || item.getAmount() <= 0 || !apply(p, effect)) return;
+        if (item == null || item.getType() != e.getItem().getType() || item.getAmount() <= 0) return;
+        apply(p, effect);
         user.setBardEnergy(Math.max(0, user.getBardEnergy() - effect.energy()));
         item.setAmount(item.getAmount() - 1);
         p.getInventory().setItemInMainHand(item.getAmount() == 0 ? null : item);

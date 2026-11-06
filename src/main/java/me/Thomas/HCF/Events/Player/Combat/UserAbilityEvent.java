@@ -339,16 +339,23 @@ public class UserAbilityEvent implements Listener {
         streaks.values().removeIf(streak -> streak.attacker().equals(uuid));
         lastAttackers.remove(uuid);
         lastAttackers.values().removeIf(uuid::equals);
-        boned.remove(uuid);
         BukkitTask task = ninjas.remove(uuid);
         if (task != null) task.cancel();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onQuit(PlayerQuitEvent e) { cleanup(e.getPlayer().getUniqueId()); }
+    public void onQuit(PlayerQuitEvent e) {
+        cleanup(e.getPlayer().getUniqueId());
+        long now = System.currentTimeMillis();
+        boned.values().removeIf(expires -> expires <= now);
+    }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onDeath(PlayerDeathEvent e) { cleanup(e.getEntity().getUniqueId()); }
+    public void onDeath(PlayerDeathEvent e) {
+        UUID uuid = e.getEntity().getUniqueId();
+        cleanup(uuid);
+        boned.remove(uuid);
+    }
 
     @EventHandler
     public void onDisable(PluginDisableEvent e) {

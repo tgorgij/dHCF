@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,44 +36,57 @@ public class DepositCommand implements Subcommand {
             return true;
         }
         User user = User.get(p);
-        if (!user.hasFaction()) {
+        Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
+        if (faction == null || !faction.hasMember(p.getUniqueId())) {
             p.sendMessage(C.chat(localeConfig.getString("commands.faction.not-in")));
             return true;
         }
-        Faction faction = Faction.get(user.getFaction());
         if (args.length != 1) {
             p.sendMessage(C.chat(localeConfig.getString("commands.faction.deposit.usage").replace("%alias%", alias)));
             return true;
         }
-        double amount;
-        if (args[0].equalsIgnoreCase("all")) {
-            amount = user.getBalance();
-        } else {
-            try {
-                amount = Double.parseDouble(args[0]);
-            } catch (NumberFormatException _) {
-                p.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
-                return true;
-            }
-        }
-        if (!Double.isFinite(amount) || amount <= 0
-                || amount < Main.getInstance().getConfig().getDouble("economy.minimum-transfer")
-                || !Double.isFinite(faction.getBalance() + amount)) {
+        if (!Double.isFinite(user.getBalance()) || !Double.isFinite(faction.getBalance())
+                || user.getBalance() < 0 || faction.getBalance() < 0) {
             p.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
             return true;
         }
-        if (amount > user.getBalance()) {
+        BigDecimal amount;
+        try {
+            amount = (args[0].equalsIgnoreCase("all") ? BigDecimal.valueOf(user.getBalance())
+                    : new BigDecimal(args[0])).stripTrailingZeros();
+        } catch (NumberFormatException | ArithmeticException exception) {
+            p.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
+            return true;
+        }
+        double minimum = Main.getInstance().getConfig().getDouble("economy.minimum-transfer", 1.0);
+        if (amount.signum() <= 0 || amount.scale() > 2 || !Double.isFinite(minimum) || minimum < 0
+                || amount.compareTo(BigDecimal.valueOf(minimum)) < 0) {
+            p.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
+            return true;
+        }
+        BigDecimal balance = BigDecimal.valueOf(user.getBalance());
+        if (amount.compareTo(balance) > 0) {
             p.sendMessage(C.chat(localeConfig.getString("primary.insufficient-funds")));
             return true;
         }
-        user.setBalance(user.getBalance() - amount);
-        faction.setBalance(faction.getBalance() + amount);
+        BigDecimal remaining = balance.subtract(amount);
+        BigDecimal received = BigDecimal.valueOf(faction.getBalance()).add(amount);
+        double newBalance = remaining.doubleValue();
+        double newTargetBalance = received.doubleValue();
+        if (!Double.isFinite(newBalance) || !Double.isFinite(newTargetBalance)
+                || BigDecimal.valueOf(newBalance).compareTo(remaining) != 0
+                || BigDecimal.valueOf(newTargetBalance).compareTo(received) != 0) {
+            p.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
+            return true;
+        }
+        user.setBalance(newBalance);
+        faction.setBalance(newTargetBalance);
         Main.getInstance().saveTogether(user, faction);
-        p.sendMessage(C.chat(localeConfig.getString("commands.faction.deposit.success").replace("%amount%", C.getFormattedMoney(amount))));
+        p.sendMessage(C.chat(localeConfig.getString("commands.faction.deposit.success").replace("%amount%", C.getFormattedMoney(amount.doubleValue()))));
         for (UUID uuid : faction.getOnlineMembers().keySet()) {
             Player player = Main.getInstance().getServer().getPlayer(uuid);
             if (player == null) continue;
-            player.sendMessage(C.chat(localeConfig.getString("commands.faction.deposit.broadcast").replace("%player%", p.getName()).replace("%amount%", C.getFormattedMoney(amount))));
+            player.sendMessage(C.chat(localeConfig.getString("commands.faction.deposit.broadcast").replace("%player%", p.getName()).replace("%amount%", C.getFormattedMoney(amount.doubleValue()))));
         }
         return true;
     }

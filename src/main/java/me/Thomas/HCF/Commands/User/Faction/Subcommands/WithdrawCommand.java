@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
+import java.math.BigDecimal;
 import java.util.*;
 
 public final class WithdrawCommand implements Subcommand {
@@ -37,32 +38,49 @@ public final class WithdrawCommand implements Subcommand {
             sender.sendMessage(C.chat(localeConfig.getString("commands.faction.withdraw.usage").replace("%alias%", alias)));
             return true;
         }
-        double amount;
+        if (!Double.isFinite(user.getBalance()) || !Double.isFinite(faction.getBalance())
+                || user.getBalance() < 0 || faction.getBalance() < 0) {
+            sender.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
+            return true;
+        }
+        BigDecimal amount;
         try {
-            amount = args[0].equalsIgnoreCase("all") ? faction.getBalance() : Double.parseDouble(args[0]);
-        } catch (NumberFormatException exception) {
+            amount = (args[0].equalsIgnoreCase("all") ? BigDecimal.valueOf(faction.getBalance())
+                    : new BigDecimal(args[0])).stripTrailingZeros();
+        } catch (NumberFormatException | ArithmeticException exception) {
             sender.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
             return true;
         }
-        if (!Double.isFinite(amount) || amount <= 0
-                || amount < Main.getInstance().getConfig().getDouble("economy.minimum-transfer")
-                || !Double.isFinite(user.getBalance() + amount)) {
+        double minimum = Main.getInstance().getConfig().getDouble("economy.minimum-transfer", 1.0);
+        if (amount.signum() <= 0 || amount.scale() > 2 || !Double.isFinite(minimum) || minimum < 0
+                || amount.compareTo(BigDecimal.valueOf(minimum)) < 0) {
             sender.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
             return true;
         }
-        if (amount > faction.getBalance()) {
+        BigDecimal balance = BigDecimal.valueOf(faction.getBalance());
+        if (amount.compareTo(balance) > 0) {
             sender.sendMessage(C.chat(localeConfig.getString("commands.faction.withdraw.insufficient-funds")));
             return true;
         }
-        faction.setBalance(faction.getBalance() - amount);
-        user.setBalance(user.getBalance() + amount);
+        BigDecimal remaining = balance.subtract(amount);
+        BigDecimal received = BigDecimal.valueOf(user.getBalance()).add(amount);
+        double newBalance = remaining.doubleValue();
+        double newTargetBalance = received.doubleValue();
+        if (!Double.isFinite(newBalance) || !Double.isFinite(newTargetBalance)
+                || BigDecimal.valueOf(newBalance).compareTo(remaining) != 0
+                || BigDecimal.valueOf(newTargetBalance).compareTo(received) != 0) {
+            sender.sendMessage(C.chat(localeConfig.getString("primary.invalid-amount")));
+            return true;
+        }
+        faction.setBalance(newBalance);
+        user.setBalance(newTargetBalance);
         Main.getInstance().saveTogether(user, faction);
-        sender.sendMessage(C.chat(localeConfig.getString("commands.faction.withdraw.success").replace("%amount%", C.getFormattedMoney(amount))));
+        sender.sendMessage(C.chat(localeConfig.getString("commands.faction.withdraw.success").replace("%amount%", C.getFormattedMoney(amount.doubleValue()))));
         for (UUID uuid : faction.getOnlineMembers().keySet()) {
             if (uuid.equals(player.getUniqueId())) continue;
             Player member = Bukkit.getPlayer(uuid);
             if (member != null) member.sendMessage(C.chat(localeConfig.getString("commands.faction.withdraw.broadcast")
-                    .replace("%player%", player.getName()).replace("%amount%", C.getFormattedMoney(amount))));
+                    .replace("%player%", player.getName()).replace("%amount%", C.getFormattedMoney(amount.doubleValue()))));
         }
         return true;
     }

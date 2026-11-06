@@ -20,7 +20,7 @@ public final class Deathban {
     }
 
     public static long getDuration(ConfigurationSection config, Predicate<String> hasPermission) {
-        if (!config.getBoolean("settings.features.deathbans", true)) return 0L;
+        if (config.getBoolean("settings.features.kitmap", false) || !config.getBoolean("settings.features.deathbans", true)) return 0L;
         long duration = Long.MAX_VALUE;
         boolean matched = false;
         for (Map<?, ?> entry : config.getMapList("deathbans.permissions")) {

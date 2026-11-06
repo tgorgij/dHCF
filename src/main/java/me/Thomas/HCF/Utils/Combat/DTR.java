@@ -29,7 +29,10 @@ public final class DTR {
         if (faction.getType() != Faction.Type.PLAYER) return;
         double minimum = config.getDouble("factions.dtr.minimum", -0.99);
         if (!Double.isFinite(minimum)) minimum = -0.99;
-        double remaining = BigDecimal.valueOf(faction.getDTR()).subtract(BigDecimal.ONE).doubleValue();
+        double loss = config.getBoolean("settings.features.kitmap", false) ? config.getDouble("factions.dtr.kitmap-multiplier", 0.5) : 1.0;
+        if (!Double.isFinite(loss)) loss = 0.5;
+        loss = Math.clamp(loss, 0.0, 1.0);
+        double remaining = BigDecimal.valueOf(faction.getDTR()).subtract(BigDecimal.valueOf(loss)).doubleValue();
         faction.setDTR(Math.max(minimum, remaining));
         long freezeMinutes = Math.clamp(config.getLong("factions.dtr.freeze-minutes", 30L), 0L, Long.MAX_VALUE / MINUTE);
         long expiry = addTime(now, freezeMinutes * MINUTE);

@@ -13,6 +13,7 @@ public class UserQuitEvent implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onQuit(PlayerQuitEvent e) {
+        e.quitMessage(null);
         Player p = e.getPlayer();
         User user = User.get(p);
         user.setName(p.getName());

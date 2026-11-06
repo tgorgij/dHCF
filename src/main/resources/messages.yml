@@ -1,3 +1,17 @@
+welcome:
+  player:
+    - " "
+    - "&bWelcome back, &e%player%&b!"
+    - "&7 • &eYour Balance&7: &a%balance%"
+    - " "
+  faction:
+    - " "
+    - "&bWelcome back, &e%player%&b!"
+    - "&7 • &eYour Balance&7: &a%balance%"
+    - "&7 • &eFaction Online Members&7: &b%online-members%&7/&b%total%"
+    - "&7 • &eFaction DTR&7: %dtr%"
+    - " "
+
 
 coords:
   - "&7&m---------------------------"

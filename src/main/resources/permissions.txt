@@ -88,6 +88,8 @@
 13. Donator commands
 - hcf.command.craft
 - hcf.command.bottle
+- hcf.rankrevive.diamond
+- hcf.rankrevive.gold
 
 14. Conquest
 - hcf.command.conquest
@@ -96,8 +98,9 @@
 - hcf.command.crowbar
 - hcf.command.spawner
 
-16. Shop signs
+16. Signs
 - hcf.sign.shop.create
+- hcf.sign.kit.create
 
 17. Requests and reports
 - hcf.request.receive

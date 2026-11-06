@@ -200,7 +200,9 @@ public class KOTH {
     }
 
     private boolean canCapture(Player p) {
-        return p != null && p.isOnline() && !p.isDead() && !User.get(p).isInStaffMode() && !User.get(p).isVanished() && !User.get(p).hasPvpProtection() && p.getGameMode() != GameMode.SPECTATOR
+        return p != null && p.isOnline() && !p.isDead() && !User.get(p).isInStaffMode() && !User.get(p).isVanished()
+                && (Main.getInstance().getStaffMode() == null || !Main.getInstance().getStaffMode().isFrozen(p))
+                && !User.get(p).hasPvpProtection() && p.getGameMode() != GameMode.SPECTATOR
                 && p.getGameMode() != GameMode.CREATIVE && contains(p.getLocation());
     }
 

@@ -57,6 +57,7 @@ public class UserJoinEvent implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent e) {
+        e.joinMessage(null);
         Player p = e.getPlayer();
         boolean firstJoin = !p.hasPlayedBefore();
         if (firstJoin) {
@@ -72,5 +73,14 @@ public class UserJoinEvent implements Listener {
         user.saveAsync();
         Faction faction = user.hasFaction() ? Faction.get(user.getFaction()) : null;
         if (faction != null) faction.broadcastMemberConnection(p, true);
+        if (!firstJoin) {
+            String path = faction != null && faction.hasMember(p.getUniqueId()) ? "welcome.faction" : "welcome.player";
+            for (String line : Main.getInstance().getMessagesConfig().getStringList(path)) {
+                p.sendMessage(C.chat(line.replace("%player%", p.getName()).replace("%balance%", C.getFormattedMoney(user.getBalance()))
+                        .replace("%online-members%", faction == null ? "0" : Integer.toString(faction.getOnlineMembers().size()))
+                        .replace("%total%", faction == null ? "0" : Integer.toString(faction.getMembers().size()))
+                        .replace("%dtr%", faction == null ? "" : C.getFormattedDTR(faction))));
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 # dHCF
 
-A configurable Hardcore Factions plugin for modern Paper servers, with an optional KitMap mode.
+HCF, reimagined for modern Minecraft, with a twist of a tech tree!
 
 ## Features
 
